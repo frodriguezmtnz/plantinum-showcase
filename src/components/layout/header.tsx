@@ -8,6 +8,7 @@ import {
   Upload,
   User as UserIcon,
   LogOut,
+  Compass,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,8 @@ import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Trophy },
-  { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown },
+  { href: '/explore', label: 'Explorar', icon: Compass },
+  { href: '/hall-of-fame', label: 'Salón de la Fama', icon: Crown },
 ];
 
 export function Header() {
@@ -92,7 +94,7 @@ export function Header() {
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
-                Upload
+                Subir
               </Button>
             </Link>
             <DropdownMenu>
@@ -117,13 +119,13 @@ export function Header() {
                 <Link href="/u/trophy-hunter-1" passHref>
                   <DropdownMenuItem>
                     <UserIcon className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
+                    <span>Perfil</span>
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>Cerrar sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
