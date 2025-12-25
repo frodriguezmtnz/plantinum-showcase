@@ -1,3 +1,76 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "Elden Ring platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1514539079130-25950c84af65?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYW50YXN5JTIwbGFuZHNjYXBlfGVufDB8fHx8MTc2NjYzNzIzMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy landscape"
+    },
+    {
+      "id": "2",
+      "description": "Ghost of Tsushima platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1689493731180-bbe43311eeef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzYW11cmFpJTIwd2FycmlvcnxlbnwwfHx8fDE3NjY2OTY1NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "samurai warrior"
+    },
+    {
+      "id": "3",
+      "description": "Spider-Man 2 platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1541336032412-2048a678540d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxuZXclMjB5b3JrfGVufDB8fHx8MTc2NjY5NjU3M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "new york"
+    },
+    {
+      "id": "4",
+      "description": "God of War Ragnarok platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1710976483742-6b25af703c9e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxub3JzZSUyMG15dGhvbG9neXxlbnwwfHx8fDE3NjY2NDg5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "norse mythology"
+    },
+    {
+      "id": "5",
+      "description": "The Last of Us Part I platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1578632220633-824351c0b694?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwb3N0JTIwYXBvY2FseXB0aWN8ZW58MHx8fHwxNzY2Njk2NTczfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "post apocalyptic"
+    },
+    {
+      "id": "6",
+      "description": "Horizon Forbidden West platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1650132707292-b0b39a77859a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxyb2JvdCUyMGRpbm9zYXVyfGVufDB8fHx8MTc2NjY5NjU3M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "robot dinosaur"
+    },
+    {
+      "id": "7",
+      "description": "Final Fantasy VII Rebirth platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1697715841367-62fbb3fe1683?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YW5pbWUlMjBzd29yZHxlbnwwfHx8fDE3NjY2OTY1NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "anime sword"
+    },
+    {
+      "id": "8",
+      "description": "Bloodborne platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1696947833843-9707b58254fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxnb3RoaWMlMjBob3Jyb3J8ZW58MHx8fHwxNzY2Njk2NTczfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gothic horror"
+    },
+    {
+      "id": "9",
+      "description": "Uncharted 4 platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1673295671950-dc7f478d1f22?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxqdW5nbGUlMjB0cmVhc3VyZXxlbnwwfHx8fDE3NjY2OTY1NzN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "jungle treasure"
+    },
+    {
+      "id": "10",
+      "description": "Persona 5 Royal platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1480796927426-f609979314bd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxhbmltZSUyMGNpdHl8ZW58MHx8fHwxNzY2NjQ3MDc2fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "anime city"
+    },
+    {
+      "id": "11",
+      "description": "Cyberpunk 2077 platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1536768139911-e290a59011e4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZnV0dXJpc3RpYyUyMGNpdHl8ZW58MHx8fHwxNzY2NjAxODE3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "futuristic city"
+    },
+    {
+      "id": "12",
+      "description": "Red Dead Redemption 2 platinum trophy screenshot",
+      "imageUrl": "https://images.unsplash.com/photo-1547700094-a0b42d320937?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3ZXN0ZXJuJTIwY293Ym95fGVufDB8fHx8MTc2NjY5NjU3M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "western cowboy"
+    }
+  ]
 }
