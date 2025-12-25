@@ -1,8 +1,6 @@
 import { getPlatinumById, getUserById, getUsers } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { PlatinumCard } from '@/components/shared/platinum-card';
-import { CommentSection } from '@/components/comments/comment-section';
-import { getCommentsByPlatinumId } from '@/lib/comments';
 import type { Metadata } from 'next';
 
 type Props = {
@@ -34,7 +32,6 @@ export default async function PlatinumDetailPage({ params }: { params: { id: str
   }
 
   const user = await getUserById(platinum.userId);
-  const comments = await getCommentsByPlatinumId(platinum.id);
   const users = await getUsers();
 
   return (
@@ -43,7 +40,6 @@ export default async function PlatinumDetailPage({ params }: { params: { id: str
         <PlatinumCard platinum={platinum} user={user} />
       </div>
       
-      <CommentSection platinumId={platinum.id} comments={comments} allUsers={users} />
     </div>
   );
 }
