@@ -1,7 +1,19 @@
 import { placeholderImages } from './placeholder-images.json';
 
+function slugify(text: string) {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of text
+}
+
 export interface Platinum {
   id: string;
+  slug: string;
   gameName: string;
   platform: 'PS3' | 'PS4' | 'PS5';
   platinumDate: string;
@@ -51,8 +63,7 @@ function getImage(seed: number) {
   };
 }
 
-
-const platinums: Platinum[] = [
+const rawPlatinums: Omit<Platinum, 'slug'>[] = [
   { id: '1', gameName: 'Elden Ring', platform: 'PS5', platinumDate: '2023-03-15', isSpoiler: true, userId: '1', votes: 125, monthlyVotes: 30, ...getImage(1) },
   { id: '2', gameName: 'Ghost of Tsushima', platform: 'PS4', platinumDate: '2022-08-20', isSpoiler: false, userId: '1', votes: 230, monthlyVotes: 45, ...getImage(2) },
   { id: '3', gameName: 'Spider-Man 2', platform: 'PS5', platinumDate: '2023-11-01', isSpoiler: false, userId: '1', votes: 180, monthlyVotes: 60, ...getImage(3) },
@@ -66,6 +77,15 @@ const platinums: Platinum[] = [
   { id: '11', gameName: 'Cyberpunk 2077', platform: 'PS5', platinumDate: '2023-10-05', isSpoiler: false, userId: '3', votes: 175, monthlyVotes: 65, ...getImage(11) },
   { id: '12', gameName: 'Red Dead Redemption 2', platform: 'PS4', platinumDate: '2020-02-14', isSpoiler: false, userId: '1', votes: 380, monthlyVotes: 25, ...getImage(12) },
 ];
+
+const platinums: Platinum[] = rawPlatinums.map(p => {
+  const user = users.find(u => u.id === p.userId);
+  const username = user ? user.username : 'unknown-user';
+  return {
+    ...p,
+    slug: slugify(`${p.gameName}-${username}-${p.id}`)
+  };
+});
 
 
 // Data access functions
@@ -87,6 +107,10 @@ export const getPlatinums = async (): Promise<Platinum[]> => {
 
 export const getPlatinumById = async (id: string): Promise<Platinum | undefined> => {
   return platinums.find(p => p.id === id);
+};
+
+export const getPlatinumBySlug = async (slug: string): Promise<Platinum | undefined> => {
+  return platinums.find(p => p.slug === slug);
 };
 
 export const getPlatinumsByUserId = async (userId: string): Promise<Platinum[]> => {

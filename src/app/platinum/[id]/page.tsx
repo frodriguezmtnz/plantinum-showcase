@@ -1,5 +1,5 @@
 
-import { getPlatinumById, getUserById } from '@/lib/data';
+import { getPlatinumBySlug, getUserById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
@@ -7,15 +7,14 @@ import { Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import type { Platinum, User } from '@/lib/data';
 import { PlatinumDetailCard } from './platinum-detail-card';
 
 type Props = {
-  params: { id: string };
+  params: { slug: string };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const platinum = await getPlatinumById(params.id);
+  const platinum = await getPlatinumBySlug(params.slug);
   
   if (!platinum) {
     return {
@@ -32,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 
-export default async function PlatinumDetailPage({ params }: { params: { id: string } }) {
-  const platinum = await getPlatinumById(params.id);
+export default async function PlatinumDetailPage({ params }: { params: { slug: string } }) {
+  const platinum = await getPlatinumBySlug(params.slug);
   
   if (!platinum) {
     notFound();
