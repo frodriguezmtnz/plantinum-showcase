@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import Image from 'next/image';
-import { User as UserIcon } from 'lucide-react';
+import { User as UserIcon, UploadCloud, Share2, Vote, PartyPopper, UserPlus } from 'lucide-react';
 import {
   Carousel,
   CarouselContent,
@@ -27,6 +27,34 @@ const SectionDivider = ({ title }: { title: string }) => (
         </div>
     </div>
 )
+
+const howItWorksSteps = [
+  {
+    icon: UserPlus,
+    title: 'Crea una cuenta',
+    description: 'Regístrate para unirte a la comunidad de cazadores de trofeos.'
+  },
+  {
+    icon: UploadCloud,
+    title: 'Sube tu platino',
+    description: 'Sube la captura de pantalla de tu último trofeo de platino de PlayStation.'
+  },
+  {
+    icon: Share2,
+    title: 'Compártelo',
+    description: 'Muestra tu logro y habilidad con tus amigos en las redes sociales.'
+  },
+  {
+    icon: Vote,
+    title: 'Vota y compite',
+    description: 'Vota por las capturas de otros para ayudarles a subir en el ranking.'
+  },
+  {
+    icon: PartyPopper,
+    title: 'Disfruta',
+    description: 'Disfruta de la comunidad y celebra la cultura del trofeo de platino.'
+  }
+];
 
 export default function Home() {
   const [hallOfFame, setHallOfFame] = useState<Platinum | null>(null);
@@ -111,6 +139,22 @@ export default function Home() {
             {latestPlatinums.map(platinum => (
             <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
             ))}
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className="mt-16">
+        <SectionDivider title="How It Works" />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 text-center mt-8">
+          {howItWorksSteps.map((step, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/20 text-primary mb-4">
+                <step.icon className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-semibold">{step.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
