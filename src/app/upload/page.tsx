@@ -30,8 +30,8 @@ import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
 const uploadFormSchema = z.object({
-  gameName: z.string().min(2, {
-    message: "Game name must be at least 2 characters.",
+  gameName: z.string().min(5, {
+    message: "Game name must be at least 5 characters.",
   }),
   platform: z.enum(["PS3", "PS4", "PS5"], {
     required_error: "You need to select a platform.",
