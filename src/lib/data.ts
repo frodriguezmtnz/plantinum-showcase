@@ -64,8 +64,8 @@ const platinums: Platinum[] = [
   { id: '8', hash: 'a1d4e5f6c3b2', gameName: 'Bloodborne', platform: 'PS4', platinumDate: '2019-07-22', isSpoiler: false, userId: '3', votes: 450, monthlyVotes: 72, ...getImage(8) },
   { id: '9', hash: 'd4e5f6c3b2a1', gameName: 'Uncharted 4', platform: 'PS4', platinumDate: '2017-05-19', isSpoiler: false, userId: '1', votes: 150, monthlyVotes: 10, ...getImage(9) },
   { id: '10', hash: 'f6c3b2a1d4e5', gameName: 'Persona 5 Royal', platform: 'PS4', platinumDate: '2021-06-12', isSpoiler: false, userId: '2', votes: 210, monthlyVotes: 35, ...getImage(10) },
-  { id: '11', hash: 'b2a1d4e5f6c3', gameName: 'Cyberpunk 2077', platform: 'PS5', platinumDate: '2023-10-05', isSpoiler: false, userId: '3', votes: 175, monthlyVotes: 65, ...getImage(11) },
-  { id: '12', hash: 'a1d4e5f6c3b2', gameName: 'Red Dead Redemption 2', platform: 'PS4', platinumDate: '2020-02-14', isSpoiler: false, userId: '1', votes: 380, monthlyVotes: 25, ...getImage(12) },
+  { id: '11', hash: 'b2a1d4e5f6c3a', gameName: 'Cyberpunk 2077', platform: 'PS5', platinumDate: '2023-10-05', isSpoiler: false, userId: '3', votes: 175, monthlyVotes: 65, ...getImage(11) },
+  { id: '12', hash: 'a1d4e5f6c3b2b', gameName: 'Red Dead Redemption 2', platform: 'PS4', platinumDate: '2020-02-14', isSpoiler: false, userId: '1', votes: 380, monthlyVotes: 25, ...getImage(12) },
 ];
 
 
