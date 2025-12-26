@@ -1,19 +1,16 @@
 
 import { placeholderImages } from './placeholder-images.json';
 
-// A simple, non-crypto hash function for demonstration purposes.
-function simpleHash(text: string): string {
-    let hash = 0;
-    if (text.length === 0) {
-        return "0";
-    }
-    for (let i = 0; i < text.length; i++) {
-        const char = text.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    // Convert to a base36 string and take a slice to keep it reasonably short
-    return Math.abs(hash).toString(36) + (hash > 0 ? 'a' : 'b') + text.length.toString(36);
+// A stable, simple, non-crypto hash function for demonstration purposes.
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  // Make it URL-friendly and a bit shorter
+  return Math.abs(hash).toString(36) + str.length.toString(36);
 }
 
 
