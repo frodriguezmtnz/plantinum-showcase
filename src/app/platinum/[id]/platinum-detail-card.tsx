@@ -7,7 +7,7 @@ import type { Platinum, User } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Eye, Expand } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 
 interface PlatinumDetailCardProps {
@@ -67,6 +67,8 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
         </div>
       </DialogTrigger>
       <DialogContent className="max-w-7xl w-full p-2 bg-transparent border-none">
+        <DialogTitle className="sr-only">Enlarged screenshot for {platinum.gameName}</DialogTitle>
+        {user && <DialogDescription className="sr-only">Uploaded by {user.username}</DialogDescription>}
         <div className="relative aspect-[16/9]">
            <Image
               src={platinum.imageUrl}
@@ -81,4 +83,3 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
     </Dialog>
   );
 }
-
