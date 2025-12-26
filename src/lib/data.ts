@@ -1,19 +1,6 @@
 
 import { placeholderImages } from './placeholder-images.json';
 
-// A stable, simple, non-crypto hash function for demonstration purposes.
-function simpleHash(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0; // Convert to 32bit integer
-  }
-  // Make it URL-friendly and a bit shorter
-  return Math.abs(hash).toString(36) + str.length.toString(36);
-}
-
-
 export interface Platinum {
   id: string;
   hash: string;
@@ -66,29 +53,20 @@ function getImage(seed: number) {
   };
 }
 
-const rawPlatinums: Omit<Platinum, 'hash'>[] = [
-  { id: '1', gameName: 'Elden Ring', platform: 'PS5', platinumDate: '2023-03-15', isSpoiler: true, userId: '1', votes: 125, monthlyVotes: 30, ...getImage(1) },
-  { id: '2', gameName: 'Ghost of Tsushima', platform: 'PS4', platinumDate: '2022-08-20', isSpoiler: false, userId: '1', votes: 230, monthlyVotes: 45, ...getImage(2) },
-  { id: '3', gameName: 'Spider-Man 2', platform: 'PS5', platinumDate: '2023-11-01', isSpoiler: false, userId: '1', votes: 180, monthlyVotes: 60, ...getImage(3) },
-  { id: '4', gameName: 'God of War Ragnarok', platform: 'PS5', platinumDate: '2023-01-10', isSpoiler: true, userId: '2', votes: 310, monthlyVotes: 95, ...getImage(4) },
-  { id: '5', gameName: 'The Last of Us Part I', platform: 'PS5', platinumDate: '2022-09-20', isSpoiler: false, userId: '2', votes: 250, monthlyVotes: 55, ...getImage(5) },
-  { id: '6', gameName: 'Horizon Forbidden West', platform: 'PS4', platinumDate: '2022-04-05', isSpoiler: false, userId: '2', votes: 190, monthlyVotes: 40, ...getImage(6) },
-  { id: '7', gameName: 'Final Fantasy VII Rebirth', platform: 'PS5', platinumDate: '2024-03-30', isSpoiler: true, userId: '3', votes: 280, monthlyVotes: 88, ...getImage(7) },
-  { id: '8', gameName: 'Bloodborne', platform: 'PS4', platinumDate: '2019-07-22', isSpoiler: false, userId: '3', votes: 450, monthlyVotes: 72, ...getImage(8) },
-  { id: '9', gameName: 'Uncharted 4', platform: 'PS4', platinumDate: '2017-05-19', isSpoiler: false, userId: '1', votes: 150, monthlyVotes: 10, ...getImage(9) },
-  { id: '10', gameName: 'Persona 5 Royal', platform: 'PS4', platinumDate: '2021-06-12', isSpoiler: false, userId: '2', votes: 210, monthlyVotes: 35, ...getImage(10) },
-  { id: '11', gameName: 'Cyberpunk 2077', platform: 'PS5', platinumDate: '2023-10-05', isSpoiler: false, userId: '3', votes: 175, monthlyVotes: 65, ...getImage(11) },
-  { id: '12', gameName: 'Red Dead Redemption 2', platform: 'PS4', platinumDate: '2020-02-14', isSpoiler: false, userId: '1', votes: 380, monthlyVotes: 25, ...getImage(12) },
+const platinums: Platinum[] = [
+  { id: '1', hash: 'elden-ring-spoiler-1', gameName: 'Elden Ring', platform: 'PS5', platinumDate: '2023-03-15', isSpoiler: true, userId: '1', votes: 125, monthlyVotes: 30, ...getImage(1) },
+  { id: '2', hash: 'ghost-of-tsushima-pride-1', gameName: 'Ghost of Tsushima', platform: 'PS4', platinumDate: '2022-08-20', isSpoiler: false, userId: '1', votes: 230, monthlyVotes: 45, ...getImage(2) },
+  { id: '3', hash: 'spiderman-2-hero-1', gameName: 'Spider-Man 2', platform: 'PS5', platinumDate: '2023-11-01', isSpoiler: false, userId: '1', votes: 180, monthlyVotes: 60, ...getImage(3) },
+  { id: '4', hash: 'god-of-war-ragnarok-spoiler-2', gameName: 'God of War Ragnarok', platform: 'PS5', platinumDate: '2023-01-10', isSpoiler: true, userId: '2', votes: 310, monthlyVotes: 95, ...getImage(4) },
+  { id: '5', hash: 'the-last-of-us-remake-2', gameName: 'The Last of Us Part I', platform: 'PS5', platinumDate: '2022-09-20', isSpoiler: false, userId: '2', votes: 250, monthlyVotes: 55, ...getImage(5) },
+  { id: '6', hash: 'horizon-forbidden-west-robot-2', gameName: 'Horizon Forbidden West', platform: 'PS4', platinumDate: '2022-04-05', isSpoiler: false, userId: '2', votes: 190, monthlyVotes: 40, ...getImage(6) },
+  { id: '7', hash: 'final-fantasy-rebirth-spoiler-3', gameName: 'Final Fantasy VII Rebirth', platform: 'PS5', platinumDate: '2024-03-30', isSpoiler: true, userId: '3', votes: 280, monthlyVotes: 88, ...getImage(7) },
+  { id: '8', hash: 'bloodborne-gothic-3', gameName: 'Bloodborne', platform: 'PS4', platinumDate: '2019-07-22', isSpoiler: false, userId: '3', votes: 450, monthlyVotes: 72, ...getImage(8) },
+  { id: '9', hash: 'uncharted-4-adventure-1', gameName: 'Uncharted 4', platform: 'PS4', platinumDate: '2017-05-19', isSpoiler: false, userId: '1', votes: 150, monthlyVotes: 10, ...getImage(9) },
+  { id: '10', hash: 'persona-5-royal-anime-2', gameName: 'Persona 5 Royal', platform: 'PS4', platinumDate: '2021-06-12', isSpoiler: false, userId: '2', votes: 210, monthlyVotes: 35, ...getImage(10) },
+  { id: '11', hash: 'cyberpunk-2077-future-3', gameName: 'Cyberpunk 2077', platform: 'PS5', platinumDate: '2023-10-05', isSpoiler: false, userId: '3', votes: 175, monthlyVotes: 65, ...getImage(11) },
+  { id: '12', hash: 'red-dead-redemption-2-cowboy-1', gameName: 'Red Dead Redemption 2', platform: 'PS4', platinumDate: '2020-02-14', isSpoiler: false, userId: '1', votes: 380, monthlyVotes: 25, ...getImage(12) },
 ];
-
-const platinums: Platinum[] = rawPlatinums.map(p => {
-  const user = users.find(u => u.id === p.userId);
-  const username = user ? user.username : 'unknown-user';
-  return {
-    ...p,
-    hash: simpleHash(`${p.gameName}-${username}-${p.platinumDate}`)
-  };
-});
 
 
 // Data access functions
