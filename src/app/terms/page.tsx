@@ -1,3 +1,4 @@
+
 import { type Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export default function TermsPage() {
       <div className="prose prose-invert mx-auto">
         <h1 className="text-4xl font-bold font-headline mb-8">Terms of Service</h1>
         <p className="text-lg text-muted-foreground">
-          Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+          Last updated: July 1, 2024
         </p>
 
         <p>Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Platinum Showcase website (the "Service") operated by us.</p>
