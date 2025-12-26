@@ -6,9 +6,21 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { cn } from '@/lib/utils';
 import { AuthProvider } from '@/hooks/use-auth';
+import { Inter, Outfit } from 'next/font/google';
 
 const APP_NAME = "Platinum Showcase";
 const APP_DESCRIPTION = "Showcase your PlayStation platinum trophies and climb the leaderboards.";
+
+const fontBody = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+});
+
+const fontHeadline = Outfit({
+  subsets: ['latin'],
+  variable: '--font-headline',
+  weight: ['700', '900'],
+});
 
 export const metadata: Metadata = {
   title: 'Platinum Showcase',
@@ -46,11 +58,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={cn('dark', fontBody.variable, fontHeadline.variable)} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Outfit:wght@700;900&display=swap" rel="stylesheet" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={cn(
