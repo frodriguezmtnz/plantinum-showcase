@@ -40,13 +40,13 @@ export default async function PlatinumDetailPage({ params }: { params: { id: str
     notFound();
   }
 
-  const user = await getUserById(platinum.userId) as User | null;
+  const user: User | undefined = await getUserById(platinum.userId);
 
   return (
     <div className="container max-w-4xl py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-            <PlatinumDetailCard platinum={platinum} user={user} />
+            <PlatinumDetailCard platinum={platinum} user={user as User | null} />
         </div>
         <div className="md:col-span-1">
             <div className="bg-card p-6 rounded-lg">
@@ -83,7 +83,7 @@ export default async function PlatinumDetailPage({ params }: { params: { id: str
                     </div>
                 </div>
                 
-                <SocialShare platinum={platinum} user={user} />
+                <SocialShare platinum={platinum} user={user as User | null} />
             </div>
         </div>
       </div>
