@@ -3,13 +3,13 @@
 import { getPlatinumByHash, getUserById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { PlatinumDetailCard } from './platinum-detail-card';
 import type { User } from '@/lib/data';
+import { SocialShare } from './SocialShare';
 
 type Props = {
   params: { id: string };
@@ -82,10 +82,8 @@ export default async function PlatinumDetailPage({ params }: { params: { id: str
                         <span className="text-muted-foreground ml-1">this month</span>
                     </div>
                 </div>
-
-                <Button className="w-full vote-button" size="lg">
-                    <Heart className="mr-2" /> Vote
-                </Button>
+                
+                <SocialShare platinum={platinum} user={user} />
             </div>
         </div>
       </div>
