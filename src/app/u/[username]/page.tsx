@@ -1,8 +1,8 @@
-import { getUserByUsername, getPlatinumsByUserId, getPlatinumById, getUserById } from '@/lib/data';
+import { getUserByUsername, getPlatinumsByUserId, getPlatinumById } from '@/lib/data';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
-import { Award, Trophy } from 'lucide-react';
+import { Award, ThumbsUp } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 import type { Metadata } from 'next';
 
@@ -33,7 +33,11 @@ export default async function UserProfilePage({ params }: { params: { username:s
 
   const platinums = await getPlatinumsByUserId(user.id);
   const pridePlatinum = user.pridePlatinumId ? await getPlatinumById(user.pridePlatinumId) : null;
-  const otherPlatinums = platinums.filter(p => p.id !== user.pridePlatinumId);
+  
+  // Exclude pride platinum from the main gallery if it exists
+  const otherPlatinums = pridePlatinum 
+    ? platinums.filter(p => p.id !== user.pridePlatinumId)
+    : platinums;
 
   return (
     <div className="container py-8 md:py-12">
@@ -49,16 +53,15 @@ export default async function UserProfilePage({ params }: { params: { username:s
             <span>{platinums.length} Platinums</span>
           </div>
           <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-400"/>
+            <ThumbsUp className="w-5 h-5 text-primary"/>
             <span>{platinums.reduce((acc, p) => acc + p.votes, 0)} Total Votes</span>
           </div>
         </div>
       </header>
 
       {pridePlatinum && (
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold tracking-tight mb-6 text-center flex items-center justify-center gap-3">
-            <Award className="w-8 h-8 text-amber-400" />
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">
             Pride of the Collection
           </h2>
           <div className="max-w-2xl mx-auto">
@@ -68,15 +71,19 @@ export default async function UserProfilePage({ params }: { params: { username:s
       )}
       
       <section>
-        <h2 className="text-3xl font-bold tracking-tight mb-6 text-center">Trophy Gallery</h2>
+        <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">Trophy Gallery</h2>
         {otherPlatinums.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
             {otherPlatinums.map(platinum => (
-              <PlatinumCard key={platinum.id} platinum={platinum} />
+              <PlatinumCard key={platinum.id} platinum={platinum} user={user} />
             ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground">This user hasn't showcased their other platinums yet.</p>
+           pridePlatinum ? (
+            <p className="text-center text-muted-foreground">This user hasn't showcased their other platinums yet.</p>
+           ) : (
+            <p className="text-center text-muted-foreground">This user hasn't showcased any platinums yet.</p>
+           )
         )}
       </section>
     </div>

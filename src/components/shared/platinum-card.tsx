@@ -6,19 +6,21 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, User as UserIcon } from 'lucide-react';
+import { Award, Eye, ThumbsUp, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PlatinumTrophyIcon } from '../icons/platinum-trophy-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 
 interface PlatinumCardProps {
   platinum: Platinum;
   user?: User;
   variant?: 'default' | 'top';
+  isPride?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, variant = 'default' }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, variant = 'default', isPride = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
@@ -41,13 +43,15 @@ export function PlatinumCard({ platinum, user, variant = 'default' }: PlatinumCa
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-4 text-white">
                 <h3 className="font-semibold text-lg">{platinum.gameName}</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-300">
-                    <UserIcon className="w-4 h-4" />
-                    <span>{user?.username}</span>
-                </div>
+                {user && (
+                    <div className="flex items-center gap-2 text-sm text-gray-300">
+                        <UserIcon className="w-4 h-4" />
+                        <span>{user.username}</span>
+                    </div>
+                )}
             </div>
             <div className="absolute top-2 right-2 flex items-center gap-2 bg-black/50 text-white font-bold p-2 rounded-md">
-                <PlatinumTrophyIcon className="w-5 h-5" />
+                <ThumbsUp className="w-4 h-4" />
                 <span>{platinum.monthlyVotes}</span>
             </div>
         </Link>
@@ -55,9 +59,15 @@ export function PlatinumCard({ platinum, user, variant = 'default' }: PlatinumCa
   }
 
   return (
-    <Card className="flex flex-col overflow-hidden bg-card border-none">
+    <Card className="flex flex-col overflow-hidden bg-card border-none group">
+       {isPride && (
+        <div className="p-2 bg-amber-400/10 text-amber-400 text-xs font-bold flex items-center justify-center gap-2">
+            <Award className="w-4 h-4" />
+            <span>Pride of the Collection</span>
+        </div>
+       )}
        <CardContent className="p-0">
-        <Link href={`/platinum/${platinum.id}`} className={cn("block aspect-[16/9] bg-muted rounded-lg overflow-hidden", !showSpoiler && "platinum-card-spoiler")}>
+        <Link href={`/platinum/${platinum.id}`} className={cn("block aspect-[16/9] bg-muted rounded-t-lg overflow-hidden", !showSpoiler && "platinum-card-spoiler")}>
           <Image
             src={platinum.imageUrl}
             alt={`Platinum screenshot for ${platinum.gameName}`}
@@ -76,22 +86,25 @@ export function PlatinumCard({ platinum, user, variant = 'default' }: PlatinumCa
           )}
         </Link>
       </CardContent>
-      <div className="pt-3">
-        <h3 className="font-semibold truncate">{platinum.gameName}</h3>
-        <div className="flex justify-between items-center mt-1">
+      <div className="p-4">
+        <div className="flex justify-between items-start">
+            <h3 className="font-semibold truncate pr-2">{platinum.gameName}</h3>
+            <Badge variant="outline" className="shrink-0">{platinum.platform}</Badge>
+        </div>
+        <div className="flex justify-between items-center mt-2">
             {user && (
                 <Link href={`/u/${user.username}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
-                    <Avatar className="h-5 w-5">
+                    <Avatar className="h-6 w-6">
                         <AvatarImage src={user.avatarUrl} alt={user.username} />
                         <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <span className="truncate">{user.username}</span>
                 </Link>
             )}
-            <div className="flex items-center gap-2 text-sm font-bold">
-                <PlatinumTrophyIcon className="w-4 h-4 text-gray-400" />
-                <span>{platinum.monthlyVotes}</span>
-            </div>
+            <Button variant="ghost" size="sm" className="vote-button text-muted-foreground hover:text-primary">
+                <ThumbsUp className="mr-2" />
+                <span>{platinum.votes}</span>
+            </Button>
         </div>
       </div>
     </Card>
