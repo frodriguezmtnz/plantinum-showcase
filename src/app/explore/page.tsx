@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton';
+import { Button } from '@/components/ui/button';
+import { Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function ExplorePage() {
   const [platinums, setPlatinums] = useState<Platinum[]>([]);
@@ -17,6 +20,7 @@ export default function ExplorePage() {
   const [sortOrder, setSortOrder] = useState('recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [filtersVisible, setFiltersVisible] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -70,42 +74,51 @@ export default function ExplorePage() {
         </p>
       </div>
       
-      <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center my-8">
-        <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Juego:</label>
-            <Input 
-              type="text"
-              placeholder="Buscar por juego..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-[200px]"
-            />
-        </div>
-        <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Plataforma:</label>
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrar por plataforma" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="PS5">PlayStation 5</SelectItem>
-                <SelectItem value="PS4">PlayStation 4</SelectItem>
-              </SelectContent>
-            </Select>
-        </div>
-        <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Ordenar por:</label>
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Ordenar por" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Recientes</SelectItem>
-                <SelectItem value="most-voted">Más votados</SelectItem>
-                <SelectItem value="least-voted">Menos votados</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="flex flex-col items-center my-8 gap-4">
+        <Button onClick={() => setFiltersVisible(!filtersVisible)} variant="outline">
+          <Filter className="mr-2 h-4 w-4" />
+          {filtersVisible ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+        </Button>
+        <div className={cn(
+          "flex flex-col sm:flex-row flex-wrap gap-4 justify-center transition-all duration-300 ease-in-out overflow-hidden",
+          filtersVisible ? 'max-h-96 mt-4' : 'max-h-0'
+        )}>
+            <div className="flex items-center gap-2">
+                <label className="text-sm font-medium sr-only sm:not-sr-only">Juego:</label>
+                <Input 
+                  type="text"
+                  placeholder="Buscar por juego..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-[200px]"
+                />
+            </div>
+            <div className="flex items-center gap-2">
+                <label className="text-sm font-medium sr-only sm:not-sr-only">Plataforma:</label>
+                <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filtrar por plataforma" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="PS5">PlayStation 5</SelectItem>
+                    <SelectItem value="PS4">PlayStation 4</SelectItem>
+                  </SelectContent>
+                </Select>
+            </div>
+            <div className="flex items-center gap-2">
+                <label className="text-sm font-medium sr-only sm:not-sr-only">Ordenar por:</label>
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Recientes</SelectItem>
+                    <SelectItem value="most-voted">Más votados</SelectItem>
+                    <SelectItem value="least-voted">Menos votados</SelectItem>
+                  </SelectContent>
+                </Select>
+            </div>
         </div>
       </div>
 
