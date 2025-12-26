@@ -8,10 +8,10 @@ export function Footer() {
           Built with 💙 for PlayStation fans. &copy; {new Date().getFullYear()} Platinum Showcase.
         </p>
         <div className="flex gap-4 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-primary">About</Link>
-            <Link href="#" className="hover:text-primary">FAQ</Link>
-            <Link href="#" className="hover:text-primary">Terms</Link>
-            <Link href="#" className="hover:text-primary">Privacy</Link>
+            <Link href="/about" className="hover:text-primary">About</Link>
+            <Link href="/faq" className="hover:text-primary">FAQ</Link>
+            <Link href="/terms" className="hover:text-primary">Terms</Link>
+            <Link href="/privacy" className="hover:text-primary">Privacy</Link>
         </div>
       </div>
     </footer>
