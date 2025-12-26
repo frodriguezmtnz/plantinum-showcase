@@ -1,4 +1,5 @@
 
+
 import { getPlatinumByHash, getUserById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
@@ -8,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { PlatinumDetailCard } from './platinum-detail-card';
+import type { User } from '@/lib/data';
 
 type Props = {
   params: { id: string };
@@ -38,13 +40,13 @@ export default async function PlatinumDetailPage({ params }: { params: { id: str
     notFound();
   }
 
-  const user = await getUserById(platinum.userId);
+  const user = await getUserById(platinum.userId) as User | null;
 
   return (
     <div className="container max-w-4xl py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-            <PlatinumDetailCard platinum={platinum} />
+            <PlatinumDetailCard platinum={platinum} user={user} />
         </div>
         <div className="md:col-span-1">
             <div className="bg-card p-6 rounded-lg">
