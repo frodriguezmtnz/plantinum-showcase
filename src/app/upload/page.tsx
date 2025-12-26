@@ -24,8 +24,10 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
 
 const uploadFormSchema = z.object({
   gameName: z.string().min(2, {
@@ -53,6 +55,14 @@ type UploadFormValues = z.infer<typeof uploadFormSchema>
 export default function UploadPage() {
   const { toast } = useToast()
   const [preview, setPreview] = useState<string | null>(null);
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user === null) {
+      router.push('/login');
+    }
+  }, [user, router]);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -85,6 +95,10 @@ export default function UploadPage() {
       reader.readAsDataURL(file);
     }
   };
+  
+  if (!user) {
+    return <div className="container text-center py-12">Redirigiendo a inicio de sesión...</div>;
+  }
 
 
   return (
