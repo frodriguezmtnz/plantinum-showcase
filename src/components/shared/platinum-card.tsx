@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -6,12 +7,12 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Award, Eye, ThumbsUp, User as UserIcon } from 'lucide-react';
+import { Award, Eye, Heart, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PlatinumTrophyIcon } from '../icons/platinum-trophy-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
-
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 interface PlatinumCardProps {
   platinum: Platinum;
@@ -22,6 +23,8 @@ interface PlatinumCardProps {
 
 export function PlatinumCard({ platinum, user, variant = 'default', isPride = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
+  const { user: authUser } = useAuth();
+  const router = useRouter();
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
 
@@ -29,6 +32,16 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
     e.preventDefault();
     setSpoilerVisible(true);
   }
+
+  const handleVoteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!authUser) {
+      router.push('/login');
+    } else {
+      // TODO: Implement vote logic
+      console.log('Voted!');
+    }
+  };
 
   if (variant === 'top') {
     return (
@@ -51,7 +64,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                 )}
             </div>
             <div className="absolute top-2 right-2 flex items-center gap-2 bg-black/50 text-white font-bold p-2 rounded-md">
-                <ThumbsUp className="w-4 h-4" />
+                <Heart className="w-4 h-4" />
                 <span>{platinum.monthlyVotes}</span>
             </div>
         </Link>
@@ -101,8 +114,8 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                     <span className="truncate">{user.username}</span>
                 </Link>
             )}
-            <Button variant="ghost" size="sm" className="vote-button text-muted-foreground hover:text-primary">
-                <ThumbsUp className="mr-2" />
+            <Button variant="ghost" size="sm" className="vote-button text-muted-foreground hover:text-primary" onClick={handleVoteClick}>
+                <Heart className="mr-2" />
                 <span>{platinum.votes}</span>
             </Button>
         </div>
