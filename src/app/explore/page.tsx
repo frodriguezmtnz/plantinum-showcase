@@ -6,12 +6,14 @@ import { useEffect, useState, useMemo } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 
 export default function ExplorePage() {
   const [platinums, setPlatinums] = useState<Platinum[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [platformFilter, setPlatformFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('recent');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -34,6 +36,10 @@ export default function ExplorePage() {
       filtered = filtered.filter(p => p.platform === platformFilter);
     }
 
+    if (searchQuery.trim() !== '') {
+      filtered = filtered.filter(p => p.gameName.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+
     let sorted = [...filtered];
     switch (sortOrder) {
       case 'most-voted':
@@ -48,7 +54,7 @@ export default function ExplorePage() {
         break;
     }
     return sorted;
-  }, [platinums, platformFilter, sortOrder]);
+  }, [platinums, platformFilter, sortOrder, searchQuery]);
 
   return (
     <section className="container py-8 md:py-12">
@@ -59,7 +65,17 @@ export default function ExplorePage() {
         </p>
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-4 justify-center my-8">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center my-8">
+        <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Juego:</label>
+            <Input 
+              type="text"
+              placeholder="Buscar por juego..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-[200px]"
+            />
+        </div>
         <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Plataforma:</label>
             <Select value={platformFilter} onValueChange={setPlatformFilter}>
@@ -67,7 +83,7 @@ export default function ExplorePage() {
                 <SelectValue placeholder="Filtrar por plataforma" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas las plataformas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="PS5">PlayStation 5</SelectItem>
                 <SelectItem value="PS4">PlayStation 4</SelectItem>
               </SelectContent>
@@ -80,7 +96,7 @@ export default function ExplorePage() {
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">Añadidos recientemente</SelectItem>
+                <SelectItem value="recent">Recientes</SelectItem>
                 <SelectItem value="most-voted">Más votados</SelectItem>
                 <SelectItem value="least-voted">Menos votados</SelectItem>
               </SelectContent>
