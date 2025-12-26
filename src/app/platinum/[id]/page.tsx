@@ -1,5 +1,5 @@
 
-import { getPlatinumBySlug, getUserById } from '@/lib/data';
+import { getPlatinumByHash, getUserById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,11 @@ import { format } from 'date-fns';
 import { PlatinumDetailCard } from './platinum-detail-card';
 
 type Props = {
-  params: { slug: string };
+  params: { id: string };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const platinum = await getPlatinumBySlug(params.slug);
+  const platinum = await getPlatinumByHash(params.id);
   
   if (!platinum) {
     return {
@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 
-export default async function PlatinumDetailPage({ params }: { params: { slug: string } }) {
-  const platinum = await getPlatinumBySlug(params.slug);
+export default async function PlatinumDetailPage({ params }: { params: { id: string } }) {
+  const platinum = await getPlatinumByHash(params.id);
   
   if (!platinum) {
     notFound();

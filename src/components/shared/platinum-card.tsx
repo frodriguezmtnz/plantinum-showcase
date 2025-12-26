@@ -45,7 +45,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
 
   if (variant === 'top') {
     return (
-        <Link href={`/platinum/${platinum.slug}`} className="group block relative aspect-[16/9] bg-muted rounded-lg overflow-hidden">
+        <Link href={`/platinum/${platinum.hash}`} className="group block relative aspect-[16/9] bg-muted rounded-lg overflow-hidden">
             <Image
                 src={platinum.imageUrl}
                 alt={`Platinum screenshot for ${platinum.gameName}`}
@@ -80,7 +80,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
         </div>
        )}
        <CardContent className="p-0">
-        <Link href={`/platinum/${platinum.slug}`} className={cn("block aspect-[16/9] bg-muted rounded-t-lg overflow-hidden relative", !showSpoiler && "platinum-card-spoiler")}>
+        <Link href={`/platinum/${platinum.hash}`} className={cn("block aspect-[16/9] bg-muted rounded-t-lg overflow-hidden relative", !showSpoiler && "platinum-card-spoiler")}>
           <Image
             src={platinum.imageUrl}
             alt={`Platinum screenshot for ${platinum.gameName}`}

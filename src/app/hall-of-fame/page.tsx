@@ -1,3 +1,4 @@
+
 import { getMonthlyRanking, getUsers } from '@/lib/data';
 import { Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,7 +36,7 @@ export default async function HallOfFamePage() {
 
             return (
               <li key={platinum.id}>
-                <Link href={`/platinum/${platinum.slug}`} className="block">
+                <Link href={`/platinum/${platinum.hash}`} className="block">
                   <Card className="p-3 sm:p-4 rounded-lg flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-primary/20 focus-visible:scale-[1.02] focus-visible:shadow-primary/20 outline-none">
                     <div className={`text-2xl sm:text-3xl font-bold w-12 text-center shrink-0 ${rankColor}`}>#{rank}</div>
                     <Image 

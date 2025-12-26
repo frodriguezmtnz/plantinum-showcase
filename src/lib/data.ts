@@ -1,19 +1,28 @@
+
 import { placeholderImages } from './placeholder-images.json';
 
-function slugify(text: string) {
-  return text
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, '-')           // Replace spaces with -
-    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-    .replace(/^-+/, '')             // Trim - from start of text
-    .replace(/-+$/, '');            // Trim - from end of text
+// A simple, non-crypto hash function for demonstration purposes.
+function simpleHash(text: string) {
+  // In a real app, you'd use a proper hashing library like crypto-js or the Web Crypto API.
+  // For this environment, we'll create a simple base64 representation.
+  try {
+    // This will only work in environments where btoa is available (browser, or Node.js with polyfill)
+    return btoa(text).replace(/=/g, '').slice(-12);
+  } catch (e) {
+    // Fallback for environments without btoa
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+        const char = text.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
+  }
 }
 
 export interface Platinum {
   id: string;
-  slug: string;
+  hash: string;
   gameName: string;
   platform: 'PS3' | 'PS4' | 'PS5';
   platinumDate: string;
@@ -63,7 +72,7 @@ function getImage(seed: number) {
   };
 }
 
-const rawPlatinums: Omit<Platinum, 'slug'>[] = [
+const rawPlatinums: Omit<Platinum, 'hash'>[] = [
   { id: '1', gameName: 'Elden Ring', platform: 'PS5', platinumDate: '2023-03-15', isSpoiler: true, userId: '1', votes: 125, monthlyVotes: 30, ...getImage(1) },
   { id: '2', gameName: 'Ghost of Tsushima', platform: 'PS4', platinumDate: '2022-08-20', isSpoiler: false, userId: '1', votes: 230, monthlyVotes: 45, ...getImage(2) },
   { id: '3', gameName: 'Spider-Man 2', platform: 'PS5', platinumDate: '2023-11-01', isSpoiler: false, userId: '1', votes: 180, monthlyVotes: 60, ...getImage(3) },
@@ -83,7 +92,7 @@ const platinums: Platinum[] = rawPlatinums.map(p => {
   const username = user ? user.username : 'unknown-user';
   return {
     ...p,
-    slug: slugify(`${p.gameName}-${username}-${p.id}`)
+    hash: simpleHash(`${p.gameName}-${username}-${p.platinumDate}`)
   };
 });
 
@@ -109,8 +118,8 @@ export const getPlatinumById = async (id: string): Promise<Platinum | undefined>
   return platinums.find(p => p.id === id);
 };
 
-export const getPlatinumBySlug = async (slug: string): Promise<Platinum | undefined> => {
-  return platinums.find(p => p.slug === slug);
+export const getPlatinumByHash = async (hash: string): Promise<Platinum | undefined> => {
+  return platinums.find(p => p.hash === hash);
 };
 
 export const getPlatinumsByUserId = async (userId: string): Promise<Platinum[]> => {
