@@ -31,25 +31,25 @@
     --radius: 0.5rem;
   }
   .dark {
-    --background: 210 25% 28%;
-    --foreground: 210 40% 96.1%;
-    --card: 210 27% 33%;
-    --card-foreground: 210 40% 96.1%;
-    --popover: 210 25% 28%;
-    --popover-foreground: 210 40% 96.1%;
-    --primary: 207 70% 53%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 210 25% 38%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 210 25% 38%;
-    --muted-foreground: 210 40% 60%;
-    --accent: 145 63% 49%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 210 25% 40%;
-    --input: 210 25% 40%;
-    --ring: 145 63% 49%;
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 224 71% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 100% 56%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 210 100% 56%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -96,4 +96,24 @@
   100% {
     transform: scale(1);
   }
+}
+
+.section-divider::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(to left, hsl(var(--border)), transparent);
+}
+
+.section-divider::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 38%;
+  height: 1px;
+  background: linear-gradient(to right, hsl(var(--border)), transparent);
 }

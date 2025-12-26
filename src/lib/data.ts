@@ -24,7 +24,7 @@ export interface User {
 
 const users: User[] = [
   { id: '1', username: 'trophy-hunter-1', avatarUrl: 'https://i.pravatar.cc/150?u=trophy-hunter-1', pridePlatinumId: '2' },
-  { id: '2', username: 'gamer-goddess', avatarUrl: 'https://i.pravatar.cc/150?u=gamer-goddess', pridePlatinumId: '4' },
+  { id: '2', username: 'gamer-goddess', avatarUrl: 'https://i.pravatr.cc/150?u=gamer-goddess', pridePlatinumId: '4' },
   { id: '3', username: 'platinum-player', avatarUrl: 'https://i.pravatar.cc/150?u=platinum-player' },
 ];
 
@@ -93,9 +93,22 @@ export const getPlatinumsByUserId = async (userId: string): Promise<Platinum[]> 
   return platinums.filter(p => p.userId === userId);
 };
 
-export const getHallOfFame = async (limit: number = 12): Promise<Platinum[]> => {
-  return [...platinums].sort((a, b) => b.votes - a.votes).slice(0, limit);
+export const getHallOfFame = async (limit: number = 1): Promise<Platinum[]> => {
+  return [...platinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
 };
+
+export const getTopPlatinums = async (limit: number = 5): Promise<Platinum[]> => {
+  // Exclude hall of fame winner from top platinums
+  const hallOfFame = await getHallOfFame(1);
+  const hallOfFameId = hallOfFame[0]?.id;
+  const filteredPlatinums = platinums.filter(p => p.id !== hallOfFameId);
+  return [...filteredPlatinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
+};
+
+export const getLatestPlatinums = async (limit: number = 8): Promise<Platinum[]> => {
+    return [...platinums].sort((a, b) => new Date(b.platinumDate).getTime() - new Date(a.platinumDate).getTime()).slice(0, limit);
+};
+
 
 export const getMonthlyRanking = async (limit: number = 10): Promise<Platinum[]> => {
   return [...platinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);

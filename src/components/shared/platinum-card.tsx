@@ -4,72 +4,66 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Award, Calendar, Eye, Heart } from 'lucide-react';
+import { Eye, User as UserIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, parseISO } from 'date-fns';
+import { PlatinumTrophyIcon } from '../icons/platinum-trophy-icon';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
 
 interface PlatinumCardProps {
   platinum: Platinum;
   user?: User;
-  isPride?: boolean;
+  variant?: 'default' | 'top';
 }
 
-export function PlatinumCard({ platinum, user, isPride = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, variant = 'default' }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
-  const [votes, setVotes] = useState(platinum.monthlyVotes);
-  const [isVoted, setIsVoted] = useState(false);
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
-
-  const handleVote = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent link navigation when voting
-    if (isVoted) {
-      setVotes(votes - 1);
-      setIsVoted(false);
-    } else {
-      setVotes(votes + 1);
-      setIsVoted(true);
-    }
-  };
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
     e.preventDefault();
     setSpoilerVisible(true);
   }
 
+  if (variant === 'top') {
+    return (
+        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-lg overflow-hidden">
+            <Image
+                src={platinum.imageUrl}
+                alt={`Platinum screenshot for ${platinum.gameName}`}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                data-ai-hint={platinum.imageHint}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 p-4 text-white">
+                <h3 className="font-semibold text-lg">{platinum.gameName}</h3>
+                <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <UserIcon className="w-4 h-4" />
+                    <span>{user?.username}</span>
+                </div>
+            </div>
+            <div className="absolute top-2 right-2 flex items-center gap-2 bg-black/50 text-white font-bold p-2 rounded-md">
+                <PlatinumTrophyIcon className="w-5 h-5" />
+                <span>{platinum.monthlyVotes}</span>
+            </div>
+        </Link>
+    )
+  }
+
   return (
-    <Card className={cn("flex flex-col overflow-hidden transition-all hover:shadow-lg hover:shadow-primary/20", isPride && "border-2 border-primary shadow-primary/20")}>
-      {isPride && (
-        <div className="p-2 text-center bg-primary/20 text-primary-foreground font-semibold flex items-center justify-center gap-2 text-sm">
-          <Award className="w-4 h-4 text-amber-400" /> My Pride
-        </div>
-      )}
-      <CardHeader className="flex-row items-start justify-between gap-4">
-        <div className="flex-1">
-          <Link href={`/platinum/${platinum.id}`} className="group">
-            <CardTitle className="font-headline text-lg leading-tight group-hover:text-primary transition-colors">
-              {platinum.gameName}
-            </CardTitle>
-          </Link>
-          {user && (
-            <Link href={`/u/${user.username}`} className="text-sm text-muted-foreground hover:text-primary">
-              by {user.username}
-            </Link>
-          )}
-        </div>
-        <Badge variant="secondary">{platinum.platform}</Badge>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Link href={`/platinum/${platinum.id}`} className={cn("block aspect-[16/9] bg-muted", !showSpoiler && "platinum-card-spoiler")}>
+    <Card className="flex flex-col overflow-hidden bg-card border-none">
+       <CardContent className="p-0">
+        <Link href={`/platinum/${platinum.id}`} className={cn("block aspect-[16/9] bg-muted rounded-lg overflow-hidden", !showSpoiler && "platinum-card-spoiler")}>
           <Image
             src={platinum.imageUrl}
             alt={`Platinum screenshot for ${platinum.gameName}`}
             width={platinum.width}
             height={platinum.height}
-            className={cn("w-full h-full object-cover", !showSpoiler && "spoiler-blur")}
+            className={cn("w-full h-full object-cover group-hover:scale-105 transition-transform duration-300", !showSpoiler && "spoiler-blur")}
             data-ai-hint={platinum.imageHint}
           />
           {!showSpoiler && (
@@ -82,24 +76,24 @@ export function PlatinumCard({ platinum, user, isPride = false }: PlatinumCardPr
           )}
         </Link>
       </CardContent>
-      <CardFooter className="flex justify-between items-center mt-auto pt-4">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>{format(parseISO(platinum.platinumDate), 'MMM d, yyyy')}</span>
+      <div className="pt-3">
+        <h3 className="font-semibold truncate">{platinum.gameName}</h3>
+        <div className="flex justify-between items-center mt-1">
+            {user && (
+                <Link href={`/u/${user.username}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
+                    <Avatar className="h-5 w-5">
+                        <AvatarImage src={user.avatarUrl} alt={user.username} />
+                        <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">{user.username}</span>
+                </Link>
+            )}
+            <div className="flex items-center gap-2 text-sm font-bold">
+                <PlatinumTrophyIcon className="w-4 h-4 text-gray-400" />
+                <span>{platinum.monthlyVotes}</span>
+            </div>
         </div>
-        <div className="flex items-center gap-2">
-            <span className="font-bold text-lg">{votes}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn("vote-button", isVoted ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-red-500")}
-              onClick={handleVote}
-              aria-label="Vote"
-            >
-              <Heart className={cn(isVoted && "fill-current")} />
-            </Button>
-        </div>
-      </CardFooter>
+      </div>
     </Card>
   );
 }
