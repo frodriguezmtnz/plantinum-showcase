@@ -2,23 +2,20 @@
 import { placeholderImages } from './placeholder-images.json';
 
 // A simple, non-crypto hash function for demonstration purposes.
-function simpleHash(text: string) {
-  // In a real app, you'd use a proper hashing library like crypto-js or the Web Crypto API.
-  // For this environment, we'll create a simple base64 representation.
-  try {
-    // This will only work in environments where btoa is available (browser, or Node.js with polyfill)
-    return btoa(text).replace(/=/g, '').slice(-12);
-  } catch (e) {
-    // Fallback for environments without btoa
+function simpleHash(text: string): string {
     let hash = 0;
+    if (text.length === 0) {
+        return "0";
+    }
     for (let i = 0; i < text.length; i++) {
         const char = text.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
         hash = hash & hash; // Convert to 32bit integer
     }
-    return Math.abs(hash).toString(36);
-  }
+    // Convert to a base36 string and take a slice to keep it reasonably short
+    return Math.abs(hash).toString(36) + (hash > 0 ? 'a' : 'b') + text.length.toString(36);
 }
+
 
 export interface Platinum {
   id: string;
