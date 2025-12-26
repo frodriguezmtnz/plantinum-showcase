@@ -27,6 +27,9 @@ import {
   SheetContent,
   SheetTrigger,
   SheetClose,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
@@ -68,9 +71,11 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72">
-              <div className="p-4">
+               <SheetHeader className="p-4 border-b">
+                <SheetTitle className="sr-only">Menu</SheetTitle>
+                <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
                 <Logo />
-              </div>
+              </SheetHeader>
               <nav className="flex flex-col gap-2 p-4">
                 {navLinks.map((link) => (
                   <SheetClose asChild key={link.href}>
