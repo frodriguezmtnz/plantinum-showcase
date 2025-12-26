@@ -1,70 +1,51 @@
 
-'use client';
-
 import { getPlatinumById, getUserById } from '@/lib/data';
-import { notFound, useRouter } from 'next/navigation';
-import { PlatinumCard } from '@/components/shared/platinum-card';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { useEffect, useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
-import { useAuth } from '@/hooks/use-auth';
+import { PlatinumDetailCard } from './platinum-detail-card';
 
-// This is now a client component, so we can't use generateMetadata directly.
-// We can set the title dynamically in the component.
+type Props = {
+  params: { id: string };
+};
 
-export default function PlatinumDetailPage({ params }: { params: { id: string } }) {
-  const [platinum, setPlatinum] = useState<Platinum | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const { user: authUser } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    async function fetchData() {
-      const platinumData = await getPlatinumById(params.id);
-      if (platinumData) {
-        const userData = await getUserById(platinumData.userId);
-        setPlatinum(platinumData);
-        setUser(userData || null);
-
-        // Dynamic metadata update
-        document.title = `${platinumData.gameName} Platinum by ${userData?.username || 'a user'} | Platinum Showcase`;
-      } else {
-        notFound();
-      }
-      setLoading(false);
-    }
-    fetchData();
-  }, [params.id]);
-
-  const handleVoteClick = () => {
-    if (!authUser) {
-      router.push('/login');
-    } else {
-      // TODO: Implement vote logic
-      console.log('Voted!');
-    }
-  };
-
-  if (loading) {
-    return <div className="container text-center py-12">Loading...</div>;
-  }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const platinum = await getPlatinumById(params.id);
   
   if (!platinum) {
-    return notFound();
+    return {
+      title: 'Platinum Not Found',
+    }
   }
+  
+  const user = await getUserById(platinum.userId);
+
+  return {
+    title: `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`,
+    description: `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`,
+  };
+}
+
+
+export default async function PlatinumDetailPage({ params }: { params: { id: string } }) {
+  const platinum = await getPlatinumById(params.id);
+  
+  if (!platinum) {
+    notFound();
+  }
+
+  const user = await getUserById(platinum.userId);
 
   return (
     <div className="container max-w-4xl py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-            <PlatinumCard platinum={platinum} user={user || undefined} />
+            <PlatinumDetailCard platinum={platinum} />
         </div>
         <div className="md:col-span-1">
             <div className="bg-card p-6 rounded-lg">
@@ -101,7 +82,7 @@ export default function PlatinumDetailPage({ params }: { params: { id: string } 
                     </div>
                 </div>
 
-                <Button className="w-full vote-button" size="lg" onClick={handleVoteClick}>
+                <Button className="w-full vote-button" size="lg">
                     <Heart className="mr-2" /> Vote
                 </Button>
             </div>
