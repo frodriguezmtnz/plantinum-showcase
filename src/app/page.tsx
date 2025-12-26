@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getHallOfFame, getTopPlatinums, getLatestPlatinums, getUsers } from '@/lib/data';
@@ -32,6 +33,7 @@ export default function Home() {
   const [topPlatinums, setTopPlatinums] = useState<Platinum[]>([]);
   const [latestPlatinums, setLatestPlatinums] = useState<Platinum[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [currentMonthYear, setCurrentMonthYear] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -47,6 +49,9 @@ export default function Home() {
       setUsers(usersData);
     }
     fetchData();
+
+    // Set date string on client to avoid hydration mismatch
+    setCurrentMonthYear(new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }));
   }, []);
 
   const getUserById = (userId: string) => {
@@ -54,8 +59,7 @@ export default function Home() {
   }
   
   const hallOfFameUser = hallOfFame ? getUserById(hallOfFame.userId) : null;
-  const currentMonthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-
+  
   return (
     <div className="container py-8 md:py-12">
       {/* Hall of Fame */}
