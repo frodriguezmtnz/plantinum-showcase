@@ -16,6 +16,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const SectionDivider = ({ title }: { title: string }) => (
     <div className="relative text-center my-12">
@@ -61,10 +63,12 @@ export default function Home() {
   const [topPlatinums, setTopPlatinums] = useState<Platinum[]>([]);
   const [latestPlatinums, setLatestPlatinums] = useState<Platinum[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentMonthYear, setCurrentMonthYear] = useState('');
 
   useEffect(() => {
     async function fetchData() {
+      setIsLoading(true);
       const [hallOfFameData, topPlatinumsData, latestPlatinumsData, usersData] = await Promise.all([
         getHallOfFame(1),
         getTopPlatinums(5),
@@ -75,6 +79,7 @@ export default function Home() {
       setTopPlatinums(topPlatinumsData);
       setLatestPlatinums(latestPlatinumsData);
       setUsers(usersData);
+      setIsLoading(false);
     }
     fetchData();
 
@@ -91,40 +96,52 @@ export default function Home() {
   return (
     <div className="container py-8 md:py-12">
       {/* Hall of Fame */}
-      {hallOfFame && hallOfFameUser && (
-        <section className="mb-12">
-            <SectionDivider title={`Hall of Fame • ${currentMonthYear}`} />
-            <div className="relative aspect-[2.39/1] w-full rounded-2xl overflow-hidden mt-8 shadow-2xl shadow-primary/20">
-                <Image 
-                    src={hallOfFame.imageUrl}
-                    alt={`Platinum screenshot for ${hallOfFame.gameName}`}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={hallOfFame.imageHint}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-8 text-white">
-                    <h2 className="text-4xl font-bold font-headline">{hallOfFame.gameName}</h2>
-                    <div className="flex items-center gap-2 mt-2 text-lg">
-                        <UserIcon className="w-5 h-5" />
-                        <span>{hallOfFameUser.username}</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-      )}
+      <section className="mb-12">
+          <SectionDivider title={`Hall of Fame • ${currentMonthYear}`} />
+          {isLoading ? (
+            <Skeleton className="relative aspect-[2.39/1] w-full rounded-2xl mt-8" />
+          ) : (
+            hallOfFame && hallOfFameUser && (
+              <div className="relative aspect-[2.39/1] w-full rounded-2xl overflow-hidden mt-8 shadow-2xl shadow-primary/20">
+                  <Image 
+                      src={hallOfFame.imageUrl}
+                      alt={`Platinum screenshot for ${hallOfFame.gameName}`}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={hallOfFame.imageHint}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-8 text-white">
+                      <h2 className="text-4xl font-bold font-headline">{hallOfFame.gameName}</h2>
+                      <div className="flex items-center gap-2 mt-2 text-lg">
+                          <UserIcon className="w-5 h-5" />
+                          <span>{hallOfFameUser.username}</span>
+                      </div>
+                  </div>
+              </div>
+            )
+          )}
+      </section>
 
       {/* Top Platinos */}
       <section className="mb-12">
         <SectionDivider title={`Top Platinos • ${currentMonthYear}`} />
         <div className="mt-8">
-          <Carousel opts={{ align: "start", loop: true }}>
+          <Carousel opts={{ align: "start", loop: isLoading ? false : topPlatinums.length > 2 }}>
             <CarouselContent className="-ml-4">
-              {topPlatinums.map(platinum => (
-                <CarouselItem key={platinum.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                  <PlatinumCard platinum={platinum} user={getUserById(platinum.userId)} variant="top" />
-                </CarouselItem>
-              ))}
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <PlatinumCardSkeleton variant="top" />
+                  </CarouselItem>
+                ))
+              ) : (
+                topPlatinums.map(platinum => (
+                  <CarouselItem key={platinum.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                    <PlatinumCard platinum={platinum} user={getUserById(platinum.userId)} variant="top" />
+                  </CarouselItem>
+                ))
+              )}
             </CarouselContent>
             <CarouselPrevious className="hidden lg:flex" />
             <CarouselNext className="hidden lg:flex" />
@@ -136,9 +153,15 @@ export default function Home() {
       <section>
         <SectionDivider title="Latest Platinos" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 mt-8">
-            {latestPlatinums.map(platinum => (
-            <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <PlatinumCardSkeleton key={index} />
+              ))
+            ) : (
+              latestPlatinums.map(platinum => (
+                <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
+              ))
+            )}
         </div>
       </section>
 

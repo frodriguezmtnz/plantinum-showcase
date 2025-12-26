@@ -1,3 +1,4 @@
+
 'use client';
 
 import { getPlatinums, getUsers } from '@/lib/data';
@@ -7,6 +8,7 @@ import type { Platinum, User } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton';
 
 export default function ExplorePage() {
   const [platinums, setPlatinums] = useState<Platinum[]>([]);
@@ -14,13 +16,16 @@ export default function ExplorePage() {
   const [platformFilter, setPlatformFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('recent');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
+      setIsLoading(true);
       const platinumsData = await getPlatinums();
       const usersData = await getUsers();
       setPlatinums(platinumsData);
       setUsers(usersData);
+      setIsLoading(false);
     }
     fetchData();
   }, []);
@@ -106,7 +111,13 @@ export default function ExplorePage() {
 
       <Separator className="mb-12" />
 
-      {filteredAndSortedPlatinums.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <PlatinumCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : filteredAndSortedPlatinums.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredAndSortedPlatinums.map(platinum => (
             <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
