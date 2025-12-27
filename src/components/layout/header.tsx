@@ -57,53 +57,24 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
+        <div className="flex-1 items-center md:flex">
           <Logo />
         </div>
         
-        {/* Mobile Menu */}
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72">
-               <SheetHeader className="p-4 border-b">
-                <SheetTitle className="sr-only">Menu</SheetTitle>
-                <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
-                <Logo />
-              </SheetHeader>
-              <nav className="flex flex-col gap-2 p-4">
-                {navLinks.map((link) => (
-                  <SheetClose asChild key={link.href}>
-                    <NavLink href={link.href}>
-                      <link.icon className="mr-2 h-4 w-4" />
-                      {link.label}
-                    </NavLink>
-                  </SheetClose>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
+        <nav className="hidden md:flex items-center gap-2">
+          {navLinks.map((link) => (
+            <NavLink href={link.href} key={link.href}>
+              <link.icon className="mr-2 h-4 w-4" />
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
 
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="hidden md:flex items-center gap-2">
-            {navLinks.map((link) => (
-              <NavLink href={link.href} key={link.href}>
-                <link.icon className="mr-2 h-4 w-4" />
-                {link.label}
-              </NavLink>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-4">
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
-                Subir
+                <span className="hidden sm:inline">Subir</span>
               </Button>
             </Link>
             {user ? (
@@ -141,7 +112,7 @@ export function Header() {
               </DropdownMenu>
             ) : (
                <>
-                <Button variant="outline" asChild>
+                <Button variant="outline" asChild className="hidden sm:flex">
                     <Link href="/login">
                         <LogIn className="mr-2 h-4 w-4" />
                         Iniciar sesión
@@ -150,7 +121,43 @@ export function Header() {
                 <Button onClick={login} variant="secondary" className="hidden">Simulate Login</Button>
                </>
             )}
-          </div>
+            
+            {/* Mobile Menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Toggle Menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-72">
+                  <SheetHeader className="p-4 border-b text-left">
+                    <SheetTitle className="sr-only">Menu</SheetTitle>
+                    <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
+                    <Logo />
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-2 p-4">
+                    {navLinks.map((link) => (
+                      <SheetClose asChild key={link.href}>
+                        <NavLink href={link.href}>
+                          <link.icon className="mr-2 h-4 w-4" />
+                          {link.label}
+                        </NavLink>
+                      </SheetClose>
+                    ))}
+                     {!user && (
+                      <SheetClose asChild>
+                        <NavLink href="/login">
+                          <LogIn className="mr-2 h-4 w-4" />
+                          Iniciar sesión
+                        </NavLink>
+                      </SheetClose>
+                    )}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
         </div>
       </div>
     </header>
