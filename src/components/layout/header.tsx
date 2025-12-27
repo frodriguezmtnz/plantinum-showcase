@@ -72,7 +72,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 ml-auto md:ml-4">
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
