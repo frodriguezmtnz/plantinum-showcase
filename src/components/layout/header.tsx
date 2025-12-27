@@ -48,7 +48,7 @@ export function Header() {
   
   const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
     <Link href={href} passHref>
-      <Button variant={pathname === href ? 'secondary' : 'ghost'} className="justify-start">
+      <Button variant={pathname === href ? 'secondary' : 'ghost'} className="justify-start w-full">
         {children}
       </Button>
     </Link>
@@ -57,16 +57,18 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <div className="flex-1 items-center md:flex">
+        <div className="mr-auto flex items-center">
           <Logo />
         </div>
         
         <nav className="hidden md:flex items-center gap-2">
           {navLinks.map((link) => (
-            <NavLink href={link.href} key={link.href}>
-              <link.icon className="mr-2 h-4 w-4" />
-              {link.label}
-            </NavLink>
+             <Link href={link.href} passHref key={link.href}>
+                <Button variant={pathname === link.href ? 'secondary' : 'ghost'}>
+                    <link.icon className="mr-2 h-4 w-4" />
+                    {link.label}
+                </Button>
+            </Link>
           ))}
         </nav>
 
@@ -131,7 +133,7 @@ export function Header() {
                     <span className="sr-only">Toggle Menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-72">
+                <SheetContent side="right" className="w-72 p-0">
                   <SheetHeader className="p-4 border-b text-left">
                     <SheetTitle className="sr-only">Menu</SheetTitle>
                     <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
