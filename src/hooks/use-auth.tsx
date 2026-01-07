@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Set to `null` to simulate a logged-out user, or `MOCK_USER` for a logged-in one.
-  const [user, setUser] = useState<AuthUser>(null);
+  const [user, setUser] = useState<AuthUser>(MOCK_USER);
 
   const login = () => setUser(MOCK_USER);
   const logout = () => setUser(null);

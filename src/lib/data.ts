@@ -26,7 +26,7 @@ export interface User {
 
 const users: User[] = [
   { id: '1', username: 'trophy-hunter-1', avatarUrl: 'https://i.pravatar.cc/150?u=trophy-hunter-1', pridePlatinumId: '2' },
-  { id: '2', username: 'gamer-goddess', avatarUrl: 'https://i.pravatr.cc/150?u=gamer-goddess', pridePlatinumId: '4' },
+  { id: '2', username: 'gamer-goddess', avatarUrl: 'https://i.pravatar.cc/150?u=gamer-goddess', pridePlatinumId: '4' },
   { id: '3', username: 'platinum-player', avatarUrl: 'https://i.pravatar.cc/150?u=platinum-player' },
 ];
 
