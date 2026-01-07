@@ -41,7 +41,7 @@ export default async function UserProfilePage({ params }: { params: { username:s
 
   return (
     <div className="container py-8 md:py-12">
-      <header className="flex flex-col items-center text-center mb-12">
+      <div className="flex flex-col items-center text-center mb-12">
         <Avatar className="w-24 h-24 mb-4 border-4 border-primary">
           <AvatarImage src={user.avatarUrl} alt={user.username} />
           <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -57,7 +57,7 @@ export default async function UserProfilePage({ params }: { params: { username:s
             <span>{platinums.reduce((acc, p) => acc + p.votes, 0)} Total Votes</span>
           </div>
         </div>
-      </header>
+      </div>
 
       {pridePlatinum && (
         <section className="mb-16">
