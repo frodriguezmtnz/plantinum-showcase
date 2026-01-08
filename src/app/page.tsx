@@ -30,34 +30,6 @@ const SectionDivider = ({ title }: { title: string }) => (
     </div>
 )
 
-const howItWorksSteps = [
-  {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExazA1cGUzdmY0ZTU0aGZtbGZ2c3JmdXRoM2Y5cWw3cXNrc3M2bGlkNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPb7b1Qp729QJcQ/giphy.gif',
-    title: 'Crea una cuenta',
-    description: 'Regístrate para unirte a la comunidad de cazadores de trofeos.'
-  },
-  {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3A1dWFqZ2RhaThnZ3Y1ZGQ2YmdicnRsemh1ZzJjMjk2ZGM0cGs3ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKS6a9G23a3g3p6/giphy.gif',
-    title: 'Sube tu platino',
-    description: 'Sube la captura de pantalla de tu último trofeo de platino de PlayStation.'
-  },
-  {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExajVsYmlzazJ5N2k3ZmNhaWcwdjRzcGZtM25heWxhdzk4bXY2M2w3ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0NwC1pi85J5Ew5oI/giphy.gif',
-    title: 'Compártelo',
-    description: 'Muestra tu logro y habilidad con tus amigos en las redes sociales.'
-  },
-  {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2Rtc2djaXd0a2Q2MXJzMWR6bWRuN3h1bWR2NWp2bHVxOXZoZ2N1dCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S9oGIGurgrL8Y/giphy.gif',
-    title: 'Vota y compite',
-    description: 'Vota por las capturas de otros para ayudarles a subir en el ranking.'
-  },
-  {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTZxNjd6eXFqNWJhdXRtYnFqNTJzY2ZxcWxtMjJscW1jMmxzdnZpZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2zVf1kS3z4f72/giphy.gif',
-    title: 'Disfruta',
-    description: 'Disfruta de la comunidad y celebra la cultura del trofeo de platino.'
-  }
-];
-
 export default function Home() {
   const [hallOfFame, setHallOfFame] = useState<Platinum | null>(null);
   const [topPlatinums, setTopPlatinums] = useState<Platinum[]>([]);
@@ -163,22 +135,6 @@ export default function Home() {
                 <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
               ))
             )}
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section className="mt-16">
-        <SectionDivider title="How It Works" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 text-center mt-8">
-          {howItWorksSteps.map((step, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 text-primary mb-4 overflow-hidden">
-                <Image src={step.gif} alt={step.title} width={96} height={96} unoptimized className="object-cover w-full h-full" />
-              </div>
-              <h3 className="text-lg font-semibold">{step.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
-            </div>
-          ))}
         </div>
       </section>
 

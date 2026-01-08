@@ -1,4 +1,5 @@
 import { type Metadata } from 'next';
+import { HowItWorks } from '@/components/shared/how-it-works';
 
 export const metadata: Metadata = {
   title: 'About | Platinum Showcase',
@@ -18,15 +19,11 @@ export default function AboutPage() {
         <p>
           We believe that every Platinum Trophy tells a story. It's a tale of dedication, skill, late nights, and the thrill of conquering a virtual world. Our mission is to provide a dedicated space where these stories can be shared and celebrated. We're not just about showing off; we're about appreciating the journey that goes into earning each and every plat.
         </p>
-        
-        <h2 className="text-2xl font-bold font-headline mt-12 mb-4">What You Can Do Here</h2>
-        <ul className="list-disc pl-5 space-y-2">
-          <li><strong>Showcase Your Platinums:</strong> Upload your proudest platinum screenshot and share your thoughts on the game.</li>
-          <li><strong>Explore the Gallery:</strong> Browse a vast collection of platinum trophies achieved by gamers from around the world.</li>
-          <li><strong>Vote for the Best:</strong> Upvote your favorite screenshots to help them climb the leaderboards.</li>
-          <li><strong>Reach the Hall of Fame:</strong> The most-voted platinums of the month get immortalized in our Monthly Hall of Fame.</li>
-        </ul>
-        
+      </div>
+
+      <HowItWorks />
+      
+      <div className="prose prose-invert mx-auto">
         <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Join the Community</h2>
         <p>
           Whether you're a seasoned trophy hunter with hundreds of platinums or a newcomer who just earned their very first one, you have a place here. Join us in celebrating the art of game completion.
