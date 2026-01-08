@@ -12,6 +12,7 @@ import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton
 import { Button } from '@/components/ui/button';
 import { Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 export default function ExplorePage() {
   const [platinums, setPlatinums] = useState<Platinum[]>([]);
@@ -20,7 +21,6 @@ export default function ExplorePage() {
   const [sortOrder, setSortOrder] = useState('recent');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [filtersVisible, setFiltersVisible] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -74,29 +74,22 @@ export default function ExplorePage() {
         </p>
       </div>
       
-      <div className="flex flex-col items-center my-8 gap-4">
-        <Button onClick={() => setFiltersVisible(!filtersVisible)} variant="outline">
-          <Filter className="mr-2 h-4 w-4" />
-          {filtersVisible ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-        </Button>
-        <div className={cn(
-          "flex flex-col sm:flex-row flex-wrap gap-4 justify-center transition-all duration-300 ease-in-out overflow-hidden",
-          filtersVisible ? 'max-h-96 mt-4' : 'max-h-0'
-        )}>
-            <div className="flex items-center gap-2">
+      <Card className="p-4 mb-12">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
+            <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <label className="text-sm font-medium sr-only sm:not-sr-only">Juego:</label>
                 <Input 
                   type="text"
                   placeholder="Buscar por juego..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-[200px]"
+                  className="w-full"
                 />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <label className="text-sm font-medium sr-only sm:not-sr-only">Plataforma:</label>
                 <Select value={platformFilter} onValueChange={setPlatformFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Filtrar por plataforma" />
                   </SelectTrigger>
                   <SelectContent>
@@ -106,10 +99,10 @@ export default function ExplorePage() {
                   </SelectContent>
                 </Select>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <label className="text-sm font-medium sr-only sm:not-sr-only">Ordenar por:</label>
                 <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Ordenar por" />
                   </SelectTrigger>
                   <SelectContent>
@@ -120,9 +113,8 @@ export default function ExplorePage() {
                 </Select>
             </div>
         </div>
-      </div>
+      </Card>
 
-      <Separator className="mb-12" />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
