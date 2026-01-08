@@ -14,6 +14,8 @@ export default function PrivacyPage() {
           Last updated: July 1, 2024
         </p>
 
+        <p className="italic text-muted-foreground mt-4">Platinum Showcase is an unofficial, fan-made website and is not affiliated with Sony or PlayStation in any way.</p>
+
         <p>This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.</p>
         
         <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Information Collection and Use</h2>

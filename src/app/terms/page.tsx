@@ -14,6 +14,8 @@ export default function TermsPage() {
           Last updated: July 1, 2024
         </p>
 
+        <p className="italic text-muted-foreground mt-4">Platinum Showcase is an unofficial, fan-made website and is not affiliated with Sony or PlayStation in any way.</p>
+
         <p>Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Platinum Showcase website (the "Service") operated by us.</p>
         
         <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Accounts</h2>
