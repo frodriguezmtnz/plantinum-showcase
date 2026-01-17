@@ -118,7 +118,7 @@ export default async function HallOfFamePage() {
       {otherRankedPlatinums.length > 0 && (
          <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-8 font-headline relative section-divider">
-            <span className="bg-background px-4 relative">Top 10 Contenders</span>
+            <span className="bg-background px-4 relative">Resto del Top 10</span>
           </h2>
           <ul className="space-y-4">
             {otherRankedPlatinums.map((platinum, index) => {
