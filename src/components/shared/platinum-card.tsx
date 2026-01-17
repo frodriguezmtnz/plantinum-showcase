@@ -30,6 +30,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setSpoilerVisible(true);
   }
 
