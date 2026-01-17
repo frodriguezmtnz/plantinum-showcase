@@ -86,9 +86,9 @@ export const getPlatinums = async (): Promise<Platinum[]> => {
   return platinums;
 };
 
-export const getPlatinumById = async (id: string): Promise<Platinum | undefined> => {
-  // eslint-disable-next-line eqeqeq
-  return platinums.find(p => p.id == id);
+export const getPlatinumById = (id: string): Platinum | undefined => {
+  const trimmedId = id ? String(id).trim() : '';
+  return platinums.find(p => p.id.trim() === trimmedId);
 };
 
 export const getPlatinumsByUserId = async (userId: string): Promise<Platinum[]> => {

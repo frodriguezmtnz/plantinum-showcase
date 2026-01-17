@@ -15,7 +15,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const platinum = await getPlatinumById(params.id);
+  const platinum = getPlatinumById(params.id);
   
   if (!platinum) {
     return {
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 
 export default async function PlatinumDetailPage({ params }: { params: { id: string } }) {
-  const platinum = await getPlatinumById(params.id);
+  const platinum = getPlatinumById(params.id);
   
   if (!platinum) {
     notFound();
