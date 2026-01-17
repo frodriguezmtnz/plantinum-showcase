@@ -90,10 +90,6 @@ export const getPlatinumById = async (id: string): Promise<Platinum | undefined>
   return platinums.find(p => p.id === id);
 };
 
-export const getPlatinumByHash = async (hash: string): Promise<Platinum | undefined> => {
-  return platinums.find(p => p.hash === hash);
-};
-
 export const getPlatinumsByUserId = async (userId: string): Promise<Platinum[]> => {
   return platinums.filter(p => p.userId === userId);
 };

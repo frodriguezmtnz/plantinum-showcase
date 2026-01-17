@@ -1,5 +1,5 @@
 
-import { getPlatinums, getPlatinumByHash, getUserById } from '@/lib/data';
+import { getPlatinums, getPlatinumById, getUserById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Heart } from 'lucide-react';
@@ -18,12 +18,12 @@ export async function generateStaticParams() {
   const platinums = await getPlatinums();
  
   return platinums.map((platinum) => ({
-    id: platinum.hash,
+    id: platinum.id,
   }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const platinum = await getPlatinumByHash(params.id);
+  const platinum = await getPlatinumById(params.id);
   
   if (!platinum) {
     return {
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 
 export default async function PlatinumDetailPage({ params }: { params: { id: string } }) {
-  const platinum = await getPlatinumByHash(params.id);
+  const platinum = await getPlatinumById(params.id);
   
   if (!platinum) {
     notFound();
