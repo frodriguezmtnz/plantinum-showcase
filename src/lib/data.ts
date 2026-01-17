@@ -70,36 +70,35 @@ const platinums: Platinum[] = [
 
 
 // Data access functions
-export const getUsers = async (): Promise<User[]> => {
+export async function getUsers(): Promise<User[]> {
   return users;
 };
 
-export const getUserById = async (id: string): Promise<User | undefined> => {
+export async function getUserById(id: string): Promise<User | undefined> {
   return users.find(user => user.id === id);
 };
 
-export const getUserByUsername = async (username: string): Promise<User | undefined> => {
+export async function getUserByUsername(username: string): Promise<User | undefined> {
   return users.find(user => user.username === username);
 };
 
-export const getPlatinums = async (): Promise<Platinum[]> => {
+export async function getPlatinums(): Promise<Platinum[]> {
   return platinums;
 };
 
-export const getPlatinumById = (id: string): Platinum | undefined => {
-  const trimmedId = id ? String(id).trim() : '';
-  return platinums.find(p => p.id.trim() === trimmedId);
+export async function getPlatinumById(id: string): Promise<Platinum | undefined> {
+  return platinums.find(p => p.id === id);
 };
 
-export const getPlatinumsByUserId = async (userId: string): Promise<Platinum[]> => {
+export async function getPlatinumsByUserId(userId: string): Promise<Platinum[]> {
   return platinums.filter(p => p.userId === userId);
 };
 
-export const getHallOfFame = async (limit: number = 1): Promise<Platinum[]> => {
+export async function getHallOfFame(limit: number = 1): Promise<Platinum[]> {
   return [...platinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
 };
 
-export const getTopPlatinums = async (limit: number = 5): Promise<Platinum[]> => {
+export async function getTopPlatinums(limit: number = 5): Promise<Platinum[]> {
   // Exclude hall of fame winner from top platinums
   const hallOfFame = await getHallOfFame(1);
   const hallOfFameId = hallOfFame[0]?.id;
@@ -107,11 +106,11 @@ export const getTopPlatinums = async (limit: number = 5): Promise<Platinum[]> =>
   return [...filteredPlatinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
 };
 
-export const getLatestPlatinums = async (limit: number = 8): Promise<Platinum[]> => {
+export async function getLatestPlatinums(limit: number = 8): Promise<Platinum[]> {
     return [...platinums].sort((a, b) => new Date(b.platinumDate).getTime() - new Date(a.platinumDate).getTime()).slice(0, limit);
 };
 
 
-export const getMonthlyRanking = async (limit: number = 10): Promise<Platinum[]> => {
+export async function getMonthlyRanking(limit: number = 10): Promise<Platinum[]> {
   return [...platinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
 };

@@ -33,7 +33,7 @@ export default async function UserProfilePage({ params }: { params: { username:s
   }
 
   const platinums = await getPlatinumsByUserId(user.id);
-  const pridePlatinum = user.pridePlatinumId ? getPlatinumById(user.pridePlatinumId) : null;
+  const pridePlatinum = user.pridePlatinumId ? await getPlatinumById(user.pridePlatinumId) : null;
   
   // Exclude pride platinum from the main gallery if it exists
   const otherPlatinums = pridePlatinum 
