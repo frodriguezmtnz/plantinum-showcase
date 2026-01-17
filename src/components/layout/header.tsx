@@ -56,8 +56,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="container flex h-16 items-center">
+        <div className="flex items-center gap-6 mr-auto">
           <Logo />
           <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
@@ -71,7 +71,7 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
@@ -98,12 +98,12 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link href={`/u/${user.username}`} passHref asChild>
-                    <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/u/${user.username}`}>
                       <UserIcon className="mr-2 h-4 w-4" />
                       <span>Perfil</span>
-                    </DropdownMenuItem>
-                  </Link>
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
