@@ -1,6 +1,5 @@
 
-
-import { getPlatinumByHash, getUserById } from '@/lib/data';
+import { getPlatinums, getPlatinumByHash, getUserById } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Heart } from 'lucide-react';
@@ -14,6 +13,14 @@ import { SocialShare } from './SocialShare';
 type Props = {
   params: { id: string };
 };
+
+export async function generateStaticParams() {
+  const platinums = await getPlatinums();
+ 
+  return platinums.map((platinum) => ({
+    id: platinum.hash,
+  }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const platinum = await getPlatinumByHash(params.id);
