@@ -15,7 +15,7 @@ export default async function HallOfFamePage() {
   const rankedPlatinums = await getMonthlyRanking();
   const users = await getUsers();
 
-  const getUserById = (userId: string) => users.find(u => u.id === userId);
+  const getUserById = (userId: string): User | undefined => users.find(u => u.id === userId);
 
   const podiumPlatinums = rankedPlatinums.slice(0, 3);
   const otherRankedPlatinums = rankedPlatinums.slice(3);
@@ -42,7 +42,7 @@ export default async function HallOfFamePage() {
       textColor: 'text-gray-400',
       bgColor: 'bg-gray-500/10',
       order: 'md:order-1',
-      lift: 'md:mt-4',
+      lift: '',
       rankText: '2nd',
     },
     3: {
