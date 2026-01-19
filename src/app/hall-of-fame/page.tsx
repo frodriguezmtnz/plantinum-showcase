@@ -25,6 +25,7 @@ export default async function HallOfFamePage() {
     borderColor: string;
     textColor: string;
     bgColor: string;
+    shadowClass: string;
     order: string;
     lift: string;
     rankText: string;
@@ -33,24 +34,27 @@ export default async function HallOfFamePage() {
       borderColor: 'border-amber-400',
       textColor: 'text-amber-400',
       bgColor: 'bg-amber-500/10',
+      shadowClass: 'hover:shadow-amber-400/30 focus-visible:shadow-amber-400/30',
       order: 'md:order-2',
-      lift: 'md:-mt-10',
+      lift: 'md:-mt-16',
       rankText: '1st',
     },
     2: {
       borderColor: 'border-gray-400',
       textColor: 'text-gray-400',
       bgColor: 'bg-gray-500/10',
+      shadowClass: 'hover:shadow-gray-400/30 focus-visible:shadow-gray-400/30',
       order: 'md:order-1',
-      lift: '',
+      lift: 'md:-mt-8',
       rankText: '2nd',
     },
     3: {
       borderColor: 'border-orange-500',
       textColor: 'text-orange-500',
       bgColor: 'bg-orange-600/10',
+      shadowClass: 'hover:shadow-orange-500/30 focus-visible:shadow-orange-500/30',
       order: 'md:order-3',
-      lift: 'md:mt-4',
+      lift: '',
       rankText: '3rd',
     },
   };
@@ -67,18 +71,19 @@ export default async function HallOfFamePage() {
       {podiumPlatinums.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto mb-20">
           {podiumPlatinums.map((platinum, index) => {
-            const rank = index + 1 as 1 | 2 | 3;
+            const rank = (index + 1) as 1 | 2 | 3;
             const user = getUserById(platinum.userId);
             const styles = podiumStyles[rank];
 
             return (
               <div key={platinum.id} className={cn('flex flex-col items-center', styles.order, styles.lift)}>
                 <h2 className={cn('text-2xl font-bold mb-2', styles.textColor)}>{styles.rankText} Place</h2>
-                <Link href={`/platinum/${platinum.id}`} className="w-full group">
+                <Link href={`/platinum/${platinum.id}`} className="w-full">
                   <Card className={cn(
-                    "overflow-hidden text-center transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/20 focus-visible:scale-105 focus-visible:shadow-2xl focus-visible:shadow-primary/20",
+                    "overflow-hidden text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl focus-visible:scale-105 focus-visible:shadow-2xl",
                     styles.borderColor,
-                    styles.bgColor
+                    styles.bgColor,
+                    styles.shadowClass
                   )}>
                     <div className="aspect-video relative overflow-hidden">
                       <Image
