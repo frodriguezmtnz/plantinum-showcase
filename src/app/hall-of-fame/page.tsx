@@ -34,25 +34,25 @@ export default async function HallOfFamePage() {
       borderColor: 'border-amber-400',
       textColor: 'text-amber-400',
       bgColor: 'bg-amber-500/10',
-      shadowClass: 'hover:shadow-amber-400/30 focus-visible:shadow-amber-400/30',
+      shadowClass: 'hover:shadow-2xl hover:shadow-amber-400/30 focus-visible:shadow-amber-400/30',
       order: 'md:order-2',
-      lift: 'md:-mt-16',
+      lift: 'md:-mt-24',
       rankText: '1st',
     },
     2: {
       borderColor: 'border-gray-400',
       textColor: 'text-gray-400',
       bgColor: 'bg-gray-500/10',
-      shadowClass: 'hover:shadow-gray-400/30 focus-visible:shadow-gray-400/30',
+      shadowClass: 'hover:shadow-2xl hover:shadow-gray-400/30 focus-visible:shadow-gray-400/30',
       order: 'md:order-1',
-      lift: 'md:-mt-8',
+      lift: 'md:-mt-12',
       rankText: '2nd',
     },
     3: {
       borderColor: 'border-orange-500',
       textColor: 'text-orange-500',
       bgColor: 'bg-orange-600/10',
-      shadowClass: 'hover:shadow-orange-500/30 focus-visible:shadow-orange-500/30',
+      shadowClass: 'hover:shadow-2xl hover:shadow-orange-500/30 focus-visible:shadow-orange-500/30',
       order: 'md:order-3',
       lift: '',
       rankText: '3rd',
@@ -80,7 +80,7 @@ export default async function HallOfFamePage() {
                 <h2 className={cn('text-2xl font-bold mb-2', styles.textColor)}>{styles.rankText} Place</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full">
                   <Card className={cn(
-                    "overflow-hidden text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl focus-visible:scale-105 focus-visible:shadow-2xl",
+                    "overflow-hidden text-center transition-all duration-300 hover:scale-105 focus-visible:scale-105",
                     styles.borderColor,
                     styles.bgColor,
                     styles.shadowClass
