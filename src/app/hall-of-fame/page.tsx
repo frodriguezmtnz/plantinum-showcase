@@ -36,7 +36,7 @@ export default async function HallOfFamePage() {
       bgColor: 'bg-amber-500/10',
       shadowClass: 'hover:shadow-2xl hover:shadow-amber-400/30 focus-visible:shadow-amber-400/30',
       order: 'md:order-2',
-      lift: 'md:-mt-24',
+      lift: 'md:-translate-y-12',
       rankText: '1st',
     },
     2: {
@@ -45,7 +45,7 @@ export default async function HallOfFamePage() {
       bgColor: 'bg-gray-500/10',
       shadowClass: 'hover:shadow-2xl hover:shadow-gray-400/30 focus-visible:shadow-gray-400/30',
       order: 'md:order-1',
-      lift: 'md:-mt-12',
+      lift: 'md:-translate-y-6',
       rankText: '2nd',
     },
     3: {
@@ -69,14 +69,14 @@ export default async function HallOfFamePage() {
 
       {/* Podium Section */}
       {podiumPlatinums.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto mb-20 pt-24">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto mb-20 pt-16">
           {podiumPlatinums.map((platinum, index) => {
             const rank = (index + 1) as 1 | 2 | 3;
             const user = getUserById(platinum.userId);
             const styles = podiumStyles[rank];
 
             return (
-              <div key={platinum.id} className={cn('flex flex-col items-center', styles.order, styles.lift)}>
+              <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift)}>
                 <h2 className={cn('text-2xl font-bold mb-2', styles.textColor)}>{styles.rankText} Place</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full">
                   <Card className={cn(
