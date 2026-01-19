@@ -69,7 +69,7 @@ export default async function HallOfFamePage() {
 
       {/* Podium Section */}
       {podiumPlatinums.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto mb-20 pt-24">
           {podiumPlatinums.map((platinum, index) => {
             const rank = (index + 1) as 1 | 2 | 3;
             const user = getUserById(platinum.userId);
