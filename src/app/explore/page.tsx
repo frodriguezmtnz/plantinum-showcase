@@ -6,12 +6,8 @@ import { PlatinumCard } from '@/components/shared/platinum-card';
 import { useEffect, useState, useMemo } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton';
-import { Button } from '@/components/ui/button';
-import { Filter } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
 export default function ExplorePage() {
@@ -49,7 +45,7 @@ export default function ExplorePage() {
       filtered = filtered.filter(p => p.gameName.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
-    let sorted = [...filtered];
+    const sorted = [...filtered];
     switch (sortOrder) {
       case 'most-voted':
         sorted.sort((a, b) => b.votes - a.votes);

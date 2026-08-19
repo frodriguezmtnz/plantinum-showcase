@@ -33,7 +33,6 @@ import {
 } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
 const navLinks = [
@@ -42,18 +41,20 @@ const navLinks = [
   { href: '/hall-of-fame', label: 'Salón de la Fama', icon: Crown },
 ];
 
-export function Header() {
-  const pathname = usePathname();
-  const { user, logout, login } = useAuth();
-  
-  const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+  return (
     <Link href={href} passHref>
-      <Button variant={pathname === href ? 'secondary' : 'ghost'} className="justify-start w-full">
+      <Button variant={active ? 'secondary' : 'ghost'} className="justify-start w-full">
         {children}
       </Button>
     </Link>
   );
+}
 
+export function Header() {
+  const pathname = usePathname();
+  const { user, logout, login } = useAuth();
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -140,7 +141,7 @@ export function Header() {
                   <nav className="flex flex-col gap-2 p-4">
                     {navLinks.map((link) => (
                       <SheetClose asChild key={link.href}>
-                        <NavLink href={link.href}>
+                        <NavLink href={link.href} active={pathname === link.href}>
                           <link.icon className="mr-2 h-4 w-4" />
                           {link.label}
                         </NavLink>
@@ -148,7 +149,7 @@ export function Header() {
                     ))}
                      {!user && (
                       <SheetClose asChild>
-                        <NavLink href="/login">
+                        <NavLink href="/login" active={pathname === '/login'}>
                           <LogIn className="mr-2 h-4 w-4" />
                           Iniciar sesión
                         </NavLink>

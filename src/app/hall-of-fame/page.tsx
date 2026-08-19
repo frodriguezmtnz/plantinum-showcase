@@ -1,5 +1,5 @@
 
-import { getMonthlyRanking, getUsers, type Platinum, type User } from '@/lib/data';
+import { getMonthlyRanking, getUsers, type User } from '@/lib/data';
 import { Trophy, Award } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';

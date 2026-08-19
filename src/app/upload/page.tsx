@@ -191,7 +191,7 @@ export default function UploadPage() {
                 <FormField
                   control={form.control}
                   name="screenshot"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem>
                       <FormLabel>Screenshot</FormLabel>
                        <FormControl>

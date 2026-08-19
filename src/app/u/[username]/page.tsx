@@ -3,16 +3,17 @@ import { getUserByUsername, getPlatinumsByUserId, getPlatinumById } from '@/lib/
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
-import { Award, ThumbsUp } from 'lucide-react';
+import { ThumbsUp } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 import type { Metadata } from 'next';
 
 type Props = {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const user = await getUserByUsername(params.username);
+  const { username } = await params;
+  const user = await getUserByUsername(username);
 
   if (!user) {
     return {
@@ -26,8 +27,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function UserProfilePage({ params }: { params: { username:string } }) {
-  const user = await getUserByUsername(params.username);
+export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
+  const user = await getUserByUsername(username);
   if (!user) {
     notFound();
   }

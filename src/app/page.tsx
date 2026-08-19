@@ -25,7 +25,7 @@ const SectionDivider = ({ title }: { title: string }) => (
             <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center">
-            <span className="bg-background px-4 text-lg font-medium text-muted-foreground">{title}</span>
+            <span className="bg-background px-4 text-lg font-medium text-muted-foreground" suppressHydrationWarning>{title}</span>
         </div>
     </div>
 )
@@ -36,7 +36,7 @@ export default function Home() {
   const [latestPlatinums, setLatestPlatinums] = useState<Platinum[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentMonthYear, setCurrentMonthYear] = useState('');
+  const [currentMonthYear] = useState(() => new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }));
 
   useEffect(() => {
     async function fetchData() {
@@ -54,9 +54,6 @@ export default function Home() {
       setIsLoading(false);
     }
     fetchData();
-
-    // Set date string on client to avoid hydration mismatch
-    setCurrentMonthYear(new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }));
   }, []);
 
   const getUserById = (userId: string) => {

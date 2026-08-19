@@ -11,11 +11,12 @@ import type { User } from '@/lib/data';
 import { SocialShare } from './SocialShare';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const platinum = await getPlatinumById(params.id);
+  const { id } = await params;
+  const platinum = await getPlatinumById(id);
   
   if (!platinum) {
     return {
@@ -32,8 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 
-export default async function PlatinumDetailPage({ params }: { params: { id: string } }) {
-  const platinum = await getPlatinumById(params.id);
+export default async function PlatinumDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const platinum = await getPlatinumById(id);
   
   if (!platinum) {
     notFound();
