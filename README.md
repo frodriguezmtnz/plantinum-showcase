@@ -30,14 +30,14 @@ Para obtener una copia local y ponerla en marcha, sigue estos sencillos pasos.
 
 ### Prerrequisitos
 
-- [Node.js](https://nodejs.org/) (v18 o posterior recomendado)
-- [npm](https://www.npmjs.com/)
+- [Node.js](https://nodejs.org/) (v20.9 o posterior)
+- [pnpm](https://pnpm.io/) (se usa la versión fijada en `packageManager`)
 
 ### Instalación
 
 1.  **Instala las dependencias:**
     ```sh
-    npm install
+    pnpm install
     ```
 
 2.  **Configura las variables de entorno:**
@@ -45,7 +45,7 @@ Para obtener una copia local y ponerla en marcha, sigue estos sencillos pasos.
 
 3.  **Ejecuta el servidor de desarrollo:**
     ```sh
-    npm run dev
+    pnpm dev
     ```
 
 Abre [http://localhost:9002](http://localhost:9002) con tu navegador para ver el resultado.

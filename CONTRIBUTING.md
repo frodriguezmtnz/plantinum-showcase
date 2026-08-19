@@ -19,10 +19,10 @@ Este documento proporciona un conjunto de directrices para contribuir al proyect
 ### Pull Requests
 
 1.  Haz un **fork** del repositorio y crea tu rama a partir de `main`.
-2.  **Instala las dependencias** ejecutando `npm install`.
+2.  **Instala las dependencias** ejecutando `pnpm install`.
 3.  **Realiza tus cambios** en una nueva rama de git.
-4.  **Asegúrate de que tu código pase el linter** ejecutando `npm run lint`.
-5.  **Prueba tus cambios** para asegurarte de que funcionan como se espera.
+4.  **Asegúrate de que tu código pase el linter** ejecutando `pnpm lint`.
+5.  **Prueba tus cambios** ejecutando `pnpm typecheck` y `pnpm build` para asegurarte de que todo funciona.
 6.  **Haz commit de tus cambios** usando un mensaje de commit descriptivo.
 7.  **Sube tu rama** a tu fork.
 8.  **Abre un Pull Request** a nuestra rama `main`. Proporciona un título y una descripción claros de tus cambios.
