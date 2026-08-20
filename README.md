@@ -30,7 +30,7 @@ Para obtener una copia local y ponerla en marcha, sigue estos sencillos pasos.
 
 ### Prerrequisitos
 
-- [Node.js](https://nodejs.org/) (v20.9 o posterior)
+- [Node.js](https://nodejs.org/) (LTS 22, o v20.9+; usa `.nvmrc`)
 - [pnpm](https://pnpm.io/) (se usa la versión fijada en `packageManager`)
 
 ### Instalación
@@ -41,7 +41,10 @@ Para obtener una copia local y ponerla en marcha, sigue estos sencillos pasos.
     ```
 
 2.  **Configura las variables de entorno:**
-    Crea un archivo `.env` en la raíz del proyecto si necesitas añadir variables de entorno personalizadas.
+    Copia `.env.example` a `.env` y rellena las variables necesarias (consulta el ejemplo para saber cuáles son y qué hacen).
+    ```sh
+    cp .env.example .env
+    ```
 
 3.  **Ejecuta el servidor de desarrollo:**
     ```sh

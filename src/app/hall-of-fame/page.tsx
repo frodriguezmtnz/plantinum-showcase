@@ -21,7 +21,7 @@ export default async function HallOfFamePage() {
   const otherRankedPlatinums = rankedPlatinums.slice(3);
 
   // Define styles for podium places
-  const podiumStyles: { [key: number]: {
+  const podiumStyles: Record<1 | 2 | 3, {
     borderColor: string;
     textColor: string;
     bgColor: string;
@@ -29,7 +29,7 @@ export default async function HallOfFamePage() {
     order: string;
     lift: string;
     rankText: string;
-  } } = {
+  }> = {
     1: {
       borderColor: 'border-amber-400',
       textColor: 'text-amber-400',

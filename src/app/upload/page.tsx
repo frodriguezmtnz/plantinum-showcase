@@ -39,13 +39,17 @@ const uploadFormSchema = z.object({
   platinumDate: z.date({
     required_error: "A date for your platinum is required.",
   }),
-  screenshot: z.any() 
-    .refine((files) => files?.length == 1, 'Image is required.')
-    .refine((files) => files?.[0]?.size <= 5000000, `Max file size is 5MB.`)
-    .refine(
-      (files) => ["image/jpeg", "image/png", "image/webp"].includes(files?.[0]?.type),
-      ".jpg, .png and .webp files are accepted."
-    ),
+  screenshot: z.custom<FileList>((files) => files instanceof FileList, {
+    message: 'Image is required.',
+  })
+    .refine((files) => {
+      const size = files[0]?.size;
+      return size !== undefined && size <= 5000000;
+    }, 'Max file size is 5MB.')
+    .refine((files) => {
+      const type = files[0]?.type;
+      return type !== undefined && ["image/jpeg", "image/png", "image/webp"].includes(type);
+    }, '.jpg, .png and .webp files are accepted.'),
   isSpoiler: z.boolean().default(false),
   comment: z.string().max(500, "Comment is too long.").optional(),
 })
@@ -85,9 +89,10 @@ export default function UploadPage() {
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = e.target.files;
+    const file = files?.[0];
     if (file) {
-      form.setValue('screenshot', e.target.files);
+      form.setValue('screenshot', files);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
