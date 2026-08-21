@@ -21,7 +21,6 @@ Este proyecto está construido con un stack tecnológico moderno y potente:
 - **Librería UI:** [React](https://react.dev/)
 - **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
 - **Componentes UI:** [ShadCN UI](https://ui.shadcn.com/)
-- **Funcionalidades IA:** [Genkit de Google](https://firebase.google.com/docs/genkit)
 - **Iconos:** [Lucide React](https://lucide.dev/)
 
 ## 🚀 Empezando
