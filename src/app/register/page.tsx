@@ -7,20 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { loginAction } from "./actions";
+import { registerAction } from "./actions";
 
 const initialState: { error?: string } = {};
 
-export default function LoginPage() {
-  const [state, formAction, isPending] = useActionState(loginAction, initialState);
+export default function RegisterPage() {
+  const [state, formAction, isPending] = useActionState(registerAction, initialState);
 
   return (
     <div className="container flex items-center justify-center py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
+          <CardTitle className="text-2xl">Crear Cuenta</CardTitle>
           <CardDescription>
-            Únete a la comunidad para votar y mostrar tus platinos.
+            Únete a la comunidad y muestra tus trofeos de platino.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -31,19 +31,24 @@ export default function LoginPage() {
           )}
           <form action={formAction} className="grid gap-4">
             <div className="grid gap-2">
+              <Label htmlFor="username">Nombre de usuario</Label>
+              <Input id="username" name="username" placeholder="trophy-hunter" required minLength={3} maxLength={20} />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" placeholder="m@example.com" required />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Contraseña</Label>
-                <span className="ml-auto inline-block text-sm underline opacity-40">¿Olvidaste tu contraseña?</span>
-              </div>
-              <Input id="password" name="password" type="password" required />
+              <Label htmlFor="password">Contraseña</Label>
+              <Input id="password" name="password" type="password" required minLength={6} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+              <Input id="confirmPassword" name="confirmPassword" type="password" required minLength={6} />
             </div>
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isPending ? "Iniciando..." : "Iniciar Sesión"}
+              {isPending ? "Creando cuenta..." : "Crear Cuenta"}
             </Button>
           </form>
           <div className="relative my-6">
@@ -55,12 +60,12 @@ export default function LoginPage() {
             </div>
           </div>
           <Button variant="outline" className="w-full" type="button" disabled title="Próximamente">
-            Iniciar sesión con Google
+            Registrarse con Google
           </Button>
           <div className="mt-4 text-center text-sm">
-            ¿No tienes una cuenta?{' '}
-            <Link href="/register" className="underline">
-              Regístrate
+            ¿Ya tienes una cuenta?{' '}
+            <Link href="/login" className="underline">
+              Inicia sesión
             </Link>
           </div>
         </CardContent>

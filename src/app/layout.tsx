@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { cn } from '@/lib/utils';
-import { AuthProvider } from '@/hooks/use-auth';
+import { SessionProvider } from 'next-auth/react';
 import { Inter, Outfit } from 'next/font/google';
 
 const APP_NAME = "Platinum Showcase";
@@ -65,14 +65,14 @@ export default function RootLayout({
       <body className={cn(
         "min-h-screen bg-background font-body antialiased",
       )}>
-        <AuthProvider>
+        <SessionProvider>
           <div className="relative flex min-h-screen flex-col">
             <Header />
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
           <Toaster />
-        </AuthProvider>
+        </SessionProvider>
       </body>
     </html>
   );

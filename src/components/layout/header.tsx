@@ -11,6 +11,7 @@ import {
   LogOut,
   Compass,
   LogIn,
+  UserPlus,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,7 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
 
 export function Header() {
   const pathname = usePathname();
-  const { user, logout, login } = useAuth();
+  const { user, logout } = useAuth();
   
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -84,15 +85,15 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar>
-                      <AvatarImage src={user.avatarUrl} alt={user.username} />
-                      <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'Usuario'} />
+                      <AvatarFallback>{(user.name ?? '?').slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.username}</p>
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
@@ -100,7 +101,7 @@ export function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href={`/u/${user.username}`}>
+                    <Link href={`/u/${user.name}`}>
                       <UserIcon className="mr-2 h-4 w-4" />
                       <span>Perfil</span>
                     </Link>
@@ -120,7 +121,12 @@ export function Header() {
                         Iniciar sesión
                     </Link>
                 </Button>
-                <Button onClick={login} variant="secondary" className="hidden">Simulate Login</Button>
+                <Button asChild className="hidden sm:flex">
+                    <Link href="/register">
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Registrarse
+                    </Link>
+                </Button>
                </>
             )}
             
@@ -148,12 +154,20 @@ export function Header() {
                       </SheetClose>
                     ))}
                      {!user && (
-                      <SheetClose asChild>
-                        <NavLink href="/login" active={pathname === '/login'}>
-                          <LogIn className="mr-2 h-4 w-4" />
-                          Iniciar sesión
-                        </NavLink>
-                      </SheetClose>
+                      <>
+                        <SheetClose asChild>
+                          <NavLink href="/login" active={pathname === '/login'}>
+                            <LogIn className="mr-2 h-4 w-4" />
+                            Iniciar sesión
+                          </NavLink>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <NavLink href="/register" active={pathname === '/register'}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Registrarse
+                          </NavLink>
+                        </SheetClose>
+                      </>
                     )}
                   </nav>
                 </SheetContent>
