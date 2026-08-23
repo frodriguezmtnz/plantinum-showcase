@@ -1,12 +1,8 @@
 
-'use client';
-
 import { getHallOfFame, getTopPlatinums, getLatestPlatinums, getUsers } from '@/lib/data';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import type { Platinum, User } from '@/lib/data';
 import Image from 'next/image';
 import { User as UserIcon } from 'lucide-react';
 import {
@@ -16,8 +12,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const SectionDivider = ({ title }: { title: string }) => (
     <div className="relative text-center my-12">
@@ -30,31 +24,17 @@ const SectionDivider = ({ title }: { title: string }) => (
     </div>
 )
 
-export default function Home() {
-  const [hallOfFame, setHallOfFame] = useState<Platinum | null>(null);
-  const [topPlatinums, setTopPlatinums] = useState<Platinum[]>([]);
-  const [latestPlatinums, setLatestPlatinums] = useState<Platinum[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentMonthYear] = useState(() => new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' }));
-
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      const [hallOfFameData, topPlatinumsData, latestPlatinumsData, usersData] = await Promise.all([
-        getHallOfFame(1),
-        getTopPlatinums(5),
-        getLatestPlatinums(8),
-        getUsers()
-      ]);
-      setHallOfFame(hallOfFameData[0] || null);
-      setTopPlatinums(topPlatinumsData);
-      setLatestPlatinums(latestPlatinumsData);
-      setUsers(usersData);
-      setIsLoading(false);
-    }
-    fetchData();
-  }, []);
+export default async function Home() {
+  const [hallOfFameData, topPlatinumsData, latestPlatinumsData, users] = await Promise.all([
+    getHallOfFame(1),
+    getTopPlatinums(5),
+    getLatestPlatinums(8),
+    getUsers()
+  ]);
+  const hallOfFame = hallOfFameData[0] || null;
+  const topPlatinums = topPlatinumsData;
+  const latestPlatinums = latestPlatinumsData;
+  const currentMonthYear = new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' });
 
   const getUserById = (userId: string) => {
     return users.find(u => u.id === userId);
@@ -67,11 +47,8 @@ export default function Home() {
       {/* Hall of Fame */}
       <section className="mb-12">
           <SectionDivider title={`Hall of Fame • ${currentMonthYear}`} />
-          {isLoading ? (
-            <Skeleton className="relative aspect-[2.39/1] w-full rounded-2xl mt-8" />
-          ) : (
-            hallOfFame && hallOfFameUser && (
-              <div className="relative aspect-[2.39/1] w-full rounded-2xl overflow-hidden mt-8 shadow-2xl shadow-primary/20">
+          {hallOfFame && hallOfFameUser ? (
+            <div className="relative aspect-[2.39/1] w-full rounded-2xl overflow-hidden mt-8 shadow-2xl shadow-primary/20">
                   <Image 
                       src={hallOfFame.imageUrl}
                       alt={`Platinum screenshot for ${hallOfFame.gameName}`}
@@ -89,29 +66,20 @@ export default function Home() {
                       </div>
                   </div>
               </div>
-            )
-          )}
+          ) : null}
       </section>
 
       {/* Top Platinos */}
       <section className="mb-12">
         <SectionDivider title={`Top Platinos • ${currentMonthYear}`} />
         <div className="mt-8">
-          <Carousel opts={{ align: "start", loop: isLoading ? false : topPlatinums.length > 2 }}>
+          <Carousel opts={{ align: "start", loop: topPlatinums.length > 2 }}>
             <CarouselContent className="-ml-4">
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, index) => (
-                  <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                    <PlatinumCardSkeleton variant="top" />
-                  </CarouselItem>
-                ))
-              ) : (
-                topPlatinums.map(platinum => (
+                {topPlatinums.map(platinum => (
                   <CarouselItem key={platinum.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                     <PlatinumCard platinum={platinum} user={getUserById(platinum.userId)} variant="top" />
                   </CarouselItem>
-                ))
-              )}
+                ))}
             </CarouselContent>
             <CarouselPrevious className="hidden lg:flex" />
             <CarouselNext className="hidden lg:flex" />
@@ -123,15 +91,9 @@ export default function Home() {
       <section>
         <SectionDivider title="Latest Platinos" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 mt-8">
-            {isLoading ? (
-              Array.from({ length: 8 }).map((_, index) => (
-                <PlatinumCardSkeleton key={index} />
-              ))
-            ) : (
-              latestPlatinums.map(platinum => (
+              {latestPlatinums.map(platinum => (
                 <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
-              ))
-            )}
+              ))}
         </div>
       </section>
 

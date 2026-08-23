@@ -1,5 +1,4 @@
-
-import { placeholderImages } from './placeholder-images.json';
+import { prisma } from "@/lib/prisma";
 
 export interface Platinum {
   id: string;
@@ -24,93 +23,118 @@ export interface User {
   pridePlatinumId?: string;
 }
 
-const users: User[] = [
-  { id: '1', username: 'trophy-hunter-1', avatarUrl: 'https://i.pravatar.cc/150?u=trophy-hunter-1', pridePlatinumId: '2' },
-  { id: '2', username: 'gamer-goddess', avatarUrl: 'https://i.pravatar.cc/150?u=gamer-goddess', pridePlatinumId: '4' },
-  { id: '3', username: 'platinum-player', avatarUrl: 'https://i.pravatar.cc/150?u=platinum-player' },
-];
-
-function getImage(seed: number) {
-  // The seed is 1-based, but our array is 0-based.
-  const imageData = placeholderImages[seed - 1];
-  
-  if (!imageData) {
-    // Fallback if the image isn't found, though it shouldn't happen with the current data.
-    const fallbackUrl = `https://picsum.photos/seed/${seed}/600/338`;
-    return {
-      imageUrl: fallbackUrl,
-      imageHint: 'game screenshot',
-      width: 600,
-      height: 338,
-    };
-  }
-
-  return {
-    imageUrl: imageData.imageUrl,
-    imageHint: imageData.imageHint,
-    width: 600,
-    height: 338,
-  };
+interface PlatinumRecord {
+  id: string;
+  hash: string;
+  gameName: string;
+  platform: string;
+  platinumDate: Date;
+  isSpoiler: boolean;
+  userId: string;
+  votes: number;
+  monthlyVotes: number;
+  imageUrl: string;
+  imageHint: string;
+  width: number;
+  height: number;
 }
 
-const platinums: Platinum[] = [
-  { id: '1', hash: 'c1b2a3d4e5f6', gameName: 'Elden Ring', platform: 'PS5', platinumDate: '2023-03-15', isSpoiler: true, userId: '1', votes: 125, monthlyVotes: 30, ...getImage(1) },
-  { id: '2', hash: 'f6e5d4c3b2a1', gameName: 'Ghost of Tsushima', platform: 'PS4', platinumDate: '2022-08-20', isSpoiler: false, userId: '1', votes: 230, monthlyVotes: 45, ...getImage(2) },
-  { id: '3', hash: 'a1b2c3d4e5f6', gameName: 'Spider-Man 2', platform: 'PS5', platinumDate: '2023-11-01', isSpoiler: false, userId: '1', votes: 180, monthlyVotes: 60, ...getImage(3) },
-  { id: '4', hash: 'd4e5f6a1b2c3', gameName: 'God of War Ragnarok', platform: 'PS5', platinumDate: '2023-01-10', isSpoiler: true, userId: '2', votes: 310, monthlyVotes: 95, ...getImage(4) },
-  { id: '5', hash: 'c3b2a1d4e5f6', gameName: 'The Last of Us Part I', platform: 'PS5', platinumDate: '2022-09-20', isSpoiler: false, userId: '2', votes: 250, monthlyVotes: 55, ...getImage(5) },
-  { id: '6', hash: 'e5f6a1b2c3d4', gameName: 'Horizon Forbidden West', platform: 'PS4', platinumDate: '2022-04-05', isSpoiler: false, userId: '2', votes: 190, monthlyVotes: 40, ...getImage(6) },
-  { id: '7', hash: 'b2a1d4e5f6c3', gameName: 'Final Fantasy VII Rebirth', platform: 'PS5', platinumDate: '2024-03-30', isSpoiler: true, userId: '3', votes: 280, monthlyVotes: 88, ...getImage(7) },
-  { id: '8', hash: 'a1d4e5f6c3b2', gameName: 'Bloodborne', platform: 'PS4', platinumDate: '2019-07-22', isSpoiler: false, userId: '3', votes: 450, monthlyVotes: 72, ...getImage(8) },
-  { id: '9', hash: 'd4e5f6c3b2a1', gameName: 'Uncharted 4', platform: 'PS4', platinumDate: '2017-05-19', isSpoiler: false, userId: '1', votes: 150, monthlyVotes: 10, ...getImage(9) },
-  { id: '10', hash: 'f6c3b2a1d4e5', gameName: 'Persona 5 Royal', platform: 'PS4', platinumDate: '2021-06-12', isSpoiler: false, userId: '2', votes: 210, monthlyVotes: 35, ...getImage(10) },
-  { id: '11', hash: 'b2a1d4e5f6c3a', gameName: 'Cyberpunk 2077', platform: 'PS5', platinumDate: '2023-10-05', isSpoiler: false, userId: '3', votes: 175, monthlyVotes: 65, ...getImage(11) },
-  { id: '12', hash: 'a1d4e5f6c3b2b', gameName: 'Red Dead Redemption 2', platform: 'PS4', platinumDate: '2020-02-14', isSpoiler: false, userId: '1', votes: 380, monthlyVotes: 25, ...getImage(12) },
-];
+interface UserRecord {
+  id: string;
+  username: string | null;
+  image: string | null;
+}
 
+const toPlatinumView = (p: PlatinumRecord): Platinum => ({
+  ...p,
+  platform: p.platform as 'PS3' | 'PS4' | 'PS5',
+  platinumDate: p.platinumDate.toISOString(),
+});
+
+const toUserView = (u: UserRecord, pridePlatinumId?: string): User => ({
+  id: u.id,
+  username: u.username ?? 'Unknown',
+  avatarUrl: u.image ?? `https://i.pravatar.cc/150?u=${u.id}`,
+  ...(pridePlatinumId ? { pridePlatinumId } : {}),
+});
+
+async function getPridePlatinumId(userId: string): Promise<string | undefined> {
+  const pride = await prisma.platinum.findFirst({
+    where: { userId },
+    orderBy: [{ votes: 'desc' }, { monthlyVotes: 'desc' }],
+    select: { id: true },
+  });
+  return pride?.id;
+}
 
 // Data access functions
 export async function getUsers(): Promise<User[]> {
-  return users;
-};
+  const users = await prisma.user.findMany();
+  return users.map((u) => toUserView(u));
+}
 
 export async function getUserById(id: string): Promise<User | undefined> {
-  return users.find(user => user.id === id);
-};
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) return undefined;
+  const pridePlatinumId = await getPridePlatinumId(user.id);
+  return toUserView(user, pridePlatinumId);
+}
 
 export async function getUserByUsername(username: string): Promise<User | undefined> {
-  return users.find(user => user.username === username);
-};
+  const user = await prisma.user.findUnique({ where: { username } });
+  if (!user) return undefined;
+  const pridePlatinumId = await getPridePlatinumId(user.id);
+  return toUserView(user, pridePlatinumId);
+}
 
 export async function getPlatinums(): Promise<Platinum[]> {
-  return platinums;
-};
+  const platinums = await prisma.platinum.findMany();
+  return platinums.map(toPlatinumView);
+}
 
 export async function getPlatinumById(id: string): Promise<Platinum | undefined> {
-  return platinums.find(p => p.id === id);
-};
+  const platinum = await prisma.platinum.findUnique({ where: { id } });
+  return platinum ? toPlatinumView(platinum) : undefined;
+}
 
 export async function getPlatinumsByUserId(userId: string): Promise<Platinum[]> {
-  return platinums.filter(p => p.userId === userId);
-};
+  const platinums = await prisma.platinum.findMany({ where: { userId } });
+  return platinums.map(toPlatinumView);
+}
 
 export async function getHallOfFame(limit: number = 1): Promise<Platinum[]> {
-  return [...platinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
-};
+  const platinums = await prisma.platinum.findMany({
+    orderBy: { monthlyVotes: 'desc' },
+    take: limit,
+  });
+  return platinums.map(toPlatinumView);
+}
 
 export async function getTopPlatinums(limit: number = 5): Promise<Platinum[]> {
-  // Exclude hall of fame winner from top platinums
-  const hallOfFame = await getHallOfFame(1);
-  const hallOfFameId = hallOfFame[0]?.id;
-  const filteredPlatinums = platinums.filter(p => p.id !== hallOfFameId);
-  return [...filteredPlatinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
-};
+  const hallOfFame = await prisma.platinum.findFirst({
+    orderBy: { monthlyVotes: 'desc' },
+    select: { id: true },
+  });
+  const platinums = await prisma.platinum.findMany({
+    where: hallOfFame ? { id: { not: hallOfFame.id } } : undefined,
+    orderBy: { monthlyVotes: 'desc' },
+    take: limit,
+  });
+  return platinums.map(toPlatinumView);
+}
 
 export async function getLatestPlatinums(limit: number = 8): Promise<Platinum[]> {
-    return [...platinums].sort((a, b) => new Date(b.platinumDate).getTime() - new Date(a.platinumDate).getTime()).slice(0, limit);
-};
-
+  const platinums = await prisma.platinum.findMany({
+    orderBy: { platinumDate: 'desc' },
+    take: limit,
+  });
+  return platinums.map(toPlatinumView);
+}
 
 export async function getMonthlyRanking(limit: number = 10): Promise<Platinum[]> {
-  return [...platinums].sort((a, b) => b.monthlyVotes - a.monthlyVotes).slice(0, limit);
-};
+  const platinums = await prisma.platinum.findMany({
+    orderBy: { monthlyVotes: 'desc' },
+    take: limit,
+  });
+  return platinums.map(toPlatinumView);
+}
