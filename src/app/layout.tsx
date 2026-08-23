@@ -68,7 +68,7 @@ export default function RootLayout({
         <SessionProvider>
           <div className="relative flex min-h-screen flex-col">
             <Header />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 animate-in fade-in duration-300">{children}</main>
             <Footer />
           </div>
           <Toaster />

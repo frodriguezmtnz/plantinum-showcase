@@ -5,6 +5,10 @@ import { toast } from '@/hooks/use-toast';
 import type { Platinum, User } from '@/lib/data';
 import { Heart, Share2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface SocialShareProps {
   platinum: Platinum;
@@ -13,7 +17,22 @@ interface SocialShareProps {
 
 export function SocialShare({ platinum, user }: SocialShareProps) {
   const pathname = usePathname();
-  
+  const { user: authUser } = useAuth();
+  const router = useRouter();
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voteCount, setVoteCount] = useState(platinum.votes);
+
+  const handleVote = () => {
+    if (!authUser) {
+      router.push('/login');
+      return;
+    }
+    if (hasVoted) return;
+    setHasVoted(true);
+    setVoteCount(prev => prev + 1);
+    toast({ title: '¡Voto registrado!', description: `Votaste por ${platinum.gameName}.` });
+  };
+
   const handleShare = async () => {
     const shareData = {
       title: `Platinum: ${platinum.gameName} by ${user?.username || 'a user'}`,
@@ -26,11 +45,9 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
         await navigator.share(shareData);
       } catch (error) {
         console.error('Error sharing:', error);
-        // Silently fail is ok
       }
     } else {
-        // Fallback for browsers that don't support Web Share API
-        navigator.clipboard.writeText(shareData.url).then(() => {
+      navigator.clipboard.writeText(shareData.url).then(() => {
             toast({
                 title: "Link Copied!",
                 description: "The URL has been copied to your clipboard.",
@@ -41,8 +58,13 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <Button className="w-full vote-button" size="lg">
-        <Heart className="mr-2" /> Vote
+      <Button
+        className={cn("w-full vote-button transition-colors", hasVoted ? "bg-red-500 hover:bg-red-600 text-white" : "")}
+        size="lg"
+        onClick={handleVote}
+      >
+        <Heart className={cn("mr-2 transition-all", hasVoted && "fill-white scale-110")} />
+        {hasVoted ? `Voted (${voteCount})` : `Vote (${voteCount})`}
       </Button>
       <Button variant="outline" size="lg" className="px-3" onClick={handleShare} aria-label="Share platinum">
         <Share2 />

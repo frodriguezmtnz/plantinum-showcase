@@ -8,6 +8,8 @@ import type { Platinum, User } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { PlatinumCardSkeleton } from '@/components/shared/platinum-card-skeleton';
+import { EmptyState } from '@/components/shared/empty-state';
+import { SearchX } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 export default function ExplorePage() {
@@ -120,15 +122,18 @@ export default function ExplorePage() {
         </div>
       ) : filteredAndSortedPlatinums.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAndSortedPlatinums.map(platinum => (
-            <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />
+            {filteredAndSortedPlatinums.map((platinum, index) => (
+            <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} index={index} />
             ))}
         </div>
       ) : (
-        <div className="text-center py-16">
-            <h2 className="text-2xl font-semibold">No se encontraron platinos</h2>
-            <p className="text-muted-foreground mt-2">¡Prueba a ajustar los filtros o vuelve más tarde!</p>
-        </div>
+        <EmptyState
+          icon={SearchX}
+          title="No se encontraron platinos"
+          description="Prueba a ajustar los filtros o vuelve más tarde."
+          actionLabel="Subir platino"
+          actionHref="/upload"
+        />
       )}
     </section>
   );

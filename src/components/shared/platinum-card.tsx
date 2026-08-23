@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -13,20 +12,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import { toast } from '@/hooks/use-toast';
 
 interface PlatinumCardProps {
   platinum: Platinum;
   user?: User;
   variant?: 'default' | 'top';
   isPride?: boolean;
+  index?: number;
 }
 
-export function PlatinumCard({ platinum, user, variant = 'default', isPride = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0 }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voteCount, setVoteCount] = useState(platinum.votes);
   const { user: authUser } = useAuth();
   const router = useRouter();
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
+  const animDelay = Math.min(index * 50, 400);
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,15 +42,17 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
     e.preventDefault();
     if (!authUser) {
       router.push('/login');
-    } else {
-      // TODO: Implement vote logic
-      console.log('Voted!');
+      return;
     }
+    if (hasVoted) return;
+    setHasVoted(true);
+    setVoteCount(prev => prev + 1);
+    toast({ title: '¡Voto registrado!', description: `Votaste por ${platinum.gameName}.` });
   };
 
   if (variant === 'top') {
     return (
-        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-lg overflow-hidden">
+        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-lg overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500" style={{ animationDelay: `${animDelay}ms` }}>
             <Image
                 src={platinum.imageUrl}
                 alt={`Platinum screenshot for ${platinum.gameName}`}
@@ -73,7 +79,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
   }
 
   return (
-    <Card className="flex flex-col overflow-hidden bg-card border-none group">
+    <Card className="flex flex-col overflow-hidden bg-card border-none group animate-in fade-in slide-in-from-bottom-3 duration-500" style={{ animationDelay: `${animDelay}ms` }}>
        {isPride && (
         <div className="p-2 bg-amber-400/10 text-amber-400 text-xs font-bold flex items-center justify-center gap-2">
             <Award className="w-4 h-4" />
@@ -115,9 +121,14 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                     <span className="truncate">{user.username}</span>
                 </Link>
             )}
-            <Button variant="ghost" size="sm" className="vote-button text-muted-foreground hover:text-primary" onClick={handleVoteClick}>
-                <Heart className="mr-2" />
-                <span>{platinum.votes}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn("vote-button transition-colors", hasVoted ? "text-red-500" : "text-muted-foreground hover:text-primary")}
+              onClick={handleVoteClick}
+            >
+                <Heart className={cn("mr-2 transition-all", hasVoted && "fill-red-500 scale-110")} />
+                <span>{voteCount}</span>
             </Button>
         </div>
       </div>

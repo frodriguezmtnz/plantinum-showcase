@@ -3,8 +3,9 @@ import { getUserByUsername, getPlatinumsByUserId, getPlatinumById } from '@/lib/
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
-import { ThumbsUp } from 'lucide-react';
+import { ThumbsUp, Trophy } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
+import { EmptyState } from '@/components/shared/empty-state';
 import type { Metadata } from 'next';
 
 type Props = {
@@ -83,9 +84,19 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
           </div>
         ) : (
            pridePlatinum ? (
-            <p className="text-center text-muted-foreground">This user hasn't showcased their other platinums yet.</p>
+            <EmptyState
+              icon={Trophy}
+              title="Solo tiene un platino"
+              description="Este usuario todavía no ha mostrado sus otros platinos."
+            />
            ) : (
-            <p className="text-center text-muted-foreground">This user hasn't showcased any platinums yet.</p>
+            <EmptyState
+              icon={Trophy}
+              title="Sin platinos aún"
+              description="Este usuario no ha mostrado ningún platino todavía."
+              actionLabel="Subir platino"
+              actionHref="/upload"
+            />
            )
         )}
       </section>
