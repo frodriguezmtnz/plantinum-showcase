@@ -28,6 +28,8 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
+import imageCompression from "browser-image-compression"
+import { uploadPlatinum } from "@/app/actions"
 
 const uploadFormSchema = z.object({
   gameName: z.string().min(5, {
@@ -77,15 +79,60 @@ export default function UploadPage() {
     },
   })
   
-  function onSubmit(data: UploadFormValues) {
-    // This is a mock submission. In a real app, you would upload the file.
-    console.log(data);
-    toast({
-      title: "Upload Successful!",
-      description: `Your platinum for ${data.gameName} has been submitted.`,
-    });
-    form.reset();
-    setPreview(null);
+  async function onSubmit(data: UploadFormValues) {
+    const originalFile = data.screenshot[0];
+    if (!originalFile) {
+      toast({
+        title: "Upload Failed",
+        description: "La captura es obligatoria.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Compress in the browser to keep the request small (serverless-friendly).
+      const compressedFile = await imageCompression(originalFile, {
+        maxSizeMB: 4,
+        maxWidthOrHeight: 1600,
+        useWebWorker: true,
+      });
+
+      const formData = new FormData();
+      formData.set("gameName", data.gameName);
+      formData.set("platform", data.platform);
+      formData.set("platinumDate", data.platinumDate.toISOString());
+      formData.set("isSpoiler", String(data.isSpoiler));
+      if (data.comment) {
+        formData.set("comment", data.comment);
+      }
+      formData.set("screenshot", compressedFile, compressedFile.name);
+
+      const result = await uploadPlatinum(formData);
+
+      if (!result.success) {
+        toast({
+          title: "Upload Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Upload Successful!",
+        description: `Your platinum for ${data.gameName} has been submitted.`,
+      });
+      form.reset();
+      setPreview(null);
+      router.push(`/platinum/${result.platinumId}`);
+    } catch {
+      toast({
+        title: "Upload Failed",
+        description: "Ha ocurrido un error inesperado. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,9 +313,9 @@ export default function UploadPage() {
                 )}
               />
 
-              <Button type="submit" className="w-full" size="lg">
+              <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
                 <UploadCloud className="mr-2" />
-                Upload Platinum
+                {form.formState.isSubmitting ? "Uploading..." : "Upload Platinum"}
               </Button>
             </form>
           </Form>

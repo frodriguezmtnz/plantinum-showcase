@@ -62,6 +62,7 @@ model Platinum {
   platform     String
   platinumDate DateTime
   isSpoiler    Boolean  @default(false)
+  comment      String?
   userId       String
   votes        Int      @default(0)
   monthlyVotes Int      @default(0)
