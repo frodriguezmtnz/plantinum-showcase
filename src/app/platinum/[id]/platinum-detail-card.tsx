@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Eye, Expand } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, isStoredImage } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 
@@ -49,6 +49,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             height={platinum.height}
             className={cn("w-full h-full object-cover transition-transform group-hover/card:scale-105", !showSpoiler && "spoiler-blur")}
             data-ai-hint={platinum.imageHint}
+            unoptimized={isStoredImage(platinum.imageUrl)}
           />
           {user && showSpoiler && <Watermark username={user.username} />}
           {!showSpoiler && (
@@ -76,6 +77,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
               fill
               className="object-contain"
               data-ai-hint={platinum.imageHint}
+              unoptimized={isStoredImage(platinum.imageUrl)}
             />
             {user && <Watermark username={user.username} />}
         </div>

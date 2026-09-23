@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, isStoredImage } from '@/lib/utils';
 
 export const metadata = {
   title: 'Hall of Fame | Platinum Showcase',
@@ -92,6 +92,7 @@ export default async function HallOfFamePage() {
                         fill
                         className="object-cover"
                         data-ai-hint={platinum.imageHint}
+                        unoptimized={isStoredImage(platinum.imageUrl)}
                       />
                     </div>
                     <CardContent className="p-4">
@@ -142,6 +143,7 @@ export default async function HallOfFamePage() {
                         height={72}
                         className="w-24 sm:w-32 h-14 sm:h-18 object-cover rounded-md" 
                         data-ai-hint={platinum.imageHint} 
+                        unoptimized={isStoredImage(platinum.imageUrl)}
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-base sm:text-lg truncate">{platinum.gameName}</h3>

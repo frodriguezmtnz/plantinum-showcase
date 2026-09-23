@@ -12,6 +12,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { isStoredImage } from '@/lib/utils';
 
 const SectionDivider = ({ title }: { title: string }) => (
     <div className="relative text-center my-12">
@@ -55,7 +56,7 @@ export default async function Home() {
                       fill
                       className="object-cover"
                       data-ai-hint={hallOfFame.imageHint}
-                      unoptimized
+                      unoptimized={isStoredImage(hallOfFame.imageUrl)}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 p-8 text-white">

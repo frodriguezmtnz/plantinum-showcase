@@ -7,7 +7,7 @@ import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Award, Eye, Heart, User as UserIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
@@ -59,6 +59,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 data-ai-hint={platinum.imageHint}
+                unoptimized={isStoredImage(platinum.imageUrl)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-4 text-white">
@@ -95,6 +96,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
             height={platinum.height}
             className={cn("w-full h-full object-cover group-hover:scale-105 transition-transform duration-300", !showSpoiler && "spoiler-blur")}
             data-ai-hint={platinum.imageHint}
+            unoptimized={isStoredImage(platinum.imageUrl)}
           />
           {!showSpoiler && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
