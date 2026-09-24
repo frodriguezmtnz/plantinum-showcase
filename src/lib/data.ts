@@ -94,6 +94,68 @@ export async function getPlatinums(): Promise<Platinum[]> {
   return platinums.map(toPlatinumView);
 }
 
+export interface PlatinumPageItem {
+  platinum: Platinum;
+  user: User;
+}
+
+export interface PlatinumPageResult {
+  items: PlatinumPageItem[];
+  hasMore: boolean;
+}
+
+export const PLATINUMS_PAGE_SIZE = 24;
+
+export async function getPlatinumsPage(options: {
+  q?: string;
+  platform?: string;
+  sort?: string;
+  offset?: number;
+  limit?: number;
+}): Promise<PlatinumPageResult> {
+  const {
+    q = '',
+    platform = 'all',
+    sort = 'recent',
+    offset = 0,
+    limit = PLATINUMS_PAGE_SIZE,
+  } = options;
+
+  const search = q.trim();
+
+  const where = {
+    ...(platform && platform !== 'all' ? { platform } : {}),
+    ...(search
+      ? { gameName: { contains: search, mode: 'insensitive' as const } }
+      : {}),
+  };
+
+  const orderBy =
+    sort === 'most-voted'
+      ? { votes: 'desc' as const }
+      : sort === 'least-voted'
+        ? { votes: 'asc' as const }
+        : { platinumDate: 'desc' as const };
+
+  const platinums = await prisma.platinum.findMany({
+    where,
+    orderBy,
+    skip: offset,
+    take: limit + 1,
+    include: { user: true },
+  });
+
+  const hasMore = platinums.length > limit;
+
+  return {
+    items: platinums.slice(0, limit).map((p) => ({
+      platinum: toPlatinumView(p),
+      user: toUserView(p.user),
+    })),
+    hasMore,
+  };
+}
+
 export async function getPlatinumById(id: string): Promise<Platinum | undefined> {
   const platinum = await prisma.platinum.findUnique({ where: { id } });
   return platinum ? toPlatinumView(platinum) : undefined;

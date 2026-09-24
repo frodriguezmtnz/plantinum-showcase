@@ -1,57 +1,88 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { PlatinumCard } from '@/components/shared/platinum-card';
-import { useState, useMemo } from 'react';
-import type { Platinum, User } from '@/lib/data';
+import type { PlatinumPageItem } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
-import { SearchX } from 'lucide-react';
+import { Loader2, SearchX } from 'lucide-react';
+import { getMorePlatinums } from '@/app/actions';
 
 interface ExploreClientProps {
-  platinums: Platinum[];
-  users: User[];
+  initialItems: PlatinumPageItem[];
+  initialHasMore: boolean;
+  q: string;
+  platform: string;
+  sort: string;
 }
 
-export function ExploreClient({ platinums, users }: ExploreClientProps) {
-  const [platformFilter, setPlatformFilter] = useState('all');
-  const [sortOrder, setSortOrder] = useState('recent');
-  const [searchQuery, setSearchQuery] = useState('');
+export function ExploreClient({ initialItems, initialHasMore, q, platform, sort }: ExploreClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const getUserById = (userId: string) => {
-    return users.find((u) => u.id === userId);
+  const [items, setItems] = useState(initialItems);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState(q);
+  const [platformFilter, setPlatformFilter] = useState(platform);
+  const [sortOrder, setSortOrder] = useState(sort);
+
+  const updateUrl = useCallback(
+    (next: { q?: string; platform?: string; sort?: string }) => {
+      const nextQ = next.q ?? searchQuery;
+      const nextPlatform = next.platform ?? platformFilter;
+      const nextSort = next.sort ?? sortOrder;
+
+      const params = new URLSearchParams();
+      if (nextQ.trim()) params.set('q', nextQ.trim());
+      if (nextPlatform && nextPlatform !== 'all') params.set('platform', nextPlatform);
+      if (nextSort && nextSort !== 'recent') params.set('sort', nextSort);
+
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchQuery, platformFilter, sortOrder],
+  );
+
+  useEffect(() => {
+    if (searchQuery === q) return;
+    const handle = setTimeout(() => updateUrl({ q: searchQuery }), 350);
+    return () => clearTimeout(handle);
+  }, [searchQuery, q, updateUrl]);
+
+  const handlePlatformChange = (value: string) => {
+    setPlatformFilter(value);
+    updateUrl({ platform: value });
   };
 
-  const filteredAndSortedPlatinums = useMemo(() => {
-    let filtered = platinums;
+  const handleSortChange = (value: string) => {
+    setSortOrder(value);
+    updateUrl({ sort: value });
+  };
 
-    if (platformFilter !== 'all') {
-      filtered = filtered.filter((p) => p.platform === platformFilter);
+  async function handleLoadMore() {
+    setIsLoadingMore(true);
+    try {
+      const result = await getMorePlatinums({
+        q,
+        platform,
+        sort,
+        offset: items.length,
+      });
+      setItems((prev) => [...prev, ...result.items]);
+      setHasMore(result.hasMore);
+    } finally {
+      setIsLoadingMore(false);
     }
-
-    if (searchQuery.trim() !== '') {
-      filtered = filtered.filter((p) => p.gameName.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-
-    const sorted = [...filtered];
-    switch (sortOrder) {
-      case 'most-voted':
-        sorted.sort((a, b) => b.votes - a.votes);
-        break;
-      case 'least-voted':
-        sorted.sort((a, b) => a.votes - b.votes);
-        break;
-      case 'recent':
-      default:
-        sorted.sort((a, b) => new Date(b.platinumDate).getTime() - new Date(a.platinumDate).getTime());
-        break;
-    }
-    return sorted;
-  }, [platinums, platformFilter, sortOrder, searchQuery]);
+  }
 
   return (
-    <section className="container py-8 md:py-12">
+    <div>
       <Card className="p-4 mb-12">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
@@ -66,7 +97,7 @@ export function ExploreClient({ platinums, users }: ExploreClientProps) {
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
             <label className="text-sm font-medium sr-only sm:not-sr-only">Plataforma:</label>
-            <Select value={platformFilter} onValueChange={setPlatformFilter}>
+            <Select value={platformFilter} onValueChange={handlePlatformChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Filtrar por plataforma" />
               </SelectTrigger>
@@ -80,7 +111,7 @@ export function ExploreClient({ platinums, users }: ExploreClientProps) {
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
             <label className="text-sm font-medium sr-only sm:not-sr-only">Ordenar por:</label>
-            <Select value={sortOrder} onValueChange={setSortOrder}>
+            <Select value={sortOrder} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Ordenar por" />
               </SelectTrigger>
@@ -94,12 +125,33 @@ export function ExploreClient({ platinums, users }: ExploreClientProps) {
         </div>
       </Card>
 
-      {filteredAndSortedPlatinums.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAndSortedPlatinums.map((platinum, index) => (
-            <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} index={index} />
-          ))}
-        </div>
+      {items.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {items.map((item, index) => (
+              <PlatinumCard
+                key={item.platinum.id}
+                platinum={item.platinum}
+                user={item.user}
+                index={index}
+              />
+            ))}
+          </div>
+
+          {hasMore && (
+            <div className="mt-12 flex justify-center">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+              >
+                {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoadingMore ? 'Cargando...' : 'Cargar más'}
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <EmptyState
           icon={SearchX}
@@ -109,6 +161,6 @@ export function ExploreClient({ platinums, users }: ExploreClientProps) {
           actionHref="/upload"
         />
       )}
-    </section>
+    </div>
   );
 }

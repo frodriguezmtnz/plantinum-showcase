@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getPlatinumsPage, PLATINUMS_PAGE_SIZE } from "@/lib/data";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
@@ -222,4 +223,13 @@ export async function deletePlatinum(id: string) {
   }
 
   return { success: true as const };
+}
+
+export async function getMorePlatinums(options: {
+  q?: string;
+  platform?: string;
+  sort?: string;
+  offset?: number;
+}) {
+  return getPlatinumsPage({ ...options, limit: PLATINUMS_PAGE_SIZE });
 }
