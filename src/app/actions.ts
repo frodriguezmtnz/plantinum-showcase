@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlatinumsPage, PLATINUMS_PAGE_SIZE } from "@/lib/data";
+import { getCurrentPeriod } from "@/lib/period";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
@@ -231,5 +232,149 @@ export async function getMorePlatinums(options: {
   sort?: string;
   offset?: number;
 }) {
-  return getPlatinumsPage({ ...options, limit: PLATINUMS_PAGE_SIZE });
+  const session = await auth();
+  return getPlatinumsPage({
+    ...options,
+    currentUserId: session?.user?.id,
+    limit: PLATINUMS_PAGE_SIZE,
+  });
+}
+
+export type VoteActionResult =
+  | { success: true; hasVoted: boolean; votes: number; monthlyVotes: number }
+  | { success: false; error: string };
+
+export async function toggleVoteForPlatinum(
+  platinumId: string,
+): Promise<VoteActionResult> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false, error: "Debes iniciar sesión para votar." };
+  }
+
+  const platinum = await prisma.platinum.findUnique({
+    where: { id: platinumId },
+    select: {
+      userId: true,
+      user: { select: { username: true } },
+    },
+  });
+
+  if (!platinum) {
+    return { success: false, error: "El platino no existe." };
+  }
+  if (platinum.userId === userId) {
+    return {
+      success: false,
+      error: "No puedes votar tu propio platino.",
+    };
+  }
+
+  const period = getCurrentPeriod();
+
+  const existingVote = await prisma.vote.findUnique({
+    where: { userId_platinumId: { userId, platinumId } },
+    select: { id: true, period: true },
+  });
+
+  try {
+    if (existingVote) {
+      const result = await prisma.$transaction(async (tx) => {
+        await tx.vote.delete({ where: { id: existingVote.id } });
+
+        await tx.$executeRaw`
+          UPDATE "Platinum"
+          SET
+            "votes" = CASE WHEN "votes" > 0 THEN "votes" - 1 ELSE 0 END,
+            "monthlyVotes" = CASE
+              WHEN "monthlyVotesMonth" = ${existingVote.period} AND "monthlyVotes" > 0
+                THEN "monthlyVotes" - 1
+              ELSE "monthlyVotes"
+            END,
+            "monthlyVotesMonth" = CASE
+              WHEN "monthlyVotesMonth" = ${existingVote.period} AND "monthlyVotes" <= 1
+                THEN NULL
+              ELSE "monthlyVotesMonth"
+            END
+          WHERE "id" = ${platinumId}
+        `;
+
+        return tx.platinum.findUniqueOrThrow({
+          where: { id: platinumId },
+          select: { votes: true, monthlyVotes: true, monthlyVotesMonth: true },
+        });
+      });
+
+      revalidateVotePaths(platinumId, platinum.user.username);
+
+      return {
+        success: true,
+        hasVoted: false,
+        votes: result.votes,
+        monthlyVotes:
+          result.monthlyVotesMonth === period ? result.monthlyVotes : 0,
+      };
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.vote.create({ data: { platinumId, userId, period } });
+
+      await tx.$executeRaw`
+        UPDATE "Platinum"
+        SET
+          "votes" = "votes" + 1,
+          "monthlyVotes" = CASE
+            WHEN "monthlyVotesMonth" = ${period} THEN "monthlyVotes" + 1
+            ELSE 1
+          END,
+          "monthlyVotesMonth" = ${period}
+        WHERE "id" = ${platinumId}
+      `;
+
+      return tx.platinum.findUniqueOrThrow({
+        where: { id: platinumId },
+        select: { votes: true, monthlyVotes: true, monthlyVotesMonth: true },
+      });
+    });
+
+    revalidateVotePaths(platinumId, platinum.user.username);
+
+    return {
+      success: true,
+      hasVoted: true,
+      votes: result.votes,
+      monthlyVotes:
+        result.monthlyVotesMonth === period ? result.monthlyVotes : 0,
+    };
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2002") {
+      const current = await prisma.platinum.findUnique({
+        where: { id: platinumId },
+        select: { votes: true, monthlyVotes: true, monthlyVotesMonth: true },
+      });
+      return {
+        success: true,
+        hasVoted: true,
+        votes: current?.votes ?? 0,
+        monthlyVotes:
+          current?.monthlyVotesMonth === period ? (current?.monthlyVotes ?? 0) : 0,
+      };
+    }
+
+    return {
+      success: false,
+      error: "No se pudo registrar el voto. Inténtalo de nuevo.",
+    };
+  }
+}
+
+function revalidateVotePaths(platinumId: string, ownerUsername?: string | null) {
+  revalidatePath("/");
+  revalidatePath("/explore");
+  revalidatePath("/hall-of-fame");
+  revalidatePath(`/platinum/${platinumId}`);
+  if (ownerUsername) {
+    revalidatePath(`/u/${ownerUsername}`);
+  }
 }
