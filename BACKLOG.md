@@ -35,6 +35,8 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 
 ## UX / diseño
 
+- [x] Mostrar/ocultar contraseña en login y registro (`PasswordInput` con Eye/EyeOff).
+- [x] Rediseño del login/registro: split-screen con panel de marca y sin header/footer (inmersivo) vía `AuthShell` + `SiteChrome`.
 - [ ] OAuth de Google (el botón ya existe pero está `disabled` "Próximamente" en `src/app/login/page.tsx`).
 - [ ] "¿Olvidaste tu contraseña?" sin flujo real (hoy es texto opaco).
 - [ ] Progreso de subida (barra/estado) en el upload.
