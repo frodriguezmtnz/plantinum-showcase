@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentPeriod } from "@/lib/period";
 
 export interface Platinum {
   id: string;
@@ -15,6 +16,7 @@ export interface Platinum {
   width: number;
   height: number;
   comment?: string | null;
+  hasVoted?: boolean;
 }
 
 export interface User {
@@ -34,6 +36,7 @@ interface PlatinumRecord {
   userId: string;
   votes: number;
   monthlyVotes: number;
+  monthlyVotesMonth: string | null;
   imageUrl: string;
   imageHint: string;
   width: number;
@@ -47,10 +50,22 @@ interface UserRecord {
   image: string | null;
 }
 
-const toPlatinumView = (p: PlatinumRecord): Platinum => ({
-  ...p,
+const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
+  id: p.id,
+  hash: p.hash,
+  gameName: p.gameName,
   platform: p.platform as 'PS3' | 'PS4' | 'PS5',
   platinumDate: p.platinumDate.toISOString(),
+  isSpoiler: p.isSpoiler,
+  userId: p.userId,
+  votes: p.votes,
+  monthlyVotes: p.monthlyVotesMonth === getCurrentPeriod() ? p.monthlyVotes : 0,
+  imageUrl: p.imageUrl,
+  imageHint: p.imageHint,
+  width: p.width,
+  height: p.height,
+  comment: p.comment,
+  hasVoted,
 });
 
 const toUserView = (u: UserRecord, pridePlatinumId?: string): User => ({
@@ -59,6 +74,27 @@ const toUserView = (u: UserRecord, pridePlatinumId?: string): User => ({
   avatarUrl: u.image ?? `https://i.pravatar.cc/150?u=${u.id}`,
   ...(pridePlatinumId ? { pridePlatinumId } : {}),
 });
+
+async function attachVoteStatus(
+  platinums: PlatinumRecord[],
+  currentUserId?: string,
+): Promise<Platinum[]> {
+  if (!currentUserId || platinums.length === 0) {
+    return platinums.map((p) => toPlatinumView(p, false));
+  }
+
+  const votes = await prisma.vote.findMany({
+    where: {
+      userId: currentUserId,
+      platinumId: { in: platinums.map((p) => p.id) },
+    },
+    select: { platinumId: true },
+  });
+
+  const votedIds = new Set(votes.map((vote) => vote.platinumId));
+
+  return platinums.map((p) => toPlatinumView(p, votedIds.has(p.id)));
+}
 
 async function getPridePlatinumId(userId: string): Promise<string | undefined> {
   const pride = await prisma.platinum.findFirst({
@@ -91,7 +127,7 @@ export async function getUserByUsername(username: string): Promise<User | undefi
 
 export async function getPlatinums(): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany();
-  return platinums.map(toPlatinumView);
+  return platinums.map((p) => toPlatinumView(p));
 }
 
 export interface PlatinumPageItem {
@@ -112,6 +148,7 @@ export async function getPlatinumsPage(options: {
   sort?: string;
   offset?: number;
   limit?: number;
+  currentUserId?: string;
 }): Promise<PlatinumPageResult> {
   const {
     q = '',
@@ -119,6 +156,7 @@ export async function getPlatinumsPage(options: {
     sort = 'recent',
     offset = 0,
     limit = PLATINUMS_PAGE_SIZE,
+    currentUserId,
   } = options;
 
   const search = q.trim();
@@ -146,59 +184,98 @@ export async function getPlatinumsPage(options: {
   });
 
   const hasMore = platinums.length > limit;
+  const visible = platinums.slice(0, limit);
+  const views = await attachVoteStatus(visible, currentUserId);
 
   return {
-    items: platinums.slice(0, limit).map((p) => ({
-      platinum: toPlatinumView(p),
-      user: toUserView(p.user),
+    items: views.map((platinum, index) => ({
+      platinum,
+      user: toUserView(visible[index]!.user),
     })),
     hasMore,
   };
 }
 
-export async function getPlatinumById(id: string): Promise<Platinum | undefined> {
+export async function getPlatinumById(
+  id: string,
+  currentUserId?: string,
+): Promise<Platinum | undefined> {
   const platinum = await prisma.platinum.findUnique({ where: { id } });
-  return platinum ? toPlatinumView(platinum) : undefined;
+  if (!platinum) return undefined;
+  const [view] = await attachVoteStatus([platinum], currentUserId);
+  return view;
 }
 
-export async function getPlatinumsByUserId(userId: string): Promise<Platinum[]> {
+export async function getPlatinumsByUserId(
+  userId: string,
+  currentUserId?: string,
+): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({ where: { userId } });
-  return platinums.map(toPlatinumView);
+  return attachVoteStatus(platinums, currentUserId);
 }
 
-export async function getHallOfFame(limit: number = 1): Promise<Platinum[]> {
+export async function getHallOfFame(
+  limit: number = 1,
+  currentUserId?: string,
+): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
-    orderBy: { monthlyVotes: 'desc' },
+    where: {
+      monthlyVotesMonth: getCurrentPeriod(),
+      monthlyVotes: { gt: 0 },
+    },
+    orderBy: [{ monthlyVotes: 'desc' }, { votes: 'desc' }],
     take: limit,
   });
-  return platinums.map(toPlatinumView);
+  return attachVoteStatus(platinums, currentUserId);
 }
 
-export async function getTopPlatinums(limit: number = 5): Promise<Platinum[]> {
+export async function getTopPlatinums(
+  limit: number = 5,
+  currentUserId?: string,
+): Promise<Platinum[]> {
   const hallOfFame = await prisma.platinum.findFirst({
-    orderBy: { monthlyVotes: 'desc' },
+    where: {
+      monthlyVotesMonth: getCurrentPeriod(),
+      monthlyVotes: { gt: 0 },
+    },
+    orderBy: [{ monthlyVotes: 'desc' }, { votes: 'desc' }],
     select: { id: true },
   });
+
   const platinums = await prisma.platinum.findMany({
-    where: hallOfFame ? { id: { not: hallOfFame.id } } : undefined,
-    orderBy: { monthlyVotes: 'desc' },
+    where: {
+      monthlyVotesMonth: getCurrentPeriod(),
+      monthlyVotes: { gt: 0 },
+      ...(hallOfFame ? { id: { not: hallOfFame.id } } : {}),
+    },
+    orderBy: [{ monthlyVotes: 'desc' }, { votes: 'desc' }],
     take: limit,
   });
-  return platinums.map(toPlatinumView);
+  return attachVoteStatus(platinums, currentUserId);
 }
 
-export async function getLatestPlatinums(limit: number = 8): Promise<Platinum[]> {
+export async function getLatestPlatinums(
+  limit: number = 8,
+  currentUserId?: string,
+): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
     orderBy: { platinumDate: 'desc' },
     take: limit,
   });
-  return platinums.map(toPlatinumView);
+  return attachVoteStatus(platinums, currentUserId);
 }
 
-export async function getMonthlyRanking(limit: number = 10): Promise<Platinum[]> {
+export async function getMonthlyRanking(
+  limit: number = 10,
+  currentUserId?: string,
+): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
-    orderBy: { monthlyVotes: 'desc' },
+    where: {
+      monthlyVotesMonth: getCurrentPeriod(),
+      monthlyVotes: { gt: 0 },
+    },
+    orderBy: [{ monthlyVotes: 'desc' }, { votes: 'desc' }],
     take: limit,
   });
-  return platinums.map(toPlatinumView);
+  return attachVoteStatus(platinums, currentUserId);
 }
