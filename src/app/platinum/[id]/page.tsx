@@ -1,5 +1,7 @@
 
 import { getPlatinumById, getUserById } from '@/lib/data';
+import { auth } from '@/auth';
+import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Heart } from 'lucide-react';
@@ -43,6 +45,9 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
 
   const user: User | undefined = await getUserById(platinum.userId);
 
+  const session = await auth();
+  const canDelete = session?.user?.id === platinum.userId;
+
   return (
     <div className="container max-w-4xl py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -85,6 +90,15 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                 </div>
                 
                 <SocialShare platinum={platinum} user={user ?? null} />
+
+                {canDelete && (
+                  <DeletePlatinumButton
+                    platinumId={platinum.id}
+                    redirectTo="/"
+                    showLabel
+                    className="mt-4 w-full border border-destructive/40 hover:bg-destructive/10"
+                  />
+                )}
             </div>
         </div>
       </div>

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
+import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 
 interface PlatinumCardProps {
   platinum: Platinum;
@@ -21,9 +22,10 @@ interface PlatinumCardProps {
   isPride?: boolean;
   index?: number;
   showComment?: boolean;
+  canDelete?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0, showComment = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0, showComment = false, canDelete = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [voteCount, setVoteCount] = useState(platinum.votes);
@@ -130,15 +132,18 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                     <span className="truncate">{user.username}</span>
                 </Link>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("vote-button transition-colors", hasVoted ? "text-red-500" : "text-muted-foreground hover:text-primary")}
-              onClick={handleVoteClick}
-            >
-                <Heart className={cn("mr-2 transition-all", hasVoted && "fill-red-500 scale-110")} />
-                <span>{voteCount}</span>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn("vote-button transition-colors", hasVoted ? "text-red-500" : "text-muted-foreground hover:text-primary")}
+                onClick={handleVoteClick}
+              >
+                  <Heart className={cn("mr-2 transition-all", hasVoted && "fill-red-500 scale-110")} />
+                  <span>{voteCount}</span>
+              </Button>
+              {canDelete && <DeletePlatinumButton platinumId={platinum.id} />}
+            </div>
         </div>
       </div>
     </Card>

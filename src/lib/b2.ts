@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -66,6 +67,11 @@ export async function putImage(key: string, body: Buffer): Promise<void> {
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
+}
+
+export async function deleteImage(key: string): Promise<void> {
+  const { client, bucket } = getClient();
+  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
 export interface StorageImage {

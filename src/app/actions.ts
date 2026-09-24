@@ -6,7 +6,7 @@ import sharp from "sharp";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
+import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -159,4 +159,67 @@ export async function uploadPlatinum(formData: FormData) {
       error: "No se pudo guardar el platino. Inténtalo de nuevo.",
     };
   }
+}
+
+const IMAGE_URL_PREFIX = "/api/images/";
+const STORED_KEY_PATTERN = /^platinums\/[a-f0-9]{64}\.avif$/;
+
+function imageKeyFromUrl(imageUrl: string): string | null {
+  if (!imageUrl.startsWith(IMAGE_URL_PREFIX)) return null;
+  const key = imageUrl.slice(IMAGE_URL_PREFIX.length);
+  return STORED_KEY_PATTERN.test(key) ? key : null;
+}
+
+export async function deletePlatinum(id: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "Debes iniciar sesión." };
+  }
+
+  const platinum = await prisma.platinum.findUnique({
+    where: { id },
+    select: { userId: true, imageUrl: true, hash: true },
+  });
+
+  if (!platinum) {
+    return { success: false as const, error: "El platino no existe." };
+  }
+  if (platinum.userId !== userId) {
+    return {
+      success: false as const,
+      error: "No puedes borrar un platino que no es tuyo.",
+    };
+  }
+
+  const key = imageKeyFromUrl(platinum.imageUrl);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+
+  await prisma.platinum.delete({ where: { id } });
+
+  if (key) {
+    const stillReferenced = await prisma.platinum.count({
+      where: { hash: platinum.hash },
+    });
+    if (stillReferenced === 0) {
+      try {
+        await deleteImage(key);
+      } catch {
+        // Best effort: the DB row is already gone.
+      }
+    }
+  }
+
+  revalidatePath("/");
+  revalidatePath("/explore");
+  revalidatePath("/hall-of-fame");
+  if (user?.username) {
+    revalidatePath(`/u/${user.username}`);
+  }
+
+  return { success: true as const };
 }
