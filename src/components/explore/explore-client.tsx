@@ -74,6 +74,7 @@ export function ExploreClient({ platinums, users }: ExploreClientProps) {
                 <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="PS5">PlayStation 5</SelectItem>
                 <SelectItem value="PS4">PlayStation 4</SelectItem>
+                <SelectItem value="PS3">PlayStation 3</SelectItem>
               </SelectContent>
             </Select>
           </div>
