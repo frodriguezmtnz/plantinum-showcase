@@ -5,10 +5,8 @@ import { toast } from '@/hooks/use-toast';
 import type { Platinum, User } from '@/lib/data';
 import { Heart, Share2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 
 interface SocialShareProps {
   platinum: Platinum;
@@ -17,21 +15,13 @@ interface SocialShareProps {
 
 export function SocialShare({ platinum, user }: SocialShareProps) {
   const pathname = usePathname();
-  const { user: authUser } = useAuth();
-  const router = useRouter();
-  const [hasVoted, setHasVoted] = useState(false);
-  const [voteCount, setVoteCount] = useState(platinum.votes);
-
-  const handleVote = () => {
-    if (!authUser) {
-      router.push('/login');
-      return;
-    }
-    if (hasVoted) return;
-    setHasVoted(true);
-    setVoteCount(prev => prev + 1);
-    toast({ title: '¡Voto registrado!', description: `Votaste por ${platinum.gameName}.` });
-  };
+  const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
+    platinumId: platinum.id,
+    ownerId: platinum.userId,
+    initialVotes: platinum.votes,
+    initialMonthlyVotes: platinum.monthlyVotes,
+    initialHasVoted: platinum.hasVoted ?? false,
+  });
 
   const handleShare = async () => {
     const shareData = {
@@ -61,10 +51,22 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
       <Button
         className={cn("w-full vote-button transition-colors", hasVoted ? "bg-red-500 hover:bg-red-600 text-white" : "")}
         size="lg"
-        onClick={handleVote}
+        onClick={toggleVote}
+        disabled={isPending || isOwner}
+        title={
+          isOwner
+            ? 'No puedes votar tu propio platino'
+            : hasVoted
+              ? 'Pulsa para retirar tu voto'
+              : 'Votar este platino'
+        }
       >
         <Heart className={cn("mr-2 transition-all", hasVoted && "fill-white scale-110")} />
-        {hasVoted ? `Voted (${voteCount})` : `Vote (${voteCount})`}
+        {isOwner
+          ? 'Tu platino'
+          : hasVoted
+            ? `Voto activo (${votes})`
+            : `Votar (${votes})`}
       </Button>
       <Button variant="outline" size="lg" className="px-3" onClick={handleShare} aria-label="Share platinum">
         <Share2 />

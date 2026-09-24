@@ -37,10 +37,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
   }
 
   const session = await auth();
-  const isOwner = session?.user?.id === user.id;
+  const currentUserId = session?.user?.id;
+  const isOwner = currentUserId === user.id;
 
-  const platinums = await getPlatinumsByUserId(user.id);
-  const pridePlatinum = user.pridePlatinumId ? await getPlatinumById(user.pridePlatinumId) : null;
+  const platinums = await getPlatinumsByUserId(user.id, currentUserId);
+  const pridePlatinum = user.pridePlatinumId
+    ? await getPlatinumById(user.pridePlatinumId, currentUserId)
+    : null;
   
   // Exclude pride platinum from the main gallery if it exists
   const otherPlatinums = pridePlatinum 

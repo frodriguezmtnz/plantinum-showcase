@@ -37,7 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PlatinumDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const platinum = await getPlatinumById(id);
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+  const platinum = await getPlatinumById(id, currentUserId);
   
   if (!platinum) {
     notFound();
@@ -45,8 +47,7 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
 
   const user: User | undefined = await getUserById(platinum.userId);
 
-  const session = await auth();
-  const canDelete = session?.user?.id === platinum.userId;
+  const canDelete = currentUserId === platinum.userId;
 
   return (
     <div className="container max-w-4xl py-8 md:py-12">

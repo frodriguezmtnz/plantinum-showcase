@@ -1,4 +1,5 @@
 import { getPlatinumsPage } from '@/lib/data';
+import { auth } from '@/auth';
 import { ExploreClient } from '@/components/explore/explore-client';
 
 export const metadata = {
@@ -11,8 +12,14 @@ type Props = {
 
 export default async function ExplorePage({ searchParams }: Props) {
   const { q = '', platform = 'all', sort = 'recent' } = await searchParams;
+  const session = await auth();
 
-  const { items, hasMore } = await getPlatinumsPage({ q, platform, sort });
+  const { items, hasMore } = await getPlatinumsPage({
+    q,
+    platform,
+    sort,
+    currentUserId: session?.user?.id,
+  });
 
   return (
     <section className="container py-8 md:py-12">

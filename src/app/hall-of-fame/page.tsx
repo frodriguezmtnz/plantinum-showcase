@@ -1,5 +1,6 @@
 
 import { getMonthlyRanking, getUsers, type User } from '@/lib/data';
+import { auth } from '@/auth';
 import { Trophy, Award } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
@@ -12,7 +13,8 @@ export const metadata = {
 };
 
 export default async function HallOfFamePage() {
-  const rankedPlatinums = await getMonthlyRanking();
+  const session = await auth();
+  const rankedPlatinums = await getMonthlyRanking(10, session?.user?.id);
   const users = await getUsers();
 
   const getUserById = (userId: string): User | undefined => users.find(u => u.id === userId);

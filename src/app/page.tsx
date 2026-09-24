@@ -1,5 +1,6 @@
 
 import { getHallOfFame, getTopPlatinums, getLatestPlatinums, getUsers } from '@/lib/data';
+import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -26,10 +27,13 @@ const SectionDivider = ({ title }: { title: string }) => (
 )
 
 export default async function Home() {
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+
   const [hallOfFameData, topPlatinumsData, latestPlatinumsData, users] = await Promise.all([
-    getHallOfFame(1),
-    getTopPlatinums(5),
-    getLatestPlatinums(8),
+    getHallOfFame(1, currentUserId),
+    getTopPlatinums(5, currentUserId),
+    getLatestPlatinums(8, currentUserId),
     getUsers()
   ]);
   const hallOfFame = hallOfFameData[0] || null;

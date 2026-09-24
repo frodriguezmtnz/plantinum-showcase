@@ -10,10 +10,8 @@ import { Award, Eye, Heart, Quote, User as UserIcon } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/use-auth';
-import { useRouter } from 'next/navigation';
-import { toast } from '@/hooks/use-toast';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
+import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 
 interface PlatinumCardProps {
   platinum: Platinum;
@@ -27,10 +25,13 @@ interface PlatinumCardProps {
 
 export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0, showComment = false, canDelete = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
-  const [voteCount, setVoteCount] = useState(platinum.votes);
-  const { user: authUser } = useAuth();
-  const router = useRouter();
+  const { hasVoted, votes, monthlyVotes, isPending, isOwner, toggleVote } = useVotePlatinum({
+    platinumId: platinum.id,
+    ownerId: platinum.userId,
+    initialVotes: platinum.votes,
+    initialMonthlyVotes: platinum.monthlyVotes,
+    initialHasVoted: platinum.hasVoted ?? false,
+  });
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
   const animDelay = Math.min(index * 50, 400);
@@ -43,14 +44,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
 
   const handleVoteClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!authUser) {
-      router.push('/login');
-      return;
-    }
-    if (hasVoted) return;
-    setHasVoted(true);
-    setVoteCount(prev => prev + 1);
-    toast({ title: '¡Voto registrado!', description: `Votaste por ${platinum.gameName}.` });
+    toggleVote();
   };
 
   if (variant === 'top') {
@@ -76,7 +70,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
             </div>
             <div className="absolute top-2 right-2 flex items-center gap-2 bg-black/50 text-white font-bold p-2 rounded-md">
                 <Heart className="w-4 h-4" />
-                <span>{platinum.monthlyVotes}</span>
+                <span>{monthlyVotes}</span>
             </div>
         </Link>
     )
@@ -138,9 +132,18 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                 size="sm"
                 className={cn("vote-button transition-colors", hasVoted ? "text-red-500" : "text-muted-foreground hover:text-primary")}
                 onClick={handleVoteClick}
+                disabled={isPending || isOwner}
+                title={
+                  isOwner
+                    ? 'No puedes votar tu propio platino'
+                    : hasVoted
+                      ? 'Pulsa para retirar tu voto'
+                      : 'Votar este platino'
+                }
+                aria-label={hasVoted ? 'Retirar voto' : 'Votar platino'}
               >
                   <Heart className={cn("mr-2 transition-all", hasVoted && "fill-red-500 scale-110")} />
-                  <span>{voteCount}</span>
+                  <span>{votes}</span>
               </Button>
               {canDelete && <DeletePlatinumButton platinumId={platinum.id} />}
             </div>
