@@ -14,6 +14,7 @@ export interface Platinum {
   imageHint: string;
   width: number;
   height: number;
+  comment?: string | null;
 }
 
 export interface User {
@@ -37,6 +38,7 @@ interface PlatinumRecord {
   imageHint: string;
   width: number;
   height: number;
+  comment?: string | null;
 }
 
 interface UserRecord {

@@ -1,5 +1,6 @@
 
 import { getUserByUsername, getPlatinumsByUserId, getPlatinumById } from '@/lib/data';
+import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
@@ -35,6 +36,9 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
     notFound();
   }
 
+  const session = await auth();
+  const isOwner = session?.user?.id === user.id;
+
   const platinums = await getPlatinumsByUserId(user.id);
   const pridePlatinum = user.pridePlatinumId ? await getPlatinumById(user.pridePlatinumId) : null;
   
@@ -69,7 +73,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             Pride of the Collection
           </h2>
           <div className="max-w-2xl mx-auto">
-            <PlatinumCard platinum={pridePlatinum} user={user} isPride />
+            <PlatinumCard platinum={pridePlatinum} user={user} isPride showComment={isOwner} />
           </div>
         </section>
       )}
@@ -79,7 +83,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
         {otherPlatinums.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
             {otherPlatinums.map(platinum => (
-              <PlatinumCard key={platinum.id} platinum={platinum} user={user} />
+              <PlatinumCard key={platinum.id} platinum={platinum} user={user} showComment={isOwner} />
             ))}
           </div>
         ) : (

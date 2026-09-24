@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Award, Eye, Heart, User as UserIcon } from 'lucide-react';
+import { Award, Eye, Heart, Quote, User as UserIcon } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -20,9 +20,10 @@ interface PlatinumCardProps {
   variant?: 'default' | 'top';
   isPride?: boolean;
   index?: number;
+  showComment?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0 }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0, showComment = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [voteCount, setVoteCount] = useState(platinum.votes);
@@ -113,6 +114,12 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
             <h3 className="font-semibold truncate pr-2">{platinum.gameName}</h3>
             <Badge variant="outline" className="shrink-0">{platinum.platform}</Badge>
         </div>
+        {showComment && platinum.comment && (
+          <div className="mt-2 flex gap-2 text-sm text-muted-foreground">
+            <Quote className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p className="italic line-clamp-2" title={platinum.comment}>{platinum.comment}</p>
+          </div>
+        )}
         <div className="flex justify-between items-center mt-2">
             {user && (
                 <Link href={`/u/${user.username}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary">
