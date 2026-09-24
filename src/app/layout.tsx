@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { SiteChrome } from '@/components/layout/site-chrome';
 import { cn } from '@/lib/utils';
 import { SessionProvider } from 'next-auth/react';
 import { Inter, Outfit } from 'next/font/google';
@@ -66,11 +67,9 @@ export default function RootLayout({
         "min-h-screen bg-background font-body antialiased",
       )}>
         <SessionProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1 animate-in fade-in duration-300">{children}</main>
-            <Footer />
-          </div>
+          <SiteChrome header={<Header />} footer={<Footer />}>
+            {children}
+          </SiteChrome>
           <Toaster />
         </SessionProvider>
       </body>
