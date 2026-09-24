@@ -93,6 +93,17 @@ export async function uploadPlatinum(formData: FormData) {
   const hash = createHash("sha256").update(processed.data).digest("hex");
   const key = storageImageKey(hash);
 
+  const existing = await prisma.platinum.findFirst({
+    where: { userId, hash },
+    select: { id: true },
+  });
+  if (existing) {
+    return {
+      success: false as const,
+      error: "Ya tienes un platino con esa misma captura.",
+    };
+  }
+
   try {
     await putImage(key, processed.data);
   } catch {
@@ -136,7 +147,13 @@ export async function uploadPlatinum(formData: FormData) {
     revalidatePath("/hall-of-fame");
 
     return { success: true as const, platinumId: platinum.id };
-  } catch {
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2002") {
+      return {
+        success: false as const,
+        error: "Ya tienes un platino con esa misma captura.",
+      };
+    }
     return {
       success: false as const,
       error: "No se pudo guardar el platino. Inténtalo de nuevo.",
