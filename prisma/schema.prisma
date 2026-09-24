@@ -20,6 +20,22 @@ model User {
   accounts  Account[]
   sessions  Session[]
   platinums Platinum[]
+  votes     Vote[]    @relation("UserVotes")
+}
+
+model Vote {
+  id         String   @id @default(cuid())
+  platinumId String
+  userId     String
+  period     String
+  createdAt  DateTime @default(now())
+
+  platinum Platinum @relation("PlatinumVotes", fields: [platinumId], references: [id], onDelete: Cascade)
+  user     User     @relation("UserVotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platinumId])
+  @@index([platinumId])
+  @@index([platinumId, period])
 }
 
 model Account {
@@ -63,15 +79,18 @@ model Platinum {
   platinumDate DateTime
   isSpoiler    Boolean  @default(false)
   comment      String?
-  userId       String
-  votes        Int      @default(0)
-  monthlyVotes Int      @default(0)
-  imageUrl     String
-  imageHint    String
-  width        Int
-  height       Int
+  userId            String
+  votes             Int      @default(0)
+  monthlyVotes      Int      @default(0)
+  monthlyVotesMonth String?
+  imageUrl          String
+  imageHint         String
+  width             Int
+  height            Int
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voteRecords Vote[] @relation("PlatinumVotes")
 
   @@unique([userId, hash])
+  @@index([monthlyVotesMonth, monthlyVotes])
 }
