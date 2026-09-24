@@ -35,7 +35,7 @@ const faqs = [
   {
     question: 'Can I change my vote?',
     answer:
-      'Currently, voting is a one-time action per platinum. Once you vote for a screenshot, you cannot undo it, so choose wisely!',
+      'You can cast one vote per platinum and it is reversible: click the heart again to remove your vote. You cannot vote for your own platinums, so the competition stays fair.',
   },
 ];
 
