@@ -10,6 +10,8 @@ colors:
   slate-edge: "hsl(217 33% 17%)"
   platinum-metal: "hsl(210 25% 88%)"
   platinum-dim: "hsl(215 18% 62%)"
+  plate-top: "hsl(224 71% 10%)"
+  scroll-edge: "hsl(217 33% 24%)"
   trophy-gold: "#fbbf24"
   heart-red: "#ef4444"
   success-green: "#2ecc71"
@@ -119,6 +121,8 @@ One working blue carries the system; everything else is a reserved specialist.
 - **Slate Edge** (`hsl(217 33% 17%)`): borders, inputs, secondary fills.
 - **Platinum Metal** (`hsl(210 25% 88%)` with a subtle silver gradient `180deg, hsl(210 30% 94%) → hsl(215 18% 72%)`): reserved celebration material.
 - **Platinum Dim** (`hsl(215 18% 62%)`): secondary tone of the metal for plates/engravings.
+- **Plate Top** (`hsl(224 71% 10%)`): upper stop of the engraved plaque surface (`.platinum-plate`).
+- **Scroll Edge** (`hsl(217 33% 24%)`): custom scrollbar thumb — one step above the border tone so browser chrome stays in-world.
 
 ### Named Rules
 **The Platinum Reserve Rule.** Platinum metal may only appear on championship content: the monthly #1, Hall of Fame placements, and "Pride of the Collection." If a surface has no champion, it shows no metal.

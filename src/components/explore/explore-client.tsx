@@ -110,7 +110,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             </Select>
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Sort by:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap shrink-0">Sort by:</label>
             <Select value={sortOrder} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sort by" />

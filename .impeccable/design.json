@@ -7,6 +7,8 @@
       "midnight": { "role": "neutral", "displayName": "Midnight", "canonical": "hsl(224 71% 4%)", "tonalRamp": ["hsl(224 71% 4%)", "hsl(224 60% 9%)", "hsl(224 50% 14%)", "hsl(222 40% 22%)", "hsl(220 32% 32%)", "hsl(218 26% 48%)", "hsl(215 20% 65%)", "hsl(212 20% 84%)"] },
       "ps-blue": { "role": "primary", "displayName": "PlayStation Blue", "canonical": "hsl(210 100% 56%)", "tonalRamp": ["hsl(211 100% 18%)", "hsl(211 100% 28%)", "hsl(211 100% 38%)", "hsl(211 100% 46%)", "hsl(210 100% 56%)", "hsl(209 100% 68%)", "hsl(208 100% 80%)", "hsl(207 100% 92%)"] },
       "platinum-metal": { "role": "tertiary", "displayName": "Platinum Metal", "canonical": "hsl(210 25% 88%)", "tonalRamp": ["hsl(215 18% 30%)", "hsl(215 18% 45%)", "hsl(215 18% 55%)", "hsl(215 18% 62%)", "hsl(212 22% 74%)", "hsl(210 25% 88%)", "hsl(210 30% 94%)", "hsl(0 0% 100%)"] },
+      "plate-top": { "role": "neutral", "displayName": "Plate Top", "canonical": "hsl(224 71% 10%)", "tonalRamp": ["hsl(224 71% 4%)", "hsl(224 71% 7%)", "hsl(224 71% 10%)", "hsl(224 60% 16%)", "hsl(222 50% 24%)", "hsl(220 40% 38%)", "hsl(218 30% 58%)", "hsl(216 25% 80%)"] },
+      "scroll-edge": { "role": "neutral", "displayName": "Scroll Edge", "canonical": "hsl(217 33% 24%)", "tonalRamp": ["hsl(217 33% 10%)", "hsl(217 33% 14%)", "hsl(217 33% 17%)", "hsl(217 33% 24%)", "hsl(217 30% 34%)", "hsl(216 26% 48%)", "hsl(215 22% 65%)", "hsl(214 20% 82%)"] },
       "heart-red": { "role": "secondary", "displayName": "Heart Red", "canonical": "#ef4444" },
       "success-green": { "role": "secondary", "displayName": "Success Green", "canonical": "#2ecc71" },
       "trophy-gold": { "role": "tertiary", "displayName": "Trophy Gold", "canonical": "#fbbf24" }

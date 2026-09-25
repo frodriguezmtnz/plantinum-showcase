@@ -7,7 +7,8 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] Toasts semánticos: verde (`success`) al votar y rojo (`danger`) al retirar voto o fallar.
 - [x] Overflow del detalle en escritorio: contadores con `flex-wrap`/`min-w-0` y `SocialShare` con `flex-1`/`shrink-0`.
 - [x] Botón de voto simplificado: `Votar` sin número si no has votado, `♥ número` si ya votaste y `Tu platino` para el autor.
-- [ ] (Añadir aquí las mejoras de diseño/UX que vayamos detectando.)
+- [x] Sistema visual "The Midnight Showcase" documentado en `DESIGN.md` (+ `.impeccable/design.json`): tokens platinum/glow escénico, exhibits con ratio nativo (masonry en Explorar/perfiles), hero + placa de campeón en home, countdown real del mes en el Salón de la Fama.
+- [ ] Pendiente de validación visual en local (`pnpm dev`, :9002) por el dueño antes del merge a main.
 
 ## Hecho
 
@@ -44,7 +45,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] Rediseño del login/registro: split-screen con panel de marca y sin header/footer (inmersivo) vía `AuthShell` + `SiteChrome`.
 - [ ] OAuth de Google (el botón ya existe pero está `disabled` "Próximamente" en `src/app/login/page.tsx`).
 - [ ] "¿Olvidaste tu contraseña?" sin flujo real (hoy es texto opaco).
-- [ ] Progreso de subida (barra/estado) en el upload.
+- [x] Progreso de subida (barra/estado) en el upload: progreso real de compresión + fase de subida. Drag & drop ahora funciona de verdad.
 
 ## SEO / share
 
