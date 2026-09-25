@@ -57,6 +57,24 @@
     --chart-3: hsl(30, 80%, 55%);
     --chart-4: hsl(280, 65%, 60%);
     --chart-5: hsl(340, 75%, 55%);
+    /* Platinum Reserve: celebration material, championship moments only */
+    --platinum: hsl(210, 25%, 88%);
+    --platinum-bright: hsl(210, 30%, 94%);
+    --platinum-dim: hsl(215, 18%, 62%);
+    /* Scenic depth: flat at rest, lit by state */
+    --spot: 0 0 32px -8px hsl(210, 100%, 56%, 0.45);
+    --spot-strong: 0 0 56px -12px hsl(210, 100%, 56%, 0.55);
+    --champion-aura: 0 0 48px -12px hsl(210, 25%, 88%, 0.35);
+  }
+
+  :root {
+    --platinum: hsl(215, 25%, 45%);
+    --platinum-bright: hsl(210, 25%, 88%);
+    --platinum-dim: hsl(215, 18%, 62%);
+    --spot: 0 0 32px -8px hsl(210, 100%, 56%, 0.35);
+    --spot-strong: 0 0 56px -12px hsl(210, 100%, 56%, 0.45);
+    --champion-aura: 0 0 48px -12px hsl(215, 25%, 45%, 0.3);
+    --ease-showcase: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   * {
@@ -99,6 +117,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-platinum: var(--platinum);
+  --color-platinum-bright: var(--platinum-bright);
+  --color-platinum-dim: var(--platinum-dim);
+  --shadow-spot: var(--spot);
+  --shadow-spot-strong: var(--spot-strong);
+  --shadow-champion: var(--champion-aura);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -136,19 +160,64 @@
   }
 }
 
-.platinum-card-spoiler {
-  position: relative;
-  overflow: hidden;
-}
-
 .platinum-card-spoiler > .spoiler-blur {
   filter: blur(24px);
   transform: scale(1.1);
-  transition: filter 0.3s ease;
+  transition: filter 0.4s var(--ease-showcase, ease);
 }
 
 .platinum-card-spoiler:hover > .spoiler-blur {
   filter: blur(16px);
+}
+
+/* Scenic lighting: the room is dark, the exhibit carries the light */
+.stage-light {
+  background:
+    radial-gradient(55% 45% at 50% 0%, hsl(210, 100%, 56%, 0.14), transparent 70%),
+    radial-gradient(90% 60% at 50% 100%, hsl(224, 71%, 4%, 0.9), transparent);
+}
+
+.platinum-edge {
+  border: 1px solid color-mix(in srgb, var(--platinum) 30%, transparent);
+}
+
+.platinum-plate {
+  background: linear-gradient(180deg, hsl(224, 71%, 10%), hsl(224, 71%, 7%));
+}
+
+.platinum-text {
+  background: linear-gradient(180deg, var(--platinum-bright), var(--platinum-dim));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: hsl(210, 100%, 56%, 0.35);
+  color: hsl(210, 40%, 98%);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(217, 33%, 24%) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(217, 33%, 24%);
+  border-radius: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .vote-button:active svg {

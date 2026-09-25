@@ -84,9 +84,11 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       <section>
         <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">Trophy Gallery</h2>
         {otherPlatinums.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
             {otherPlatinums.map(platinum => (
-              <PlatinumCard key={platinum.id} platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} />
+              <div key={platinum.id} className="mb-6 break-inside-avoid">
+                <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} />
+              </div>
             ))}
           </div>
         ) : (

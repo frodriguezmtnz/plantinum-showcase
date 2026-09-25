@@ -127,14 +127,15 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
 
       {items.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
             {items.map((item, index) => (
-              <PlatinumCard
-                key={item.platinum.id}
-                platinum={item.platinum}
-                user={item.user}
-                index={index}
-              />
+              <div key={item.platinum.id} className="mb-6 break-inside-avoid">
+                <PlatinumCard
+                  platinum={item.platinum}
+                  user={item.user}
+                  index={index}
+                />
+              </div>
             ))}
           </div>
 
