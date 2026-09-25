@@ -84,7 +84,7 @@ export default function UploadPage() {
     if (!originalFile) {
       toast({
         title: "Upload Failed",
-        description: "La captura es obligatoria.",
+        description: "A screenshot is required.",
         variant: "destructive",
       });
       return;
@@ -129,7 +129,7 @@ export default function UploadPage() {
     } catch {
       toast({
         title: "Upload Failed",
-        description: "Ha ocurrido un error inesperado. Inténtalo de nuevo.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
@@ -149,7 +149,7 @@ export default function UploadPage() {
   };
   
   if (!user) {
-    return <div className="container text-center py-12">Redirigiendo a inicio de sesión...</div>;
+    return <div className="container text-center py-12">Redirecting to sign in&hellip;</div>;
   }
 
 

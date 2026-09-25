@@ -12,9 +12,9 @@ interface AuthShellProps {
 }
 
 const HIGHLIGHTS = [
-  { icon: Trophy, text: 'Sube tus platinos con una captura y su historia.' },
-  { icon: Heart, text: 'Vota y descubre los favoritos de la comunidad.' },
-  { icon: Users, text: 'Presume de perfil y compite en el ranking mensual.' },
+  { icon: Trophy, text: 'Post your platinums with the screenshot and the story behind it.' },
+  { icon: Heart, text: 'Vote and discover the community\u2019s favorites.' },
+  { icon: Users, text: 'Show off your profile and climb the monthly ranking.' },
 ];
 
 export function AuthShell({ title, description, children, footer, error }: AuthShellProps) {
@@ -29,10 +29,10 @@ export function AuthShell({ title, description, children, footer, error }: AuthS
         <div className="space-y-8">
           <div className="space-y-4">
             <h2 className="font-headline text-4xl font-bold leading-tight">
-              Tu vitrina de <span className="text-primary">trofeos de platino</span>.
+              Your <span className="text-primary">platinum trophy</span> showcase.
             </h2>
             <p className="text-lg text-muted-foreground">
-              Sube tus logros, presume de colección y compite en el Salón de la Fama.
+              Upload your achievements, flex your collection, and compete in the Hall of Fame.
             </p>
           </div>
           <ul className="space-y-4 text-sm">

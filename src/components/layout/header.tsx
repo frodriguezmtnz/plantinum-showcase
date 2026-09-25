@@ -38,8 +38,8 @@ import { useAuth } from '@/hooks/use-auth';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Trophy },
-  { href: '/explore', label: 'Explorar', icon: Compass },
-  { href: '/hall-of-fame', label: 'Salón de la Fama', icon: Crown },
+  { href: '/explore', label: 'Explore', icon: Compass },
+  { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown },
 ];
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
@@ -77,7 +77,7 @@ export function Header() {
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Subir</span>
+                <span className="hidden sm:inline">Upload</span>
               </Button>
             </Link>
             {user ? (
@@ -85,7 +85,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar>
-                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'Usuario'} />
+                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
                       <AvatarFallback>{(user.name ?? '?').slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
@@ -103,13 +103,13 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href={`/u/${user.name}`}>
                       <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Perfil</span>
+                      <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
+                    <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -118,13 +118,13 @@ export function Header() {
                 <Button variant="outline" asChild className="hidden sm:flex">
                     <Link href="/login">
                         <LogIn className="mr-2 h-4 w-4" />
-                        Iniciar sesión
+                        Sign in
                     </Link>
                 </Button>
                 <Button asChild className="hidden sm:flex">
                     <Link href="/register">
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Registrarse
+                        Sign up
                     </Link>
                 </Button>
                </>
@@ -158,13 +158,13 @@ export function Header() {
                         <SheetClose asChild>
                           <NavLink href="/login" active={pathname === '/login'}>
                             <LogIn className="mr-2 h-4 w-4" />
-                            Iniciar sesión
+                            Sign in
                           </NavLink>
                         </SheetClose>
                         <SheetClose asChild>
                           <NavLink href="/register" active={pathname === '/register'}>
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Registrarse
+                            Sign up
                           </NavLink>
                         </SheetClose>
                       </>

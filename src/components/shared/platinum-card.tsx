@@ -135,12 +135,12 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                 disabled={isPending || isOwner}
                 title={
                   isOwner
-                    ? 'No puedes votar tu propio platino'
+                    ? "You can't vote for your own platinum"
                     : hasVoted
-                      ? 'Pulsa para retirar tu voto'
-                      : 'Votar este platino'
+                      ? 'Click to undo your vote'
+                      : 'Vote for this platinum'
                 }
-                aria-label={hasVoted ? 'Retirar voto' : 'Votar platino'}
+                aria-label={hasVoted ? 'Remove vote' : 'Vote for platinum'}
               >
                   <Heart className={cn("mr-2 transition-all", hasVoted && "fill-red-500 scale-110")} />
                   <span>{votes}</span>

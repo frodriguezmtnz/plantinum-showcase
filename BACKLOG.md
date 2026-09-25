@@ -39,6 +39,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 
 ## UX / diseño
 
+- [x] UI 100% en inglés: traducidos todos los strings (acciones, toasts, header, auth, explore, perfiles, upload) y `toLocaleString` a `en-US`. Decisión de producto: idioma único para alcance internacional.
 - [x] Mostrar/ocultar contraseña en login y registro (`PasswordInput` con Eye/EyeOff).
 - [x] Rediseño del login/registro: split-screen con panel de marca y sin header/footer (inmersivo) vía `AuthShell` + `SiteChrome`.
 - [ ] OAuth de Google (el botón ya existe pero está `disabled` "Próximamente" en `src/app/login/page.tsx`).

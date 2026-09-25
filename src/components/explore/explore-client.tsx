@@ -86,23 +86,23 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
       <Card className="p-4 mb-12">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Juego:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only">Game:</label>
             <Input
               type="text"
-              placeholder="Buscar por juego..."
+              placeholder="Search by game..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full"
             />
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Plataforma:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only">Platform:</label>
             <Select value={platformFilter} onValueChange={handlePlatformChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Filtrar por plataforma" />
+                <SelectValue placeholder="Filter by platform" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="PS5">PlayStation 5</SelectItem>
                 <SelectItem value="PS4">PlayStation 4</SelectItem>
                 <SelectItem value="PS3">PlayStation 3</SelectItem>
@@ -110,15 +110,15 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             </Select>
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Ordenar por:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only">Sort by:</label>
             <Select value={sortOrder} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Ordenar por" />
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">Recientes</SelectItem>
-                <SelectItem value="most-voted">Más votados</SelectItem>
-                <SelectItem value="least-voted">Menos votados</SelectItem>
+                <SelectItem value="recent">Most recent</SelectItem>
+                <SelectItem value="most-voted">Most voted</SelectItem>
+                <SelectItem value="least-voted">Least voted</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -147,7 +147,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
                 disabled={isLoadingMore}
               >
                 {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoadingMore ? 'Cargando...' : 'Cargar más'}
+                {isLoadingMore ? 'Loading...' : 'Load more'}
               </Button>
             </div>
           )}
@@ -155,9 +155,9 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
       ) : (
         <EmptyState
           icon={SearchX}
-          title="No se encontraron platinos"
-          description="Prueba a ajustar los filtros o vuelve más tarde."
-          actionLabel="Subir platino"
+          title="No platinums found"
+          description="Try tweaking the filters, or come back later."
+          actionLabel="Upload a platinum"
           actionHref="/upload"
         />
       )}

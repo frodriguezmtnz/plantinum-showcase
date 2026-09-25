@@ -39,7 +39,7 @@ export default async function Home() {
   const hallOfFame = hallOfFameData[0] || null;
   const topPlatinums = topPlatinumsData;
   const latestPlatinums = latestPlatinumsData;
-  const currentMonthYear = new Date().toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+  const currentMonthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
   const getUserById = (userId: string) => {
     return users.find(u => u.id === userId);
@@ -74,9 +74,9 @@ export default async function Home() {
           ) : null}
       </section>
 
-      {/* Top Platinos */}
+      {/* Top Platinums */}
       <section className="mb-12">
-        <SectionDivider title={`Top Platinos • ${currentMonthYear}`} />
+        <SectionDivider title={`Top Platinums \u00b7 ${currentMonthYear}`} />
         <div className="mt-8">
           <Carousel opts={{ align: "start", loop: topPlatinums.length > 2 }}>
             <CarouselContent className="-ml-4">
@@ -92,9 +92,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Latest Platinos */}
+      {/* Latest Platinums */}
       <section>
-        <SectionDivider title="Latest Platinos" />
+        <SectionDivider title="Latest Platinums" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 mt-8">
               {latestPlatinums.map(platinum => (
                 <PlatinumCard key={platinum.id} platinum={platinum} user={getUserById(platinum.userId)} />

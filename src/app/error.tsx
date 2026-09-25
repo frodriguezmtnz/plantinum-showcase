@@ -15,12 +15,12 @@ export default function ErrorPage({
   return (
     <div className="container flex min-h-[60vh] flex-col items-center justify-center text-center py-16">
       <AlertTriangle className="h-16 w-16 text-destructive mb-6" />
-      <h2 className="text-2xl font-semibold">Algo ha salido mal</h2>
+      <h2 className="text-2xl font-semibold">Something went wrong</h2>
       <p className="mt-2 text-muted-foreground max-w-md">
-        Se ha producido un error inesperado. Intenta recargar la página o vuelve a intentarlo.
+        An unexpected error occurred. Try reloading the page, or give it another go in a moment.
       </p>
       <Button onClick={reset} size="lg" className="mt-8">
-        Intentar de nuevo
+        Try again
       </Button>
     </div>
   );

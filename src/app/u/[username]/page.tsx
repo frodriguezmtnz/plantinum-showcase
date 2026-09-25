@@ -93,15 +93,15 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
            pridePlatinum ? (
             <EmptyState
               icon={Trophy}
-              title="Solo tiene un platino"
-              description="Este usuario todavía no ha mostrado sus otros platinos."
+              title="Just one platinum for now"
+              description="This hunter hasn't shown off any other platinums yet."
             />
            ) : (
             <EmptyState
               icon={Trophy}
-              title="Sin platinos aún"
-              description="Este usuario no ha mostrado ningún platino todavía."
-              actionLabel="Subir platino"
+              title="No platinums yet"
+              description="This hunter hasn't shared any platinum screenshots yet."
+              actionLabel="Upload a platinum"
               actionHref="/upload"
             />
            )

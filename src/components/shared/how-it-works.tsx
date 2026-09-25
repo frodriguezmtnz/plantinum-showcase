@@ -15,28 +15,28 @@ const SectionDivider = ({ title }: { title: string }) => (
 const howItWorksSteps = [
   {
     gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExazA1cGUzdmY0ZTU0aGZtbGZ2c3JmdXRoM2Y5cWw3cXNrc3M2bGlkNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPb7b1Qp729QJcQ/giphy.gif',
-    title: 'Crea una cuenta',
-    description: 'Regístrate para unirte a la comunidad de cazadores de trofeos.'
+    title: 'Create an account',
+    description: 'Sign up to join the community of trophy hunters.'
   },
   {
     gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3A1dWFqZ2RhaThnZ3Y1ZGQ2YmdicnRsemh1ZzJjMjk2ZGM0cGs3ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKS6a9G23a3g3p6/giphy.gif',
-    title: 'Sube tu platino',
-    description: 'Sube la captura de pantalla de tu último trofeo de platino de PlayStation.'
+    title: 'Upload your platinum',
+    description: 'Post the screenshot of your latest PlayStation platinum trophy.'
   },
   {
     gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExajVsYmlzazJ5N2k3ZmNhaWcwdjRzcGZtM25heWxhdzk4bXY2M2w3ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0NwC1pi85J5Ew5oI/giphy.gif',
-    title: 'Compártelo',
-    description: 'Muestra tu logro y habilidad con tus amigos en las redes sociales.'
+    title: 'Show it off',
+    description: 'Share your achievement and skill with friends on social media.'
   },
   {
     gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2Rtc2djaXd0a2Q2MXJzMWR6bWRuN3h1bWR2NWp2bHVxOXZoZ2N1dCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S9oGIGurgrL8Y/giphy.gif',
-    title: 'Vota y compite',
-    description: 'Vota por las capturas de otros para ayudarles a subir en el ranking.'
+    title: 'Vote and compete',
+    description: 'Vote on other hunters\u2019 screenshots to help them climb the ranking.'
   },
   {
     gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTZxNjd6eXFqNWJhdXRtYnFqNTJzY2ZxcWxtMjJscW1jMmxzdnZpZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2zVf1kS3z4f72/giphy.gif',
-    title: 'Disfruta',
-    description: 'Disfruta de la comunidad y celebra la cultura del trofeo de platino.'
+    title: 'Enjoy',
+    description: 'Enjoy the community and celebrate platinum trophy culture.'
   }
 ];
 
