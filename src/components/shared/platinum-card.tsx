@@ -18,13 +18,12 @@ interface PlatinumCardProps {
   user?: User;
   variant?: 'default' | 'top';
   isPride?: boolean;
-  index?: number;
   showComment?: boolean;
   canDelete?: boolean;
   cover?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, index = 0, showComment = false, canDelete = false, cover = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, showComment = false, canDelete = false, cover = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const { hasVoted, votes, monthlyVotes, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
@@ -35,7 +34,6 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
   });
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
-  const animDelay = Math.min(index * 50, 400);
   const frameStyle = cover ? undefined : { aspectRatio: `${platinum.width} / ${platinum.height}` };
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
@@ -51,7 +49,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
 
   if (variant === 'top') {
     return (
-        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500 hover:shadow-bloom focus-visible:shadow-bloom ring-1 ring-white/70 transition-shadow duration-300" style={{ animationDelay: `${animDelay}ms` }}>
+        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500 hover:shadow-bloom focus-visible:shadow-bloom ring-1 ring-white/70 transition-shadow duration-300">
             <Image
                 src={platinum.imageUrl}
                 alt={`Platinum screenshot for ${platinum.gameName}`}
@@ -79,7 +77,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
   }
 
   return (
-    <Card className={cn("panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom", isPride && "ring-2 ring-primary/60")} style={{ animationDelay: `${animDelay}ms` }}>
+    <Card className={cn("panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom", isPride && "ring-2 ring-primary/60")}>
        {isPride && (
         <div className="bg-primary/10 text-primary text-xs font-bold tracking-[0.14em] uppercase flex items-center justify-center gap-2 py-2.5">
             <Award className="w-4 h-4 text-primary" />

@@ -100,13 +100,12 @@ export default async function Home() {
           </div>
           {latestPlatinums.length > 0 ? (
             <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
-              {latestPlatinums.map((platinum, index) => (
-                <div key={platinum.id} className="mb-6 break-inside-avoid">
-                  <PlatinumCard
-                    platinum={platinum}
-                    user={getUserById(platinum.userId)}
-                    index={index}
-                  />
+                {latestPlatinums.map((platinum) => (
+                  <div key={platinum.id} className="mb-6 break-inside-avoid">
+                    <PlatinumCard
+                      platinum={platinum}
+                      user={getUserById(platinum.userId)}
+                    />
                 </div>
               ))}
             </div>
