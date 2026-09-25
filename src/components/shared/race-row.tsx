@@ -100,7 +100,7 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
       onKeyDown={onKeyDown}
       className="overflow-x-auto px-8 pb-16 pt-2 sm:px-12"
     >
-      <div className={cn('flex w-max snap-x snap-mandatory gap-5', entries.length > 2 && 'mx-auto')}>
+      <div className={cn('flex w-max snap-x snap-proximity gap-5', entries.length > 2 && 'mx-auto')}>
         {entries.map((entry, i) => (
           <PlateTile key={entry.id} entry={entry} rank={i + 1} />
         ))}

@@ -7,6 +7,7 @@ import {
 import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { RaceRow, type RaceEntry } from '@/components/shared/race-row';
+import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Upload } from 'lucide-react';
@@ -46,11 +47,12 @@ export default async function Home() {
   }));
 
   return (
+    <HomeMotion>
     <div>
       {/* The browse screen itself: the field is the page, the race row is the hero. */}
       <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 pb-10 pt-24">
         <div className="absolute inset-x-0 top-4 flex justify-center px-4">
-          <div className="panel-solid flex flex-wrap items-center justify-center gap-x-3 rounded-full px-5 py-2 text-center">
+          <div className="hm-strip panel-solid flex max-w-full flex-wrap items-center justify-center gap-x-3 rounded-full px-5 py-2 text-center">
             <span className="field-mark">{race.monthLabel}</span>
             <span aria-hidden className="text-border">|</span>
             <span className="tabular text-sm font-semibold">
@@ -62,10 +64,10 @@ export default async function Home() {
         </div>
 
         <div className="px-6 text-center">
-          <h1 className="font-headline text-4xl font-light leading-[1.08] tracking-tight text-balance text-foreground md:text-6xl">
-            Show your platinum to the world.
+          <h1 className="font-headline overflow-hidden pb-[0.12em] text-4xl font-light leading-[1.08] tracking-tight text-balance text-foreground md:text-6xl">
+            <span className="hm-title block">Show your platinum to the world.</span>
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base font-semibold text-secondary-foreground/80 md:text-lg">
+          <p className="hm-sub mx-auto mt-4 max-w-xl text-base font-semibold text-secondary-foreground/80 md:text-lg">
             The community gallery for PlayStation platinums. One vote each, every month
             — the board resets when the clocks roll over.
           </p>
@@ -76,16 +78,18 @@ export default async function Home() {
             The board is empty — be the first plate of {race.monthLabel}.
           </p>
         )}
-        <RaceRow entries={entries} />
+        <div className="hm-row w-full">
+          <RaceRow entries={entries} />
+        </div>
 
-        <p className="field-mark">
+        <p className="hm-hint field-mark">
           Arrows or scroll to browse · Enter opens the plate
         </p>
       </section>
 
       {/* Latest plates: the gallery sheet on the field. */}
-      <section className="container pb-16">
-        <div className="panel rounded-2xl p-6 md:p-10">
+      <section id="latest" className="container scroll-mt-24 pb-16">
+        <div className="hm-reveal panel rounded-2xl p-6 md:p-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="field-mark">Fresh from the case</p>
@@ -118,8 +122,8 @@ export default async function Home() {
       </section>
 
       {/* CTA */}
-      <section className="container pb-20">
-        <div className="panel mx-auto max-w-3xl rounded-2xl px-6 py-16 text-center">
+      <section id="cta" className="container scroll-mt-24 pb-20">
+        <div className="hm-reveal panel mx-auto max-w-3xl rounded-2xl px-6 py-16 text-center">
           <p className="field-mark">Next issue · {race.monthLabel}</p>
           <h2 className="mt-2 font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
             Your platinum belongs on this row.
@@ -136,5 +140,6 @@ export default async function Home() {
         </div>
       </section>
     </div>
+    </HomeMotion>
   );
 }

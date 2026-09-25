@@ -3,10 +3,11 @@
 import { useEffect, useRef } from 'react';
 import type { RaceFieldPalette } from '@/lib/race';
 
+// Drift tuned to near-imperceptible: the field breathes, it never fidgets.
 const WAVE_LAYERS = [
-  { base: 0.52, amp: 0.055, freq: 1.35, speed: 0.020, alpha: 0.55 },
-  { base: 0.66, amp: 0.075, freq: 0.9, speed: -0.014, alpha: 0.5 },
-  { base: 0.8, amp: 0.09, freq: 0.62, speed: 0.009, alpha: 0.65 },
+  { base: 0.52, amp: 0.055, freq: 1.35, speed: 0.00055, alpha: 0.55 },
+  { base: 0.66, amp: 0.075, freq: 0.9, speed: -0.00035, alpha: 0.5 },
+  { base: 0.8, amp: 0.09, freq: 0.62, speed: 0.00022, alpha: 0.65 },
 ] as const;
 
 function hslParts(color: string): [number, number, number] {
@@ -120,10 +121,13 @@ export function SkyField({ palette }: { palette: RaceFieldPalette }) {
       drawWave(WAVE_LAYERS[2], toRgba(palette.waveB, 0.65), toRgba(palette.waveB, 0.92));
     };
 
-    const step = () => {
+    let last = 0;
+    const step = (now: number) => {
+      raf = requestAnimationFrame(step);
+      if (now - last < 50) return;
+      last = now;
       t += 1;
       draw();
-      raf = requestAnimationFrame(step);
     };
 
     resize();
