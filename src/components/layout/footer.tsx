@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Github, Twitter } from "lucide-react";
+import { Github, Heart, Twitter } from "lucide-react";
 
 export function Footer() {
   return (
@@ -9,8 +9,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="flex flex-col gap-3">
             <Logo />
-            <p className="text-sm text-muted-foreground">
-              Built with 💙 for PlayStation fans.
+            <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+              Built with <Heart className="h-3.5 w-3.5 fill-primary text-primary" aria-hidden /> for PlayStation fans.
             </p>
           </div>
 

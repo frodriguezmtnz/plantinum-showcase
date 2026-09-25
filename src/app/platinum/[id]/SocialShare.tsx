@@ -72,7 +72,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
         {isOwner
           ? 'Yours'
           : hasVoted
-            ? votes
+            ? <span className="tabular">{votes}</span>
             : 'Vote'}
       </Button>
       <Button variant="outline" size="lg" className="shrink-0 px-3" onClick={handleShare} aria-label="Share platinum">

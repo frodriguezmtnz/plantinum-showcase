@@ -53,10 +53,13 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
           />
           {user && showSpoiler && <Watermark username={user.username} />}
           {!showSpoiler && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20">
-                <p className="text-lg font-bold text-white mb-4">Spoiler Warning</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-black/70 via-black/60 to-black/80 z-20">
+                <p className="text-lg font-bold text-white flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-muted-foreground" />
+                  Spoiler protected
+                </p>
               <Button onClick={handleShowSpoiler} variant="secondary">
-                <Eye className="mr-2 h-4 w-4" /> Show Screenshot
+                Reveal screenshot
               </Button>
             </div>
           )}

@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Heart } from 'lucide-react';
+import { Heart, Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -79,13 +79,13 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                 
                 <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
                     <div className="flex min-w-0 items-center">
-                        <Heart className="mr-2 shrink-0 text-primary"/>
-                        <span className="font-bold">{platinum.votes}</span>
+                        <Heart className="mr-2 shrink-0 fill-red-500 text-red-500"/>
+                        <span className="font-bold tabular">{platinum.votes}</span>
                         <span className="text-muted-foreground ml-1">votes</span>
                     </div>
                      <div className="flex min-w-0 items-center">
-                        <Heart className="mr-2 shrink-0 text-amber-400"/>
-                        <span className="font-bold">{platinum.monthlyVotes}</span>
+                        <Trophy className="mr-2 shrink-0 text-amber-400"/>
+                        <span className="font-bold tabular">{platinum.monthlyVotes}</span>
                         <span className="text-muted-foreground ml-1">this month</span>
                     </div>
                 </div>

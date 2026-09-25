@@ -86,7 +86,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
       <Card className="p-4 mb-12">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Game:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Game:</label>
             <Input
               type="text"
               placeholder="Search by game..."
@@ -96,7 +96,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             />
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Platform:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Platform:</label>
             <Select value={platformFilter} onValueChange={handlePlatformChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Filter by platform" />
@@ -110,7 +110,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             </Select>
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Sort by:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Sort by:</label>
             <Select value={sortOrder} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Sort by" />
