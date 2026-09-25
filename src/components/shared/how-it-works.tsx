@@ -7,7 +7,7 @@ const SectionDivider = ({ title }: { title: string }) => (
             <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center">
-            <span className="bg-background px-4 text-lg font-medium text-muted-foreground">{title}</span>
+            <span className="bg-background px-4 font-headline text-xl font-bold tracking-tight md:text-2xl">{title}</span>
         </div>
     </div>
 )

@@ -22,7 +22,7 @@ const SectionDivider = ({ title }: { title: string }) => (
             <div className="w-full border-t border-border"></div>
         </div>
         <div className="relative flex justify-center">
-            <span className="bg-background px-4 text-lg font-medium text-muted-foreground" suppressHydrationWarning>{title}</span>
+            <span className="bg-background px-4 font-headline text-xl font-bold tracking-tight md:text-2xl" suppressHydrationWarning>{title}</span>
         </div>
     </div>
 )
@@ -104,7 +104,7 @@ export default async function Home() {
                     unoptimized={isStoredImage(featured.imageUrl)}
                   />
                 </div>
-                <div className="absolute -bottom-5 left-1/2 w-max max-w-[92%] -translate-x-1/2 rounded-lg platinum-plate platinum-edge px-5 py-3 text-center shadow-lg">
+                <div className="absolute -bottom-5 left-1/2 w-max max-w-[92%] -translate-x-1/2 rounded-lg border border-border bg-card px-5 py-3 text-center shadow-lg">
                   <p className="truncate font-headline text-base font-bold">{featured.gameName}</p>
                   <p className="text-xs text-muted-foreground">
                     {featuredUser ? `@${featuredUser.username}` : 'fresh from the case'} · {featured.platform}
@@ -134,13 +134,13 @@ export default async function Home() {
             <div className="relative mx-auto mt-8 max-w-5xl">
               <div className="overflow-hidden rounded-2xl platinum-edge platinum-plate shadow-champion">
                 <div className="grid gap-0 md:grid-cols-5">
-                  <Link href={`/platinum/${hallOfFame.id}`} className="group relative block overflow-hidden bg-muted md:col-span-3">
-                    <div className="aspect-[2.39/1] h-full w-full">
+                  <Link href={`/platinum/${hallOfFame.id}`} className="group relative block overflow-hidden bg-black/60 md:col-span-3">
+                    <div className="aspect-video h-full w-full">
                       <Image
                         src={hallOfFame.imageUrl}
                         alt={`Champion platinum screenshot for ${hallOfFame.gameName}`}
                         fill
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                         data-ai-hint={hallOfFame.imageHint}
                         unoptimized={isStoredImage(hallOfFame.imageUrl)}
                       />

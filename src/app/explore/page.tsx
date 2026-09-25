@@ -24,7 +24,7 @@ export default async function ExplorePage({ searchParams }: Props) {
   return (
     <section className="container py-8 md:py-12">
       <div className="text-center mb-8">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline">Explore the Gallery</h1>
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight font-headline text-balance">Explore the Gallery</h1>
         <p className="mt-3 text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
           Browse every platinum screenshot shared by the community. Use the filters to find exactly what
           you&apos;re looking for.

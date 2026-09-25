@@ -47,25 +47,25 @@ export default async function HallOfFamePage() {
       borderColor: 'platinum-edge',
       textColor: 'text-platinum-bright',
       bgColor: 'platinum-plate',
-      shadowClass: 'shadow-champion hover:shadow-champion',
+      shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
       order: 'md:order-2',
       lift: 'md:-translate-y-12',
       rankText: 'Champion',
     },
     2: {
-      borderColor: 'border-gray-400',
-      textColor: 'text-gray-400',
-      bgColor: 'bg-gray-500/10',
-      shadowClass: 'hover:shadow-2xl hover:shadow-gray-400/30 focus-visible:shadow-gray-400/30',
+      borderColor: 'border-gray-500/60',
+      textColor: 'text-gray-300',
+      bgColor: 'bg-gray-500/5',
+      shadowClass: 'hover:shadow-spot focus-visible:shadow-spot',
       order: 'md:order-1',
       lift: 'md:-translate-y-6',
       rankText: '2nd Place',
     },
     3: {
-      borderColor: 'border-orange-500',
-      textColor: 'text-orange-500',
-      bgColor: 'bg-orange-600/10',
-      shadowClass: 'hover:shadow-2xl hover:shadow-orange-500/30 focus-visible:shadow-orange-500/30',
+      borderColor: 'border-orange-800/70',
+      textColor: 'text-orange-300/90',
+      bgColor: 'bg-orange-950/30',
+      shadowClass: 'hover:shadow-spot focus-visible:shadow-spot',
       order: 'md:order-3',
       lift: '',
       rankText: '3rd Place',
@@ -75,8 +75,8 @@ export default async function HallOfFamePage() {
   return (
     <div className="container py-8 md:py-12">
       <div className="text-center mb-16">
-        <Award className="mx-auto h-16 w-16 text-amber-400 drop-shadow-lg" />
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-4">Monthly Hall of Fame</h1>
+        <Award className="mx-auto h-16 w-16 text-muted-foreground" />
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight font-headline mt-4 text-balance">Monthly Hall of Fame</h1>
         <p className="mt-3 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
           The community&apos;s favorite platinum screenshots of {monthYear.toLowerCase()}.
         </p>
@@ -115,12 +115,13 @@ export default async function HallOfFamePage() {
                     styles.bgColor,
                     styles.shadowClass
                   )}>
-                    <div className="relative bg-muted" style={{ aspectRatio: `${platinum.width} / ${platinum.height}`, maxHeight: 280, margin: '0 auto' }}>
+                    <div className="relative bg-black/50" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}
                         fill
-                        className="object-cover"
+                        sizes="(max-width: 768px) 90vw, 30vw"
+                        className="object-contain"
                         data-ai-hint={platinum.imageHint}
                         unoptimized={isStoredImage(platinum.imageUrl)}
                       />
@@ -135,7 +136,7 @@ export default async function HallOfFamePage() {
                           <span className="font-semibold truncate">{user.username}</span>
                         </div>
                       )}
-                      <h3 className="font-medium mt-2 truncate text-lg">{platinum.gameName}</h3>
+                      <h3 className={cn("font-medium mt-2 truncate text-lg", rank === 1 && "font-headline font-bold platinum-text")}>{platinum.gameName}</h3>
                       <div className={cn('flex items-center justify-center gap-2 font-bold mt-2', styles.textColor)}>
                         <span className="tabular">{platinum.monthlyVotes}</span>
                         <Trophy className="w-5 h-5" />

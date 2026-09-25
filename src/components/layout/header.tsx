@@ -121,7 +121,7 @@ export function Header() {
                         Sign in
                     </Link>
                 </Button>
-                <Button asChild className="hidden sm:flex">
+                <Button asChild variant="outline" className="hidden sm:flex">
                     <Link href="/register">
                         <UserPlus className="mr-2 h-4 w-4" />
                         Sign up

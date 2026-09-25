@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Github, Heart, Twitter } from "lucide-react";
+import { Github, Heart } from "lucide-react";
 
 export function Footer() {
   return (
@@ -24,10 +24,7 @@ export function Footer() {
 
           <div className="flex flex-col gap-2">
             <h4 className="font-semibold text-sm">Community</h4>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
-              <Twitter className="h-4 w-4" /> Twitter / X
-            </a>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+            <a href="https://github.com/frodriguezmtnz/plantinum-showcase" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
               <Github className="h-4 w-4" /> GitHub
             </a>
           </div>
