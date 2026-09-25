@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T00:00:00.000Z",
+  "title": "Design System: Platinum Showcase",
+  "extensions": {
+    "colorMeta": {
+      "midnight": { "role": "neutral", "displayName": "Midnight", "canonical": "hsl(224 71% 4%)", "tonalRamp": ["hsl(224 71% 4%)", "hsl(224 60% 9%)", "hsl(224 50% 14%)", "hsl(222 40% 22%)", "hsl(220 32% 32%)", "hsl(218 26% 48%)", "hsl(215 20% 65%)", "hsl(212 20% 84%)"] },
+      "ps-blue": { "role": "primary", "displayName": "PlayStation Blue", "canonical": "hsl(210 100% 56%)", "tonalRamp": ["hsl(211 100% 18%)", "hsl(211 100% 28%)", "hsl(211 100% 38%)", "hsl(211 100% 46%)", "hsl(210 100% 56%)", "hsl(209 100% 68%)", "hsl(208 100% 80%)", "hsl(207 100% 92%)"] },
+      "platinum-metal": { "role": "tertiary", "displayName": "Platinum Metal", "canonical": "hsl(210 25% 88%)", "tonalRamp": ["hsl(215 18% 30%)", "hsl(215 18% 45%)", "hsl(215 18% 55%)", "hsl(215 18% 62%)", "hsl(212 22% 74%)", "hsl(210 25% 88%)", "hsl(210 30% 94%)", "hsl(0 0% 100%)"] },
+      "heart-red": { "role": "secondary", "displayName": "Heart Red", "canonical": "#ef4444" },
+      "success-green": { "role": "secondary", "displayName": "Success Green", "canonical": "#2ecc71" },
+      "trophy-gold": { "role": "tertiary", "displayName": "Trophy Gold", "canonical": "#fbbf24" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero and page titles, Outfit 900." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles, Outfit 700." },
+      "label": { "displayName": "Label", "purpose": "Metadata, badges, vote counts (tabular-nums)." }
+    },
+    "shadows": [
+      { "name": "spot-hover", "value": "0 0 32px -8px hsl(210 100% 56% / 0.45)", "purpose": "Hover/focus glow on cards and primary controls." },
+      { "name": "champion-aura", "value": "0 0 48px -12px hsl(210 25% 88% / 0.35)", "purpose": "Platinum-toned glow, Hall of Fame 1st place only." }
+    ],
+    "motion": [
+      { "name": "ease-showcase", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Entrances and reveals." },
+      { "name": "vote-heart-pop", "value": "scale 1 → 1.5 → 1 over 0.5s ease-out on press", "purpose": "The one authored micro-moment on voting." },
+      { "name": "spoiler-lift", "value": "filter blur 24px → 0 over 0.4s ease", "purpose": "Revealing spoiler-protected screenshots." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "PlayStation-blue CTA; the only lit control in a dark room.",
+      "html": "<button class=\"ds-btn-primary\">Upload a Platinum</button>",
+      "css": ".ds-btn-primary { background: var(--color-primary, hsl(210 100% 56%)); color: hsl(210 40% 98%); border: none; border-radius: 8px; padding: 10px 20px; font: 600 0.875rem/1 Inter, sans-serif; cursor: pointer; transition: filter 0.2s, box-shadow 0.2s; } .ds-btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 32px -8px hsl(210 100% 56% / 0.45); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-ring, hsl(210 100% 56%)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Vote Pill",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Heart vote control; red only when voted; scale-pop on press.",
+      "html": "<button class=\"ds-vote\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\"><path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\"/></svg><span>128</span></button>",
+      "css": ".ds-vote { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: hsl(215 20% 65%); border: none; border-radius: 9999px; padding: 8px 16px; font: 600 0.875rem/1 Inter, sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; transition: color 0.2s; } .ds-vote:hover { color: #ef4444; } .ds-vote.voted { color: #ef4444; } .ds-vote.voted svg { fill: #ef4444; } .ds-vote:active svg { animation: ds-vote-pop 0.5s ease-out; } @keyframes ds-vote-pop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }"
+    },
+    {
+      "name": "Exhibit Card",
+      "kind": "card",
+      "refersTo": "card-exhibit",
+      "description": "Gallery card: flush native-ratio image over a dark plaque of metadata.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-img\"></div><div class=\"ds-card-meta\"><strong>Elden Ring</strong><span>@trophyhunter</span></div></div>",
+      "css": ".ds-card { background: var(--color-card, hsl(224 71% 8%)); border-radius: 12px; overflow: hidden; transition: box-shadow 0.3s, transform 0.3s; } .ds-card:hover { box-shadow: 0 0 32px -8px hsl(210 100% 56% / 0.45); } .ds-card-img { aspect-ratio: 16/10; background: linear-gradient(160deg, hsl(222 40% 18%), hsl(224 60% 9%)); } .ds-card-meta { display: flex; justify-content: space-between; align-items: center; padding: 16px; color: hsl(210 40% 98%); font: 500 0.875rem/1.4 Inter, sans-serif; }"
+    },
+    {
+      "name": "Champion Plaque",
+      "kind": "custom",
+      "refersTo": "plaque-champion",
+      "description": "Reserved platinum treatment for the monthly #1.",
+      "html": "<div class=\"ds-plaque\"><p class=\"ds-plaque-kicker\">CHAMPION · SEPTEMBER</p><p class=\"ds-plaque-name\">Bloodborne</p></div>",
+      "css": ".ds-plaque { background: linear-gradient(180deg, hsl(224 71% 10%), hsl(224 71% 7%)); border: 1px solid hsl(210 25% 88% / 0.25); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 0 48px -12px hsl(210 25% 88% / 0.35); } .ds-plaque-kicker { color: hsl(215 18% 62%); font: 600 0.75rem/1 Inter, sans-serif; letter-spacing: 0.08em; } .ds-plaque-name { margin-top: 8px; background: linear-gradient(180deg, hsl(210 30% 94%), hsl(215 18% 72%)); -webkit-background-clip: text; background-clip: text; color: transparent; font: 900 1.5rem/1.2 Outfit, sans-serif; }"
+    },
+    {
+      "name": "Site Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Sticky blurred midnight bar; active route gets a slate fill.",
+      "html": "<nav class=\"ds-nav\"><a class=\"active\">Explore</a><a>Hall of Fame</a><button class=\"ds-nav-cta\">Upload</button></nav>",
+      "css": ".ds-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 32px; background: hsl(224 71% 4% / 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid hsl(217 33% 17%); font: 500 0.875rem/1 Inter, sans-serif; color: hsl(210 40% 98%); } .ds-nav a { padding: 8px 16px; border-radius: 8px; cursor: pointer; } .ds-nav a:hover { background: hsl(217 33% 17%); } .ds-nav a.active { background: hsl(217 33% 17%); } .ds-nav-cta { margin-left: auto; background: hsl(210 100% 56%); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 600; cursor: pointer; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Midnight Showcase",
+    "overview": "The gallery is dark and quiet; the only light falls on the exhibits — the platinum screenshots themselves. Every surface decision serves one idea: a captured platinum is a museum object. The chrome recedes into deep navy and cool gray, and attention is bought with contrast and spotlight, never with decoration. The identity material is platinum: a cool silver-white used almost nowhere, so that when it appears it reads as the trophy metal it evokes.",
+    "keyCharacteristics": [
+      "Screenshots shown at native aspect ratio; never force-cropped.",
+      "Flat at rest; scenic blue glow only on hover/focus/celebration.",
+      "Platinum metal reserved for championship moments (≤5% of a screen).",
+      "Outfit heavy display as the voice; Inter for operations.",
+      "Dark-first: the .dark token set is canonical."
+    ],
+    "rules": [
+      { "name": "The Platinum Reserve Rule", "body": "Platinum metal may only appear on championship content: the monthly #1, Hall of Fame placements, and Pride of the Collection. If a surface has no champion, it shows no metal.", "section": "colors" },
+      { "name": "The One Light Rule", "body": "Blue glow marks state (hover, focus, celebration), never idle decoration. A resting card emits no light.", "section": "colors" },
+      { "name": "The Vote Is a Number Rule", "body": "Vote counts render in the label tier with tabular-nums; they are data, never display type.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Glow appears only as a response to state (hover, focus, championship).", "section": "elevation" }
+    ],
+    "dos": [
+      "Do show screenshots at native aspect ratio; the crop of a trophy list is the content.",
+      "Do keep idle surfaces flat and let hover glow carry life.",
+      "Do reserve platinum for championship moments; its rarity is its value.",
+      "Do tint secondary text on colored grounds from the ground's hue, never gray.",
+      "Do use tabular numerals wherever counts change (votes, rankings)."
+    ],
+    "donts": [
+      "Don't use gradient text outside the platinum plaque treatment.",
+      "Don't add kickers/eyebrows above headings.",
+      "Don't let red or green wander off their reserved jobs (vote, success/error).",
+      "Don't force 16:9 object-cover crops on user screenshots in Explore or profiles.",
+      "Don't stack a border and a big soft shadow on the same card (ghost card)."
+    ]
+  }
+}
