@@ -57,6 +57,7 @@ export default function LoginPage() {
       </div>
       <Button variant="outline" className="w-full" type="button" disabled title="Coming soon">
         Sign in with Google
+        <span className="field-mark ml-2 opacity-70">Coming soon</span>
       </Button>
     </AuthShell>
   );

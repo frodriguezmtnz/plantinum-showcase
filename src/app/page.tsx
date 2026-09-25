@@ -54,11 +54,11 @@ export default async function Home() {
         <div className="absolute inset-x-0 top-4 flex justify-center px-4">
           <div className="hm-strip panel-solid flex max-w-full flex-wrap items-center justify-center gap-x-3 rounded-full px-5 py-2 text-center">
             <span className="field-mark">{race.monthLabel}</span>
-            <span aria-hidden className="text-border">|</span>
+            <span aria-hidden className="hidden text-border sm:inline">|</span>
             <span className="tabular text-sm font-semibold">
-              {stats.plates} plates · {stats.votes} votes cast
+              {stats.plates} plates on the board · {stats.votes} votes cast
             </span>
-            <span aria-hidden className="text-border">|</span>
+            <span aria-hidden className="hidden text-border sm:inline">|</span>
             <span className="text-sm font-semibold text-primary">{closeCopy(race.daysLeft)}</span>
           </div>
         </div>
@@ -91,12 +91,9 @@ export default async function Home() {
       <section id="latest" className="container scroll-mt-24 pb-16">
         <div className="hm-reveal panel rounded-2xl p-6 md:p-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="field-mark">Fresh from the case</p>
-              <h2 className="mt-1 font-headline text-2xl font-bold tracking-tight md:text-3xl">
-                Latest platinums
-              </h2>
-            </div>
+            <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+              Latest platinums
+            </h2>
             <Button asChild variant="outline" size="sm">
               <Link href="/explore">Open the full gallery</Link>
             </Button>
@@ -124,8 +121,7 @@ export default async function Home() {
       {/* CTA */}
       <section id="cta" className="container scroll-mt-24 pb-20">
         <div className="hm-reveal panel mx-auto max-w-3xl rounded-2xl px-6 py-16 text-center">
-          <p className="field-mark">Next issue · {race.monthLabel}</p>
-          <h2 className="mt-2 font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
+          <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
             Your platinum belongs on this row.
           </h2>
           <p className="mx-auto mt-3 max-w-md text-muted-foreground">

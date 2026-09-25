@@ -57,7 +57,6 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
         </div>
         <div className="md:col-span-1 min-w-0">
             <div className="panel-solid p-6 rounded-2xl overflow-hidden">
-                <p className="field-mark mb-1">The plate</p>
                 <h2 className="text-2xl font-bold font-headline mb-4 break-words">{platinum.gameName}</h2>
                 {user && (
                   <div className="mb-6 flex min-w-0 items-center gap-4">

@@ -76,8 +76,7 @@ export default async function HallOfFamePage() {
     <div className="container py-8 md:py-12">
       <div className="text-center mb-16">
         <Award className="mx-auto h-14 w-14 text-[hsl(38_88%_42%)]" />
-        <p className="field-mark mt-4">{monthYear}</p>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-1 text-balance">Monthly Hall of Fame</h1>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-2 text-balance">Monthly Hall of Fame</h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
           The community&apos;s favorite platinum screenshots of {monthYear.toLowerCase()}.
         </p>
@@ -116,7 +115,7 @@ export default async function HallOfFamePage() {
                     styles.bgColor,
                     styles.shadowClass
                   )}>
-                    <div className="relative bg-[hsl(212_38%_16%)]" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
+                    <div className="relative bg-[hsl(206_45%_94%)]" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}

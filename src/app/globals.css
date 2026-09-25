@@ -186,6 +186,17 @@
   transform: translateY(0);
 }
 
+/* Resting selection: a browse screen always holds a selection without a mouse. */
+.plate-shell[data-selected] .plate-bloom {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow: var(--bloom);
+}
+
+.plate-shell[data-selected] .bloom-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* The field deepens while a plate is bloomed (set on body by the race row). */
 .sky-field {
   position: fixed;
@@ -225,7 +236,7 @@ body[data-bloom='deep'] .sky-field {
 * {
   caret-color: hsl(209 62% 32%);
   scrollbar-width: thin;
-  scrollbar-color: hsl(207 30% 70%) transparent;
+  scrollbar-color: hsl(207 30% 58%) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -234,14 +245,14 @@ body[data-bloom='deep'] .sky-field {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: hsl(207 30% 70%);
+  background: hsl(207 30% 58%);
   border-radius: 10px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: hsl(207 26% 58%);
+  background: hsl(207 32% 44%);
   border: 3px solid transparent;
   background-clip: content-box;
 }

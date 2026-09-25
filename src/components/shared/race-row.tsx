@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Eye, Plus } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 
@@ -18,11 +18,12 @@ export interface RaceEntry {
   isSpoiler: boolean;
 }
 
-function PlateTile({ entry, rank }: { entry: RaceEntry; rank: number }) {
+function PlateTile({ entry, rank, selected }: { entry: RaceEntry; rank: number; selected?: boolean }) {
   return (
     <Link
       href={`/platinum/${entry.id}`}
       data-tile
+      {...(selected ? { 'data-selected': '' } : {})}
       className="plate-shell group relative w-64 shrink-0 snap-center outline-none sm:w-72"
     >
       <div className="plate-bloom relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-white/70 shadow-lift">
@@ -60,6 +61,7 @@ function PlateTile({ entry, rank }: { entry: RaceEntry; rank: number }) {
 
 export function RaceRow({ entries }: { entries: RaceEntry[] }) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState(0);
 
   useEffect(() => {
     const row = rowRef.current;
@@ -89,20 +91,23 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
       ? tiles[Math.min(idx + 1, tiles.length - 1)]
       : tiles[Math.max(idx - 1, 0)];
     const target = tiles.includes(current as HTMLAnchorElement) ? next : tiles[0];
+    if (!target) return;
     e.preventDefault();
-    target?.focus();
-    target?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    target.focus();
+    target.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    const plateIdx = tiles.indexOf(target);
+    if (plateIdx >= 0 && plateIdx < entries.length) setSelected(plateIdx);
   };
 
   return (
     <div
       ref={rowRef}
       onKeyDown={onKeyDown}
-      className="overflow-x-auto px-8 pb-16 pt-2 sm:px-12"
+      className="overflow-x-auto px-8 pb-16 pt-6 sm:px-12"
     >
       <div className={cn('flex w-max snap-x snap-proximity gap-5', entries.length > 2 && 'mx-auto')}>
         {entries.map((entry, i) => (
-          <PlateTile key={entry.id} entry={entry} rank={i + 1} />
+          <PlateTile key={entry.id} entry={entry} rank={i + 1} selected={i === selected} />
         ))}
         <Link
           data-tile
