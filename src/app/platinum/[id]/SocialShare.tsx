@@ -49,7 +49,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
   return (
     <div className="flex items-center gap-2">
       <Button
-        className={cn("w-full vote-button transition-colors", hasVoted ? "bg-red-500 hover:bg-red-600 text-white" : "")}
+        className={cn("min-w-0 flex-1 px-4 vote-button transition-colors", hasVoted ? "bg-red-500 hover:bg-red-600 text-white" : "")}
         size="lg"
         onClick={toggleVote}
         disabled={isPending || isOwner}
@@ -62,13 +62,15 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
         }
       >
         <Heart className={cn("mr-2 transition-all", hasVoted && "fill-white scale-110")} />
-        {isOwner
-          ? 'Tu platino'
-          : hasVoted
-            ? `Voto activo (${votes})`
-            : `Votar (${votes})`}
+        <span className="truncate">
+          {isOwner
+            ? 'Tu platino'
+            : hasVoted
+              ? `Voto activo (${votes})`
+              : `Votar (${votes})`}
+        </span>
       </Button>
-      <Button variant="outline" size="lg" className="px-3" onClick={handleShare} aria-label="Share platinum">
+      <Button variant="outline" size="lg" className="shrink-0 px-3" onClick={handleShare} aria-label="Share platinum">
         <Share2 />
       </Button>
     </div>

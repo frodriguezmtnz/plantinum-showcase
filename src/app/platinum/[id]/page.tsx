@@ -52,20 +52,20 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
   return (
     <div className="container max-w-4xl py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 min-w-0">
             <PlatinumDetailCard platinum={platinum} user={user ?? null} />
         </div>
-        <div className="md:col-span-1">
-            <div className="bg-card p-6 rounded-lg">
-                <h2 className="text-2xl font-bold font-headline mb-4">{platinum.gameName}</h2>
+        <div className="md:col-span-1 min-w-0">
+            <div className="bg-card p-6 rounded-lg overflow-hidden">
+                <h2 className="text-2xl font-bold font-headline mb-4 break-words">{platinum.gameName}</h2>
                 {user && (
-                  <div className="flex items-center space-x-4 mb-6">
-                    <Avatar className="h-12 w-12">
+                  <div className="mb-6 flex min-w-0 items-center gap-4">
+                    <Avatar className="h-12 w-12 shrink-0">
                       <AvatarImage src={user.avatarUrl} alt={user.username} />
                       <AvatarFallback>{user.username.slice(0,2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold">{user.username}</p>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{user.username}</p>
                       <Link href={`/u/${user.username}`} className="text-sm text-primary hover:underline">
                         View Profile
                       </Link>
@@ -77,14 +77,14 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                     <p><strong>Achieved on:</strong> {format(new Date(platinum.platinumDate), 'MMMM d, yyyy')}</p>
                 </div>
                 
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="flex items-center text-lg">
-                        <Heart className="mr-2 text-primary"/>
+                <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
+                    <div className="flex min-w-0 items-center">
+                        <Heart className="mr-2 shrink-0 text-primary"/>
                         <span className="font-bold">{platinum.votes}</span>
                         <span className="text-muted-foreground ml-1">votes</span>
                     </div>
-                     <div className="flex items-center text-lg">
-                        <Heart className="mr-2 text-amber-400"/>
+                     <div className="flex min-w-0 items-center">
+                        <Heart className="mr-2 shrink-0 text-amber-400"/>
                         <span className="font-bold">{platinum.monthlyVotes}</span>
                         <span className="text-muted-foreground ml-1">this month</span>
                     </div>
