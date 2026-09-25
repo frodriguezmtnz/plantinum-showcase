@@ -7,8 +7,10 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] Toasts semánticos: verde (`success`) al votar y rojo (`danger`) al retirar voto o fallar.
 - [x] Overflow del detalle en escritorio: contadores con `flex-wrap`/`min-w-0` y `SocialShare` con `flex-1`/`shrink-0`.
 - [x] Botón de voto simplificado: `Votar` sin número si no has votado, `♥ número` si ya votaste y `Tu platino` para el autor.
-- [x] Sistema visual "The Midnight Showcase" documentado en `DESIGN.md` (+ `.impeccable/design.json`): tokens platinum/glow escénico, exhibits con ratio nativo (masonry en Explorar/perfiles), hero + placa de campeón en home, countdown real del mes en el Salón de la Fama.
-- [ ] Pendiente de validación visual en local (`pnpm dev`, :9002) por el dueño antes del merge a main.
+- [x] Sistema visual "The Midnight Showcase" (descartado en el rediseño de 2026-09; ver siguiente).
+- [x] Mundo "The Console Browse Screen" (rama `feat/new-redesign-and-i18n`): campo de olas claro según fase de la carrera, paneles esmerilados, selección en reposo estilo XMB, Mulish única, intro GSAP + reveals; finish-review: ship; `DESIGN.md` + `.impeccable/design.json` reescritos desde el mundo construido (detector: 0 drifts).
+- [ ] Validación visual en local (`pnpm dev`, :9002) por el dueño antes del merge a main — especialmente: intro GSAP del boot, olas casi imperceptibles, y el formulario de upload logueado (no capturable en headless).
+- [ ] Barrido opcional de utilidades legacy aún definidas en `globals.css` (`.platinum-*`, `.stage-light`, `.section-divider`, `shadow-champion`) — documentadas como legacy en `DESIGN.md`.
 
 ## Hecho
 
