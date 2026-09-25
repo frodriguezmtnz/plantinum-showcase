@@ -6,6 +6,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 
 - [x] Toasts semánticos: verde (`success`) al votar y rojo (`danger`) al retirar voto o fallar.
 - [x] Overflow del detalle en escritorio: contadores con `flex-wrap`/`min-w-0` y `SocialShare` con `flex-1`/`shrink-0`.
+- [x] Botón de voto simplificado: `Votar` sin número si no has votado, `♥ número` si ya votaste y `Tu platino` para el autor.
 - [ ] (Añadir aquí las mejoras de diseño/UX que vayamos detectando.)
 
 ## Hecho
