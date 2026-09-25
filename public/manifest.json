@@ -4,6 +4,6 @@
   "description": "Showcase your PlayStation platinum trophies and climb the leaderboards.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#030712",
-  "theme_color": "#148bff"
+  "background_color": "#e3f1f8",
+  "theme_color": "#bcdcec"
 }

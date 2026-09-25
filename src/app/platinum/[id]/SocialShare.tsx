@@ -49,7 +49,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
   return (
     <div className="flex items-center gap-2">
       <Button
-        className={cn("min-w-0 flex-1 rounded-full px-4 vote-button transition-colors", hasVoted ? "bg-red-500 hover:bg-red-600 text-white" : "shadow-none hover:shadow-spot")}
+        className={cn("min-w-0 flex-1 rounded-full px-4 vote-button transition-all", hasVoted && "bg-destructive text-destructive-foreground hover:brightness-110")}
         size="lg"
         onClick={toggleVote}
         disabled={isPending || isOwner}

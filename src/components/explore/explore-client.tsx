@@ -83,7 +83,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
 
   return (
     <div>
-      <Card className="p-4 mb-12">
+      <Card className="panel p-4 mb-12 rounded-2xl">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
             <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Game:</label>

@@ -51,7 +51,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
 
   if (variant === 'top') {
     return (
-        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500 hover:shadow-spot focus-visible:shadow-spot transition-shadow duration-300" style={{ animationDelay: `${animDelay}ms` }}>
+        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500 hover:shadow-bloom focus-visible:shadow-bloom ring-1 ring-white/70 transition-shadow duration-300" style={{ animationDelay: `${animDelay}ms` }}>
             <Image
                 src={platinum.imageUrl}
                 alt={`Platinum screenshot for ${platinum.gameName}`}
@@ -70,8 +70,8 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                     </div>
                 )}
             </div>
-            <div className="absolute top-2 right-2 flex items-center gap-2 rounded-lg bg-black/55 px-2.5 py-1.5 text-white font-bold backdrop-blur-sm">
-                <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+            <div className="absolute top-2 right-2 flex items-center gap-2 rounded-full px-2.5 py-1 font-bold backdrop-blur-md bg-white/85 ring-1 ring-white text-secondary-foreground">
+                <Heart className="w-4 h-4 text-destructive fill-destructive" />
                 <span className="tabular">{monthlyVotes}</span>
             </div>
         </Link>
@@ -79,10 +79,10 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
   }
 
   return (
-    <Card className={cn("flex flex-col overflow-hidden bg-card border-none group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 transition-shadow duration-300 hover:shadow-spot focus-within:shadow-spot", isPride && "platinum-edge shadow-champion")} style={{ animationDelay: `${animDelay}ms` }}>
+    <Card className={cn("panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom", isPride && "ring-2 ring-primary/60")} style={{ animationDelay: `${animDelay}ms` }}>
        {isPride && (
-        <div className="platinum-plate text-platinum text-xs font-bold tracking-[0.08em] uppercase flex items-center justify-center gap-2 py-2.5">
-            <Award className="w-4 h-4 text-platinum-bright" />
+        <div className="bg-primary/10 text-primary text-xs font-bold tracking-[0.14em] uppercase flex items-center justify-center gap-2 py-2.5">
+            <Award className="w-4 h-4 text-primary" />
             <span>Pride of the Collection</span>
         </div>
        )}
@@ -98,12 +98,12 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
             unoptimized={isStoredImage(platinum.imageUrl)}
           />
           {!showSpoiler && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-black/70 via-black/60 to-black/80">
-              <p className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[hsl(210_60%_99%/0.86)] backdrop-blur-[2px]">
+              <p className="text-lg font-bold flex items-center gap-2 text-foreground">
                 <Eye className="w-5 h-5 text-muted-foreground" />
                 Spoiler protected
               </p>
-              <Button onClick={handleShowSpoiler} variant="secondary">
+              <Button onClick={handleShowSpoiler} variant="outline">
                 Reveal screenshot
               </Button>
             </div>
@@ -135,7 +135,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
               <Button
                 variant="ghost"
                 size="sm"
-                className={cn("vote-button transition-colors", hasVoted ? "text-red-500" : "text-muted-foreground hover:text-red-500")}
+                className={cn("vote-button transition-colors", hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
                 onClick={handleVoteClick}
                 disabled={isPending || isOwner}
                 title={
@@ -147,7 +147,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                 }
                 aria-label={hasVoted ? 'Remove vote' : 'Vote for platinum'}
               >
-                  <Heart className={cn("mr-2 transition-all", hasVoted && "fill-red-500 scale-110")} />
+                  <Heart className={cn("mr-2 transition-all", hasVoted && "fill-destructive scale-110")} />
                   <span className="tabular">{votes}</span>
               </Button>
               {canDelete && <DeletePlatinumButton platinumId={platinum.id} />}

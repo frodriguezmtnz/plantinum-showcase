@@ -35,6 +35,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Trophy },
@@ -42,12 +43,19 @@ const navLinks = [
   { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown },
 ];
 
+const navPill =
+  'flex h-10 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors duration-200';
+const navActive = 'bg-white/85 text-primary shadow-lift ring-1 ring-white';
+const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
+
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   return (
-    <Link href={href} passHref>
-      <Button variant={active ? 'secondary' : 'ghost'} className="justify-start w-full">
-        {children}
-      </Button>
+    <Link
+      href={href}
+      className={cn(navPill, 'justify-start w-full', active ? navActive : navIdle)}
+      aria-current={active ? 'page' : undefined}
+    >
+      {children}
     </Link>
   );
 }
@@ -57,17 +65,21 @@ export function Header() {
   const { user, logout } = useAuth();
   
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full">
+      <div className="panel rounded-none border-x-0 border-t-0">
       <div className="container flex h-16 items-center px-4 md:px-8">
         <div className="flex items-center gap-2 md:gap-6 mr-auto min-w-0">
           <Logo />
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
             {navLinks.map((link) => (
-              <Link href={link.href} passHref key={link.href}>
-                  <Button variant={pathname === link.href ? 'secondary' : 'ghost'} aria-current={pathname === link.href ? 'page' : undefined}>
-                      <link.icon className="mr-2 h-4 w-4" />
-                      {link.label}
-                  </Button>
+              <Link
+                href={link.href}
+                key={link.href}
+                className={cn(navPill, pathname === link.href ? navActive : navIdle)}
+                aria-current={pathname === link.href ? 'page' : undefined}
+              >
+                <link.icon className="h-4 w-4" />
+                {link.label}
               </Link>
             ))}
           </nav>
@@ -174,6 +186,7 @@ export function Header() {
               </Sheet>
             </div>
         </div>
+      </div>
       </div>
     </header>
   );

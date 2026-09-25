@@ -4,7 +4,7 @@ import { Github, Heart } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t mt-12">
+    <footer className="panel mt-12 rounded-none border-x-0 border-b-0">
       <div className="container py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="flex flex-col gap-3">
@@ -15,7 +15,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h4 className="font-semibold text-sm">Links</h4>
+            <h4 className="field-mark">Links</h4>
             <Link href="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">About</Link>
             <Link href="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">FAQ</Link>
             <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms</Link>
@@ -23,7 +23,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h4 className="font-semibold text-sm">Community</h4>
+            <h4 className="field-mark">Community</h4>
             <a href="https://github.com/frodriguezmtnz/plantinum-showcase" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
               <Github className="h-4 w-4" /> GitHub
             </a>

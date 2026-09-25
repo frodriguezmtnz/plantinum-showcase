@@ -20,7 +20,7 @@ const HIGHLIGHTS = [
 export function AuthShell({ title, description, children, footer, error }: AuthShellProps) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-primary/25 via-background to-background p-12 lg:flex">
+      <aside className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
         <Link href="/" className="group flex items-center gap-2">
           <PlatinumTrophyIcon className="h-8 w-8 transition-transform group-hover:scale-110" />
           <span className="font-headline text-xl font-bold tracking-tight">Platinum Showcase</span>
@@ -49,7 +49,7 @@ export function AuthShell({ title, description, children, footer, error }: AuthS
       </aside>
 
       <div className="flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-sm">
+        <div className="panel w-full max-w-sm rounded-2xl p-8">
           <Link href="/" className="mb-8 flex items-center justify-center gap-2 lg:hidden">
             <PlatinumTrophyIcon className="h-8 w-8" />
             <span className="font-headline text-xl font-bold tracking-tight">Platinum Showcase</span>
