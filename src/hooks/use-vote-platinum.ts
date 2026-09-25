@@ -67,7 +67,7 @@ export function useVotePlatinum({
         toast({
           title: 'No se pudo votar',
           description: result.error,
-          variant: 'destructive',
+          variant: 'danger',
         });
         router.refresh();
         return;
@@ -84,6 +84,7 @@ export function useVotePlatinum({
         description: result.hasVoted
           ? 'Tu voto se ha guardado correctamente.'
           : 'Tu voto ya no contará para el ranking de este mes.',
+        variant: result.hasVoted ? 'success' : 'danger',
       });
 
       router.refresh();
