@@ -57,18 +57,23 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
           isOwner
             ? 'No puedes votar tu propio platino'
             : hasVoted
-              ? 'Pulsa para retirar tu voto'
+              ? `Votado · pulsa para retirar (${votes})`
+              : 'Votar este platino'
+        }
+        aria-label={
+          isOwner
+            ? 'No puedes votar tu propio platino'
+            : hasVoted
+              ? `Retirar voto (${votes})`
               : 'Votar este platino'
         }
       >
-        <Heart className={cn("mr-2 transition-all", hasVoted && "fill-white scale-110")} />
-        <span className="truncate">
-          {isOwner
-            ? 'Tu platino'
-            : hasVoted
-              ? `Voto activo (${votes})`
-              : `Votar (${votes})`}
-        </span>
+        <Heart className={cn("transition-all", hasVoted && "fill-white scale-110")} />
+        {isOwner
+          ? 'Tu platino'
+          : hasVoted
+            ? votes
+            : 'Votar'}
       </Button>
       <Button variant="outline" size="lg" className="shrink-0 px-3" onClick={handleShare} aria-label="Share platinum">
         <Share2 />
