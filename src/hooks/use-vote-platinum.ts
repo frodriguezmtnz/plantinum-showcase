@@ -65,7 +65,7 @@ export function useVotePlatinum({
 
       if (!result.success) {
         toast({
-          title: 'No se pudo votar',
+          title: 'Vote failed',
           description: result.error,
           variant: 'danger',
         });
@@ -80,10 +80,10 @@ export function useVotePlatinum({
       });
 
       toast({
-        title: result.hasVoted ? '¡Voto registrado!' : 'Voto retirado',
+        title: result.hasVoted ? 'Vote counted!' : 'Vote removed',
         description: result.hasVoted
-          ? 'Tu voto se ha guardado correctamente.'
-          : 'Tu voto ya no contará para el ranking de este mes.',
+          ? 'Your vote has been saved.'
+          : 'Your vote no longer counts toward this month\u2019s ranking.',
         variant: result.hasVoted ? 'success' : 'danger',
       });
 

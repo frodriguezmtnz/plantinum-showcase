@@ -1,0 +1,618 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T12:00:00.000Z",
+  "title": "Design System: Platinum Showcase",
+  "extensions": {
+    "colorMeta": {
+      "cloud": {
+        "role": "neutral",
+        "displayName": "Cloud Ground",
+        "canonical": "hsl(210 60% 98%)",
+        "tonalRamp": [
+          "hsl(211 60% 18%)",
+          "hsl(211 55% 32%)",
+          "hsl(210 50% 48%)",
+          "hsl(209 50% 62%)",
+          "hsl(208 55% 74%)",
+          "hsl(207 58% 84%)",
+          "hsl(209 60% 93%)",
+          "hsl(210 60% 98%)"
+        ]
+      },
+      "frost": {
+        "role": "neutral",
+        "displayName": "Frost Sheet",
+        "canonical": "hsl(210 60% 99%)",
+        "note": "Material alpha, never a flat fill: 0.74 (.panel chrome), 0.92 (.panel-solid content), 0.65/0.85/0.42 in components."
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "hsl(212 38% 16%)",
+        "tonalRamp": [
+          "hsl(212 38% 8%)",
+          "hsl(212 38% 16%)",
+          "hsl(211 40% 20%)",
+          "hsl(211 30% 30%)",
+          "hsl(211 22% 36%)",
+          "hsl(210 24% 52%)",
+          "hsl(209 30% 72%)",
+          "hsl(208 40% 90%)"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "hsl(211 22% 36%)",
+        "note": "--muted-foreground; the .field-mark color."
+      },
+      "ink-deep": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "hsl(211 40% 20%)",
+        "note": "--secondary-foreground; text on frost-filled buttons and pills."
+      },
+      "sky-white": {
+        "role": "primary",
+        "displayName": "Sky White",
+        "canonical": "hsl(210 80% 98%)",
+        "note": "--primary-foreground; text on console-blue fills."
+      },
+      "console-blue": {
+        "role": "primary",
+        "displayName": "Console Blue",
+        "canonical": "hsl(209 62% 32%)",
+        "tonalRamp": [
+          "hsl(210 62% 12%)",
+          "hsl(210 62% 20%)",
+          "hsl(209 62% 32%)",
+          "hsl(208 62% 42%)",
+          "hsl(206 64% 54%)",
+          "hsl(204 72% 68%)",
+          "hsl(203 78% 80%)",
+          "hsl(202 60% 92%)"
+        ]
+      },
+      "ice": {
+        "role": "primary",
+        "displayName": "Ice Blue",
+        "canonical": "hsl(203 92% 52%)",
+        "tonalRamp": [
+          "hsl(204 92% 16%)",
+          "hsl(204 92% 30%)",
+          "hsl(203 92% 42%)",
+          "hsl(203 92% 52%)",
+          "hsl(203 88% 66%)",
+          "hsl(203 88% 74%)",
+          "hsl(202 84% 84%)",
+          "hsl(201 72% 92%)"
+        ],
+        "note": "--ice / --ring: focus outline, selection tint at 0.32."
+      },
+      "ice-soft": {
+        "role": "primary",
+        "displayName": "Ice Soft",
+        "canonical": "hsl(203 88% 74%)",
+        "note": "Defined in :root; no component consumer yet."
+      },
+      "bloom-glow": {
+        "role": "primary",
+        "displayName": "Bloom Glow",
+        "canonical": "hsl(203 95% 68%)",
+        "note": "At 0.8 alpha inside --bloom: the 3px selection ring."
+      },
+      "ink-shadow": {
+        "role": "neutral",
+        "displayName": "Ink Shadow",
+        "canonical": "hsl(207 60% 28%)",
+        "note": "The only drop-shadow tint: --lift at 0.4, --bloom drop at 0.45; panel drop uses hsl(209 60% 22%) at 0.4."
+      },
+      "cloud-mat": {
+        "role": "neutral",
+        "displayName": "Cloud Mat",
+        "canonical": "hsl(206 45% 94%)",
+        "tonalRamp": [
+          "hsl(207 45% 24%)",
+          "hsl(207 45% 40%)",
+          "hsl(206 45% 56%)",
+          "hsl(206 45% 70%)",
+          "hsl(206 45% 82%)",
+          "hsl(206 45% 94%)",
+          "hsl(205 42% 96%)",
+          "hsl(205 40% 98%)"
+        ],
+        "note": "Image letterbox mat behind contained podium shots; 2nd-place ground at 0.85."
+      },
+      "haze": {
+        "role": "neutral",
+        "displayName": "Haze",
+        "canonical": "hsl(205 48% 91%)",
+        "note": "--secondary quiet fill."
+      },
+      "ice-mist": {
+        "role": "neutral",
+        "displayName": "Ice Mist",
+        "canonical": "hsl(203 72% 88%)",
+        "note": "--accent quiet fill."
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "hsl(206 30% 82%)",
+        "note": "--border / --input; strip's pipe dividers use text-border."
+      },
+      "cloud-edge": {
+        "role": "neutral",
+        "displayName": "Cloud Edge",
+        "canonical": "hsl(207 36% 84%)",
+        "note": "The .panel-solid border; the frost sheet's seam."
+      },
+      "scrollbar-ink": {
+        "role": "neutral",
+        "displayName": "Scrollbar Ink",
+        "canonical": "hsl(207 30% 58%)",
+        "note": "Thin scrollbar thumb, 10px radius, transparent track."
+      },
+      "scrollbar-ink-deep": {
+        "role": "neutral",
+        "displayName": "Scrollbar Ink Deep",
+        "canonical": "hsl(207 32% 44%)",
+        "note": "Scrollbar thumb hover."
+      },
+      "alert-red": {
+        "role": "secondary",
+        "displayName": "Alert Red",
+        "canonical": "hsl(0 62% 42%)",
+        "note": "--destructive: vote heart and destructive actions only."
+      },
+      "dusk-amber": {
+        "role": "secondary",
+        "displayName": "Dusk Amber",
+        "canonical": "hsl(38 88% 42%)",
+        "tonalRamp": [
+          "hsl(36 88% 16%)",
+          "hsl(38 88% 26%)",
+          "hsl(38 88% 34%)",
+          "hsl(38 88% 42%)",
+          "hsl(38 88% 45%)",
+          "hsl(40 88% 60%)",
+          "hsl(42 90% 76%)",
+          "hsl(44 92% 90%)"
+        ],
+        "note": "HoF award icon; champion-aura shadow tint at 0.45 (hsl(38 90% 42%))."
+      },
+      "dusk-amber-bright": {
+        "role": "secondary",
+        "displayName": "Dusk Amber Bright",
+        "canonical": "hsl(38 88% 45%)",
+        "note": "Champion ring at 0.65, champion avatar border at 0.8."
+      },
+      "sunrise-cream": {
+        "role": "tertiary",
+        "displayName": "Sunrise Cream",
+        "canonical": "hsl(44 92% 90%)",
+        "note": "Champion card ground at 0.8."
+      },
+      "champion-ink": {
+        "role": "tertiary",
+        "displayName": "Champion Ink",
+        "canonical": "hsl(30 72% 32%)",
+        "note": "1st-place rank text; game name at hsl(30 72% 30%)."
+      },
+      "runner-silver": {
+        "role": "tertiary",
+        "displayName": "Runner Silver",
+        "canonical": "hsl(211 30% 55%)",
+        "note": "2nd-place ring at 0.5; 2nd-place ink hsl(211 45% 32%)."
+      },
+      "ember-bronze": {
+        "role": "tertiary",
+        "displayName": "Ember Bronze",
+        "canonical": "hsl(24 55% 45%)",
+        "note": "3rd-place ring at 0.5; ground hsl(28 65% 93%) at 0.85."
+      },
+      "ember-ink": {
+        "role": "tertiary",
+        "displayName": "Ember Ink",
+        "canonical": "hsl(24 60% 34%)",
+        "note": "3rd-place rank text."
+      },
+      "platinum-steel": {
+        "role": "legacy",
+        "displayName": "Platinum Steel (legacy remap)",
+        "canonical": "hsl(206 28% 52%)",
+        "note": "--platinum, remapped for unrebuilt pages; feeds .platinum-edge."
+      },
+      "platinum-glint": {
+        "role": "legacy",
+        "displayName": "Platinum Glint (legacy remap)",
+        "canonical": "hsl(203 60% 84%)",
+        "note": "--platinum-bright; no current consumer."
+      },
+      "platinum-ghost": {
+        "role": "legacy",
+        "displayName": "Platinum Ghost (legacy remap)",
+        "canonical": "hsl(208 20% 42%)",
+        "note": "--platinum-dim; feeds .platinum-text only."
+      },
+      "chart-1": {
+        "role": "reserved",
+        "displayName": "Chart Steel",
+        "canonical": "hsl(203 72% 44%)",
+        "note": "Defined in :root, no component consumer."
+      },
+      "chart-2": {
+        "role": "reserved",
+        "displayName": "Chart Ember",
+        "canonical": "hsl(28 88% 52%)",
+        "note": "Defined in :root, no component consumer."
+      },
+      "chart-3": {
+        "role": "reserved",
+        "displayName": "Chart Pine",
+        "canonical": "hsl(168 44% 38%)",
+        "note": "Defined in :root, no component consumer."
+      },
+      "chart-4": {
+        "role": "reserved",
+        "displayName": "Chart Sun",
+        "canonical": "hsl(44 88% 52%)",
+        "note": "Defined in :root, no component consumer."
+      },
+      "chart-5": {
+        "role": "reserved",
+        "displayName": "Chart Iris",
+        "canonical": "hsl(248 36% 58%)",
+        "note": "Defined in :root, no component consumer."
+      },
+      "race-top": {
+        "role": "field",
+        "displayName": "Race Sky (cold morning, zenith)",
+        "canonical": "hsl(202 82% 94%)"
+      },
+      "race-mid": {
+        "role": "field",
+        "displayName": "Race Sky (cold morning, haze)",
+        "canonical": "hsl(203 64% 85%)"
+      },
+      "race-low": {
+        "role": "field",
+        "displayName": "Race Sky (cold morning, horizon)",
+        "canonical": "hsl(206 48% 73%)"
+      },
+      "closing-top": {
+        "role": "field",
+        "displayName": "Dusk Sky (zenith)",
+        "canonical": "hsl(38 78% 91%)"
+      },
+      "closing-mid": {
+        "role": "field",
+        "displayName": "Dusk Sky (amber haze)",
+        "canonical": "hsl(27 68% 82%)"
+      },
+      "closing-low": {
+        "role": "field",
+        "displayName": "Dusk Sky (deep horizon)",
+        "canonical": "hsl(210 34% 64%)"
+      },
+      "final-top": {
+        "role": "field",
+        "displayName": "Dawn Sky (zenith)",
+        "canonical": "hsl(44 92% 88%)"
+      },
+      "final-mid": {
+        "role": "field",
+        "displayName": "Dawn Sky (sunrise gold)",
+        "canonical": "hsl(30 82% 76%)"
+      },
+      "final-low": {
+        "role": "field",
+        "displayName": "Dawn Sky (deep horizon)",
+        "canonical": "hsl(214 38% 54%)"
+      },
+      "ink-void": {
+        "role": "neutral",
+        "displayName": "Selection Ink",
+        "canonical": "hsl(212 38% 14%)",
+        "note": "::selection text on the ice wash; the deepest step of the ink family."
+      },
+      "field-dot": {
+        "role": "neutral",
+        "displayName": "Field Dot",
+        "canonical": "hsl(212 38% 16% / 0.06)",
+        "note": "The console dot-grid: 1px ink dots on a 22px lattice over the phase sky gradient."
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home hero line only, Mulish 300, masked boot reveal."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page titles (Explore, Hall of Fame), Mulish 700."
+      },
+      "subhead": {
+        "displayName": "Subhead",
+        "purpose": "Section titles inside frost shells and podium rank names."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Game names on cards, detail-panel headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions and card copy."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Card meta, captions, descriptions under titles."
+      },
+      "nav": {
+        "displayName": "Nav Pill",
+        "purpose": "Header navigation, 15px/600 inside rounded-full pills."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, rank chips, button text (12-14px semibold/bold)."
+      },
+      "micro-caps": {
+        "displayName": "Field Mark",
+        "purpose": ".field-mark: 11px/700/0.22em uppercase data labels only — month, PLATFORM, countdown, hints, footer heads."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift",
+        "value": "0 14px 34px -22px hsl(207 60% 28% / 0.4)",
+        "purpose": "Resting elevation: plates, cards, primary buttons, active nav pill."
+      },
+      {
+        "name": "bloom",
+        "value": "0 0 0 3px hsl(203 95% 68% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45)",
+        "purpose": "The single selection state: hover, focus-visible, and the resting [data-selected] plate."
+      },
+      {
+        "name": "panel-drop",
+        "value": "0 18px 42px -30px hsl(209 60% 22% / 0.4)",
+        "purpose": "Soft drop under 74% frost chrome (.panel)."
+      },
+      {
+        "name": "champion-aura",
+        "value": "0 16px 40px -22px hsl(38 90% 42% / 0.45)",
+        "purpose": "Legacy token remapped warm; Hall of Fame 1st place only."
+      },
+      {
+        "name": "ink-scrim",
+        "value": "background: hsl(212 38% 16% / 0.55); backdrop-filter: blur(4px)",
+        "purpose": "Dialog/sheet/alert overlay veil; the only dark layer in the world."
+      },
+      {
+        "name": "spot (legacy alias)",
+        "value": "var(--lift); strong alias: var(--bloom)",
+        "purpose": "Old dark-world shadow tokens kept so unrebuilt pages read in the new world."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-bloom",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Single easing curve for every state transition in the world."
+      },
+      {
+        "name": "bloom-lift",
+        "value": "transform/box-shadow 0.45s ease-bloom; translateY(-10px) scale(1.04)",
+        "purpose": "Plate rises into bloom on hover, focus, or resting selection."
+      },
+      {
+        "name": "caption-rise",
+        "value": "opacity/transform 0.4s ease-bloom; translateY(10px) to 0",
+        "purpose": "Frosted caption slides up under a bloomed plate."
+      },
+      {
+        "name": "field-deepen",
+        "value": "filter blur(6px) saturate(1.1) over 0.5s ease-bloom",
+        "purpose": "body[data-bloom='deep'] steps the sky field back while the browse row holds focus."
+      },
+      {
+        "name": "boot-intro",
+        "value": "GSAP timeline, once: strip y-18/0.55s, title mask yPercent 115/0.9s, sub y14/0.6s, plates y90 scale0.9 stagger 0.07 back.out(1.3)/0.7s with clearProps, hint fade 0.6s",
+        "purpose": "The console boots once on first load; clearProps hands control back to CSS bloom."
+      },
+      {
+        "name": "scroll-reveal",
+        "value": "y42, 0.8s power2.out, ScrollTrigger start 'top 86%' once, clearProps",
+        "purpose": "Below-fold frost panels reveal exactly one time."
+      },
+      {
+        "name": "mount-fade",
+        "value": "fade-in + slide-in-from-bottom-3, 500ms, uniform",
+        "purpose": "Platinum cards mount in one wash — deliberately no per-card stagger."
+      },
+      {
+        "name": "vote-pop",
+        "value": "scale 1 to 1.5 to 1 over 0.5s ease-out on press",
+        "purpose": "The one authored micro-moment on voting."
+      },
+      {
+        "name": "spoiler-reveal",
+        "value": "blur(22px) scale(1.08) to clear, 0.4s ease-bloom",
+        "purpose": "Spoiler-protected plates lift their frost veil."
+      },
+      {
+        "name": "field-drift",
+        "value": "3 wave layers, rAF gated at 50ms (20fps), DPR capped at 2, paused on tab hide, palette lerp 0.02/frame",
+        "purpose": "Near-imperceptible ambient breathing; never fidgets."
+      },
+      {
+        "name": "reduced-motion-contract",
+        "value": "field paints one static frame; bloom hover transform none; field-deepen filter none; boot intro and scroll reveals skipped (?motion=off also skips intro)",
+        "purpose": "Selection survives on the ice ring alone when motion is reduced."
+      },
+      {
+        "name": "race-marquee",
+        "value": "translateX(-50%) over 50s linear infinite",
+        "purpose": "Home row continuous drift; pauses on hover/focus/off-screen, stops permanently on take-over (data-static), static under reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Console-blue pill CTA; resting lift, hover escalates to the ice bloom.",
+      "html": "<button class=\"ds-btn-primary\">Submit a plate</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 20px; border: none; border-radius: 9999px; background: var(--primary, hsl(209 62% 32%)); color: var(--primary-foreground, hsl(210 80% 98%)); font: 600 0.875rem/1 Mulish, sans-serif; box-shadow: var(--lift, 0 14px 34px -22px hsl(207 60% 28% / 0.4)); cursor: pointer; transition: filter 0.2s, box-shadow 0.2s; } .ds-btn-primary:hover { filter: brightness(1.1); box-shadow: var(--bloom, 0 0 0 3px hsl(203 95% 68% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45)); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ice, hsl(203 92% 52%)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Frost (Outline) Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The default secondary: translucent white frost pill on the field.",
+      "html": "<button class=\"ds-btn-frost\">Open the full gallery</button>",
+      "css": ".ds-btn-frost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 20px; border: 1px solid hsl(0 0% 100% / 0.7); border-radius: 9999px; background: hsl(0 0% 100% / 0.65); backdrop-filter: blur(12px); color: hsl(211 40% 20%); font: 600 0.875rem/1 Mulish, sans-serif; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; } .ds-btn-frost:hover { background: hsl(0 0% 100% / 0.95); box-shadow: var(--lift, 0 14px 34px -22px hsl(207 60% 28% / 0.4)); } .ds-btn-frost:focus-visible { outline: 2px solid var(--ice, hsl(203 92% 52%)); outline-offset: 2px; }"
+    },
+    {
+      "name": "Frost Nav Bar",
+      "kind": "nav",
+      "refersTo": "nav-pill-active",
+      "description": "Sticky 74% frost header bar; 15px pills; exact-pathname route turns a white active pill.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-logo\">◆ Platinum Showcase</span><a class=\"ds-nav-pill active\">Home</a><a class=\"ds-nav-pill\">Explore</a><a class=\"ds-nav-pill\">Hall of Fame</a><button class=\"ds-nav-cta\">Upload</button></nav>",
+      "css": ".ds-nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 4px; height: 64px; padding: 0 32px; background: hsl(210 60% 99% / 0.74); backdrop-filter: blur(18px) saturate(1.3); border-bottom: 1px solid hsl(0 0% 100% / 0.65); box-shadow: 0 18px 42px -30px hsl(209 60% 22% / 0.4); font: 600 15px/1 Mulish, sans-serif; color: hsl(212 38% 16%); } .ds-nav-logo { margin-right: 24px; } .ds-nav-pill { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 9999px; color: hsl(211 40% 20% / 0.8); cursor: pointer; transition: background 0.2s; } .ds-nav-pill:hover { background: hsl(0 0% 100% / 0.5); } .ds-nav-pill.active { background: hsl(0 0% 100% / 0.85); color: hsl(209 62% 32%); box-shadow: 0 14px 34px -22px hsl(207 60% 28% / 0.4); outline: 1px solid hsl(0 0% 100%); } .ds-nav-cta { margin-left: auto; height: 40px; padding: 0 20px; border: none; border-radius: 9999px; background: hsl(209 62% 32%); color: hsl(210 80% 98%); font: 600 14px/1 Mulish, sans-serif; box-shadow: 0 14px 34px -22px hsl(207 60% 28% / 0.4); cursor: pointer; }"
+    },
+    {
+      "name": "Month Strip",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The race-clock readout: solid-frost pill with month micro-caps, live counts, close copy.",
+      "html": "<div class=\"ds-strip\"><span class=\"ds-mark\">SEPTEMBER 2026</span><span class=\"ds-strip-sep\">|</span><span class=\"ds-strip-data\">128 plates on the board · 942 votes cast</span><span class=\"ds-strip-sep\">|</span><span class=\"ds-strip-heat\">polls close in 6 days</span></div>",
+      "css": ".ds-strip { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; padding: 8px 20px; border-radius: 9999px; background: hsl(210 60% 99% / 0.92); backdrop-filter: blur(18px) saturate(1.3); border: 1px solid hsl(207 36% 84%); font: 600 0.875rem/1.4 Mulish, sans-serif; color: hsl(212 38% 16%); } .ds-mark { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: hsl(211 22% 36%); } .ds-strip-sep { color: hsl(206 30% 82%); } .ds-strip-data { font-variant-numeric: tabular-nums; } .ds-strip-heat { color: hsl(209 62% 32%); font-weight: 600; }"
+    },
+    {
+      "name": "Browse Plate",
+      "kind": "card",
+      "refersTo": "plate-tile",
+      "description": "The signature tile: rests with lift, blooms (ice ring + rise) on hover, focus, or resting selection while the field blurs behind.",
+      "html": "<a class=\"ds-plate-shell\" data-selected=\"\"><div class=\"ds-plate\"><img class=\"ds-plate-img\" src=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='288' height='162'%3E%3Crect width='288' height='162' fill='hsl(206,42%25,93%25)'/%3E%3C/svg%3E\" alt=\"\"><span class=\"ds-rank\">#1</span></div><div class=\"ds-caption\"><div class=\"ds-caption-inner\"><p class=\"ds-caption-name\">Bloodborne</p><p class=\"ds-caption-meta\"><span>@trophyhunter · PS4</span><strong>412 votes</strong></p></div></div></a>",
+      "css": ".ds-plate-shell { position: relative; display: block; width: 288px; flex: none; scroll-snap-align: center; outline: none; text-decoration: none; color: hsl(212 38% 16%); } .ds-plate { position: relative; aspect-ratio: 16/9; overflow: hidden; border-radius: 14px; background: hsl(206 42% 93%); box-shadow: var(--lift, 0 14px 34px -22px hsl(207 60% 28% / 0.4)); outline: 1px solid hsl(0 0% 100% / 0.7); transition: transform 0.45s var(--ease-bloom, cubic-bezier(0.22,1,0.36,1)), box-shadow 0.45s var(--ease-bloom, cubic-bezier(0.22,1,0.36,1)); } .ds-plate-img { width: 100%; height: 100%; object-fit: cover; } .ds-plate-shell:hover .ds-plate, .ds-plate-shell:focus-visible .ds-plate, .ds-plate-shell[data-selected] .ds-plate { transform: translateY(-10px) scale(1.04); box-shadow: var(--bloom, 0 0 0 3px hsl(203 95% 68% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45)); } .ds-rank { position: absolute; left: 8px; top: 8px; padding: 2px 10px; border-radius: 9999px; background: hsl(0 0% 100% / 0.85); backdrop-filter: blur(12px); font: 700 0.75rem/1.4 Mulish, sans-serif; font-variant-numeric: tabular-nums; color: hsl(209 62% 32%); } .ds-caption { position: absolute; left: 8px; right: 8px; top: 100%; margin-top: 12px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity 0.4s var(--ease-bloom, cubic-bezier(0.22,1,0.36,1)), transform 0.4s var(--ease-bloom, cubic-bezier(0.22,1,0.36,1)); } .ds-plate-shell:hover .ds-caption, .ds-plate-shell:focus-within .ds-caption, .ds-plate-shell[data-selected] .ds-caption { opacity: 1; transform: translateY(0); } .ds-caption-inner { border-radius: 14px; padding: 12px 16px; background: hsl(210 60% 99% / 0.92); backdrop-filter: blur(18px) saturate(1.3); border: 1px solid hsl(207 36% 84%); box-shadow: var(--lift, 0 14px 34px -22px hsl(207 60% 28% / 0.4)); } .ds-caption-name { font: 700 0.875rem/1.4 Mulish, sans-serif; } .ds-caption-meta { display: flex; justify-content: space-between; margin-top: 2px; font: 400 0.75rem/1.4 Mulish, sans-serif; font-variant-numeric: tabular-nums; color: hsl(211 22% 36%); } .ds-caption-meta strong { color: hsl(209 62% 32%); font-weight: 700; } @media (prefers-reduced-motion: reduce) { .ds-plate-shell:hover .ds-plate, .ds-plate-shell:focus-visible .ds-plate { transform: none; } }"
+    },
+    {
+      "name": "Platinum Card",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "Solid-frost gallery card: uniform 500ms mount wash (no stagger), bloom on hover, native aspect ratio, ghost vote pill.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-img\"><span class=\"ds-card-badge\">PS5</span></div><div class=\"ds-card-body\"><div class=\"ds-card-row\"><h3>Elden Ring</h3><span class=\"ds-card-badge\">PS5</span></div><div class=\"ds-card-foot\"><span class=\"ds-card-user\">@frodriguez</span><button class=\"ds-vote\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"currentColor\"><path d=\"M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z\"/></svg><span>128</span></button></div></div></div>",
+      "css": ".ds-card { display: flex; flex-direction: column; overflow: hidden; border-radius: 12px; background: hsl(210 60% 99% / 0.92); backdrop-filter: blur(18px) saturate(1.3); border: 1px solid hsl(207 36% 84%); box-shadow: var(--lift, 0 14px 34px -22px hsl(207 60% 28% / 0.4)); animation: ds-mount 0.5s ease-out both; transition: box-shadow 0.3s; } @keyframes ds-mount { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } } .ds-card:hover { box-shadow: var(--bloom, 0 0 0 3px hsl(203 95% 68% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45)); } .ds-card-img { aspect-ratio: 1 / 1; background: hsl(206 42% 93%); } .ds-card-body { padding: 16px; color: hsl(212 38% 16%); font-family: Mulish, sans-serif; } .ds-card-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; } .ds-card-row h3 { font-size: 0.875rem; font-weight: 600; } .ds-card-badge { border: 1px solid hsl(206 30% 82%); border-radius: 8px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; } .ds-card-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; } .ds-card-user { font-size: 0.875rem; color: hsl(211 22% 36%); } .ds-vote { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border: none; border-radius: 9999px; background: transparent; color: hsl(211 22% 36%); font: 600 0.875rem/1 Mulish, sans-serif; font-variant-numeric: tabular-nums; cursor: pointer; } .ds-vote:hover { color: hsl(0 62% 42%); } .ds-vote.voted { color: hsl(0 62% 42%); } .ds-vote:active svg { animation: ds-vote-pop 0.5s ease-out; } @keyframes ds-vote-pop { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }"
+    },
+    {
+      "name": "Champion Podium Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Hall of Fame 1st place: sunrise-gold inks on solid frost, the only wearer of the amber champion aura.",
+      "html": "<div class=\"ds-podium\"><h2>Champion</h2><a class=\"ds-podium-card\"><div class=\"ds-podium-img\"></div><div class=\"ds-podium-body\"><p><strong>@trophyhunter</strong></p><h3>Bloodborne</h3><p class=\"ds-podium-votes\">412 Monthly Votes</p></div></a></div>",
+      "css": ".ds-podium { display: flex; flex-direction: column; align-items: center; font-family: Mulish, sans-serif; } .ds-podium h2 { margin-bottom: 8px; font-size: 1.5rem; font-weight: 700; color: hsl(30 72% 32%); } .ds-podium-card { display: block; width: 100%; overflow: hidden; text-align: center; border-radius: 12px; background: hsl(44 92% 90% / 0.8); backdrop-filter: blur(18px) saturate(1.3); border: 1px solid hsl(207 36% 84%); outline: 2px solid hsl(38 88% 45% / 0.65); box-shadow: 0 16px 40px -22px hsl(38 90% 42% / 0.45); color: hsl(212 38% 16%); text-decoration: none; transition: transform 0.3s; } .ds-podium-card:hover { transform: scale(1.02); } .ds-podium-img { aspect-ratio: 16/9; background: hsl(206 45% 94%); } .ds-podium-body { padding: 16px; } .ds-podium-body h3 { margin-top: 8px; font-size: 1.125rem; font-weight: 700; color: hsl(30 72% 30%); } .ds-podium-votes { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font-weight: 700; font-variant-numeric: tabular-nums; color: hsl(30 72% 32%); }"
+    },
+    {
+      "name": "Field Mark Label",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "The 11px tracked-caps data label; the only surviving small-caps device, and only for data.",
+      "html": "<p class=\"ds-field-mark\">PLATFORM</p>",
+      "css": ".ds-field-mark { font: 700 11px/1.4 Mulish, sans-serif; letter-spacing: 0.22em; text-transform: uppercase; color: hsl(211 22% 36%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Console Browse Screen",
+    "overview": "The site is the community's own console browse screen: a living sky you scroll across, frosted system panels for chrome, and plates that bloom when selection rests on them. It refuses the dark-gallery hero completely — the world is bright, cloud-lit, and quiet, and the trophy screenshots carry all the visual weight. Depth and heat come from the clock: the field's light tracks the real race state (cold sky when the month opens, amber dusk in the final week, sunrise gold in the last 48 hours), so the showcase reads as a living monthly event rather than a static archive. Materials are the identity. Two frosts — a 74% translucent .panel for chrome and a 92% .panel-solid for content you read — sit over a full-bleed canvas wave field. Ink-blue text on cloud-white grounds replaces the old dark chrome entirely. Selection has exactly one language: the ice bloom — a 3px hsl(203 95% 68% / 0.8) ring plus an ink-tinted lift shadow, with the tile rising 10px at 1.04 scale — and unlike a hover-only system, a browse screen always holds a resting selection, moved by arrow keys.",
+    "keyCharacteristics": [
+      "Light world: cloud grounds, ink text, frost panels; no dark chrome anywhere.",
+      "The sky is never chosen by a surface: race.ts derives the phase palette from days-left and hands it to the canvas field.",
+      "One selection language: the ice bloom, shared by hover, focus-visible, and the resting [data-selected] plate.",
+      "Mulish is the only family; the voice is weight and tracking, not a second face.",
+      "Tracked micro-caps survive only as data labels, never as kickers above headings.",
+      "All real motion is action-triggered or once-only; the ambient field is near-still.",
+      "English-only, honest live counts, and never a PlayStation logo or glyph."
+    ],
+    "rules": [
+      {
+        "name": "The Heat Rule",
+        "body": "The field's light escalates with the race clock — cold sky, amber dusk, sunrise gold — and it is the only place amber is allowed to flood the screen. Surfaces keep the same inks in every phase.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Marks Rule",
+        "body": "No PlayStation logos, glyphs, or trademarked shapes are ever reproduced. Marks are generic line icons or the self-drawn PlatinumTrophyIcon.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Selection Rule",
+        "body": "Hover, focus, and resting selection all render the identical --bloom treatment. If a screen shows two blooms, one is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Mulish only. A second face is never introduced for display effect.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracked Caps Are Data Rule",
+        "body": "Letter-spaced uppercase exists only as data labels: month name, PLATFORM keys, rank chips' context, countdown, spoiler status, footer column heads, keyboard hint. Never a kicker above a heading.",
+        "section": "typography"
+      },
+      {
+        "name": "The Vote Is a Number Rule",
+        "body": "Every count renders with tabular-nums; numbers must not jitter as they tick.",
+        "section": "typography"
+      },
+      {
+        "name": "The Blue-Ink Shadow Rule",
+        "body": "Every shadow tints from hsl(207 60% 28%) (or its amber champion exception). Black shadows do not belong on cloud.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Field Steps Back Rule",
+        "body": "Selection dims the environment: while the browse row holds focus, the sky blurs to 7px so the bloomed plate is the brightest thing on screen.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep every surface light: frost on cloud, ink text; the only dark layer is the modal scrim (hsl(212 38% 16% / 0.55)).",
+      "Do let race.ts pick the sky from days-left; ship the phase palette straight into the canvas and nothing else.",
+      "Do use the single --bloom treatment for hover, focus, and resting selection, and keep exactly one resting selection per browse row.",
+      "Do reserve .field-mark (11px/700/0.22em) for data labels and render every changing count with tabular-nums.",
+      "Do use the two frosts correctly: 74% .panel for chrome, 92% .panel-solid for content surfaces.",
+      "Do show screenshots at native aspect ratio (contained on a cloud mat when the shape matters, as on the podium).",
+      "Do state real database counts or say the board is empty — live honesty is part of the world.",
+      "Do honor prefers-reduced-motion (and ?motion=off): static field, no hover lift or blur, intro and reveals skipped; selection stays the ice ring alone."
+    ],
+    "donts": [
+      "Don't reintroduce dark chrome, black panels, or black shadows — depth tints from hsl(207 60% 28%).",
+      "Don't put kickers/eyebrows above headings; tracked caps are data, not decoration.",
+      "Don't reproduce PlayStation logos, glyphs, or the button symbols; this is a fan product with its own marks.",
+      "Don't invent social proof, launch claims, or fake counts.",
+      "Don't add looping or ambient motion beyond the near-still field; intro and reveals fire once and clearProps so bloom keeps working.",
+      "Don't stagger platinum-card mount fades; the uniform 500ms wash is the deliberate choice.",
+      "Don't let red (vote/destructive) or the amber podium family wander off their reserved jobs.",
+      "Don't build new surfaces on the legacy utilities (platinum-text, platinum-plate, platinum-edge, stage-light, section-divider, shadow-champion); they survive only for hall-of-fame and retire when it rebuilds."
+    ]
+  }
+}

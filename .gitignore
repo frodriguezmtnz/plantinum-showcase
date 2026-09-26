@@ -52,3 +52,7 @@ firestore-debug.log
 
 # local docs
 /docs/
+# Impeccable review captures (local evidence, not repo assets)
+.impeccable/review/
+.impeccable/build/
+.impeccable/mocks/

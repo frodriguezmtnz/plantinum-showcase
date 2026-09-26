@@ -12,17 +12,28 @@ export const metadata = {
   title: 'Hall of Fame | Platinum Showcase',
 };
 
+function daysUntilMonthEnd(now: Date): number {
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return lastDay - now.getDate();
+}
+
 export default async function HallOfFamePage() {
   const session = await auth();
-  const rankedPlatinums = await getMonthlyRanking(10, session?.user?.id);
-  const users = await getUsers();
+  const [rankedPlatinums, users] = await Promise.all([
+    getMonthlyRanking(10, session?.user?.id),
+    getUsers(),
+  ]);
 
   const getUserById = (userId: string): User | undefined => users.find(u => u.id === userId);
+
+  const now = new Date();
+  const monthYear = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const daysLeft = daysUntilMonthEnd(now);
 
   const podiumPlatinums = rankedPlatinums.slice(0, 3);
   const otherRankedPlatinums = rankedPlatinums.slice(3);
 
-  // Define styles for podium places
+  // Podium metal in the field's own inks: sunrise gold, console blue, ember bronze.
   const podiumStyles: Record<1 | 2 | 3, {
     borderColor: string;
     textColor: string;
@@ -33,45 +44,62 @@ export default async function HallOfFamePage() {
     rankText: string;
   }> = {
     1: {
-      borderColor: 'border-amber-400',
-      textColor: 'text-amber-400',
-      bgColor: 'bg-amber-500/10',
-      shadowClass: 'hover:shadow-2xl hover:shadow-amber-400/30 focus-visible:shadow-amber-400/30',
+      borderColor: 'ring-2 ring-[hsl(38_88%_45%/0.65)]',
+      textColor: 'text-[hsl(30_72%_32%)]',
+      bgColor: 'bg-[hsl(44_92%_90%/0.8)]',
+      shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
       order: 'md:order-2',
       lift: 'md:-translate-y-12',
-      rankText: '1st',
+      rankText: 'Champion',
     },
     2: {
-      borderColor: 'border-gray-400',
-      textColor: 'text-gray-400',
-      bgColor: 'bg-gray-500/10',
-      shadowClass: 'hover:shadow-2xl hover:shadow-gray-400/30 focus-visible:shadow-gray-400/30',
+      borderColor: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
+      textColor: 'text-[hsl(211_45%_32%)]',
+      bgColor: 'bg-[hsl(206_45%_94%/0.85)]',
+      shadowClass: 'hover:shadow-bloom focus-visible:shadow-bloom',
       order: 'md:order-1',
       lift: 'md:-translate-y-6',
-      rankText: '2nd',
+      rankText: '2nd Place',
     },
     3: {
-      borderColor: 'border-orange-500',
-      textColor: 'text-orange-500',
-      bgColor: 'bg-orange-600/10',
-      shadowClass: 'hover:shadow-2xl hover:shadow-orange-500/30 focus-visible:shadow-orange-500/30',
+      borderColor: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
+      textColor: 'text-[hsl(24_60%_34%)]',
+      bgColor: 'bg-[hsl(28_65%_93%/0.85)]',
+      shadowClass: 'hover:shadow-bloom focus-visible:shadow-bloom',
       order: 'md:order-3',
       lift: '',
-      rankText: '3rd',
+      rankText: '3rd Place',
     },
   };
 
   return (
     <div className="container py-8 md:py-12">
       <div className="text-center mb-16">
-        <Award className="mx-auto h-16 w-16 text-amber-400 drop-shadow-lg" />
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-4">Monthly Hall of Fame</h1>
-        <p className="mt-3 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">The community's favorite platinum screenshots of the month. A new champion is crowned every month!</p>
+        <Award className="mx-auto h-14 w-14 text-[hsl(38_88%_42%)]" />
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-2 text-balance">Monthly Hall of Fame</h1>
+        <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
+          The community&apos;s favorite platinum screenshots of {monthYear.toLowerCase()}.
+        </p>
+        <p className="field-mark mt-3">
+          {daysLeft === 0 ? (
+            <span>Final day of voting</span>
+          ) : (
+            <>The polls close in <span className="tabular font-semibold text-foreground">{daysLeft}</span> {daysLeft === 1 ? 'day' : 'days'}</>
+          )}
+        </p>
       </div>
 
+      {rankedPlatinums.length === 0 ? (
+        <div className="mx-auto max-w-2xl rounded-2xl border border-dashed border-border p-12 text-center">
+          <Trophy className="mx-auto h-10 w-10 text-muted-foreground" />
+          <h2 className="mt-4 font-headline text-xl font-bold">The podium is empty this month.</h2>
+          <p className="mt-2 text-muted-foreground">Vote on the freshest platinums or upload your own — the first champion of {monthYear} is undecided.</p>
+        </div>
+      ) : (
+        <>
       {/* Podium Section */}
       {podiumPlatinums.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-5xl mx-auto mb-20 pt-16">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 items-end max-w-5xl mx-auto mb-20 pt-16">
           {podiumPlatinums.map((platinum, index) => {
             const rank = (index + 1) as 1 | 2 | 3;
             const user = getUserById(platinum.userId);
@@ -79,20 +107,21 @@ export default async function HallOfFamePage() {
 
             return (
               <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift)}>
-                <h2 className={cn('text-2xl font-bold mb-2', styles.textColor)}>{styles.rankText} Place</h2>
+                <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full">
                   <Card className={cn(
-                    "overflow-hidden text-center transition-all duration-300 hover:scale-105 focus-visible:scale-105",
+                    "panel-solid overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02] focus-visible:scale-[1.02]",
                     styles.borderColor,
                     styles.bgColor,
                     styles.shadowClass
                   )}>
-                    <div className="aspect-video relative overflow-hidden">
+                    <div className="relative bg-[hsl(206_45%_94%)]" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}
                         fill
-                        className="object-cover"
+                        sizes="(max-width: 768px) 90vw, 30vw"
+                        className="object-contain"
                         data-ai-hint={platinum.imageHint}
                         unoptimized={isStoredImage(platinum.imageUrl)}
                       />
@@ -100,16 +129,16 @@ export default async function HallOfFamePage() {
                     <CardContent className="p-4">
                       {user && (
                         <div className="flex items-center justify-center gap-2">
-                          <Avatar className="h-8 w-8 border-2" style={{borderColor: styles.borderColor}}>
+                          <Avatar className="h-8 w-8 border-2" style={{ borderColor: rank === 1 ? 'hsl(38 88% 45% / 0.8)' : undefined }}>
                             <AvatarImage src={user.avatarUrl} alt={user.username} />
                             <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                           </Avatar>
                           <span className="font-semibold truncate">{user.username}</span>
                         </div>
                       )}
-                      <h3 className="font-medium mt-2 truncate text-lg">{platinum.gameName}</h3>
+                      <h3 className={cn("font-medium mt-2 truncate text-lg", rank === 1 && "font-headline font-bold text-[hsl(30_72%_30%)]")}>{platinum.gameName}</h3>
                       <div className={cn('flex items-center justify-center gap-2 font-bold mt-2', styles.textColor)}>
-                        <span>{platinum.monthlyVotes}</span>
+                        <span className="tabular">{platinum.monthlyVotes}</span>
                         <Trophy className="w-5 h-5" />
                         <span className="font-medium">Monthly Votes</span>
                       </div>
@@ -126,7 +155,7 @@ export default async function HallOfFamePage() {
       {otherRankedPlatinums.length > 0 && (
          <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-8 font-headline relative section-divider">
-            <span className="bg-background px-4 relative">Resto del Top 10</span>
+            <span className="panel-solid px-4 relative rounded-full">Rest of the Top 10</span>
           </h2>
           <ul className="space-y-4">
             {otherRankedPlatinums.map((platinum, index) => {
@@ -136,8 +165,8 @@ export default async function HallOfFamePage() {
               return (
                 <li key={platinum.id}>
                   <Link href={`/platinum/${platinum.id}`} className="block">
-                    <Card className="p-3 sm:p-4 rounded-lg flex items-center gap-4 transition-all duration-300 hover:bg-card/90 hover:scale-[1.02] hover:shadow-primary/20 focus-visible:scale-[1.02] focus-visible:shadow-primary/20 outline-hidden">
-                      <div className={`text-2xl sm:text-3xl font-bold w-12 text-center shrink-0 text-muted-foreground`}>#{rank}</div>
+                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition-all duration-300 hover:bg-white/95 hover:shadow-bloom focus-visible:shadow-bloom outline-hidden">
+                      <div className={`text-2xl sm:text-3xl font-bold w-12 text-center shrink-0 text-muted-foreground tabular`}>#{rank}</div>
                       <Image 
                         src={platinum.imageUrl} 
                         alt={`Screenshot for ${platinum.gameName}`} 
@@ -145,7 +174,7 @@ export default async function HallOfFamePage() {
                         height={72}
                         className="w-24 sm:w-32 h-14 sm:h-18 object-cover rounded-md" 
                         data-ai-hint={platinum.imageHint} 
-                        unoptimized={isStoredImage(platinum.imageUrl)}
+                        unoptimized={isStoredImage(platinum.imageUrl)} 
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-base sm:text-lg truncate">{platinum.gameName}</h3>
@@ -160,7 +189,7 @@ export default async function HallOfFamePage() {
                         )}
                       </div>
                       <div className="hidden sm:flex flex-col items-end text-right shrink-0">
-                        <div className="flex items-center gap-2 text-lg font-bold text-primary">
+                        <div className="flex items-center gap-2 text-lg font-bold text-primary tabular">
                           <span>{platinum.monthlyVotes}</span>
                           <Trophy className="w-5 h-5" />
                         </div>
@@ -173,6 +202,8 @@ export default async function HallOfFamePage() {
             })}
           </ul>
         </div>
+      )}
+        </>
       )}
     </div>
   );

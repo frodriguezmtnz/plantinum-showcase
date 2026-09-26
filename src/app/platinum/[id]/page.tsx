@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Heart } from 'lucide-react';
+import { Heart, Trophy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -56,7 +56,7 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
             <PlatinumDetailCard platinum={platinum} user={user ?? null} />
         </div>
         <div className="md:col-span-1 min-w-0">
-            <div className="bg-card p-6 rounded-lg overflow-hidden">
+            <div className="panel-solid p-6 rounded-2xl overflow-hidden">
                 <h2 className="text-2xl font-bold font-headline mb-4 break-words">{platinum.gameName}</h2>
                 {user && (
                   <div className="mb-6 flex min-w-0 items-center gap-4">
@@ -72,20 +72,20 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                     </div>
                   </div>
                 )}
-                <div className="space-y-3 text-sm mb-6">
-                    <p><strong>Platform:</strong> {platinum.platform}</p>
-                    <p><strong>Achieved on:</strong> {format(new Date(platinum.platinumDate), 'MMMM d, yyyy')}</p>
+                <div className="space-y-2 text-sm mb-6">
+                    <p className="flex justify-between gap-3 border-b border-border/60 pb-2"><span className="field-mark">Platform</span><span className="font-semibold">{platinum.platform}</span></p>
+                    <p className="flex justify-between gap-3"><span className="field-mark">Achieved on</span><span className="tabular font-semibold">{format(new Date(platinum.platinumDate), 'MMMM d, yyyy')}</span></p>
                 </div>
                 
                 <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
                     <div className="flex min-w-0 items-center">
-                        <Heart className="mr-2 shrink-0 text-primary"/>
-                        <span className="font-bold">{platinum.votes}</span>
+                        <Heart className="mr-2 shrink-0 fill-destructive text-destructive"/>
+                        <span className="font-bold tabular">{platinum.votes}</span>
                         <span className="text-muted-foreground ml-1">votes</span>
                     </div>
                      <div className="flex min-w-0 items-center">
-                        <Heart className="mr-2 shrink-0 text-amber-400"/>
-                        <span className="font-bold">{platinum.monthlyVotes}</span>
+                        <Trophy className="mr-2 shrink-0 text-muted-foreground"/>
+                        <span className="font-bold tabular">{platinum.monthlyVotes}</span>
                         <span className="text-muted-foreground ml-1">this month</span>
                     </div>
                 </div>

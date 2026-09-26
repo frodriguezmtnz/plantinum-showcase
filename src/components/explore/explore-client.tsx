@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import type { PlatinumPageItem } from '@/lib/data';
@@ -81,28 +81,51 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
     }
   }
 
+  // Infinite scroll: a sentinel near the bottom pulls the next page through
+  // the same offset endpoint; the button stays as a keyboard/no-JS fallback.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    loadMoreRef.current = () => {
+      if (hasMore && !isLoadingMore) handleLoadMore();
+    };
+  });
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMoreRef.current();
+      },
+      { rootMargin: '600px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <div>
-      <Card className="p-4 mb-12">
+      <Card className="panel p-4 mb-12 rounded-2xl">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Juego:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Game:</label>
             <Input
               type="text"
-              placeholder="Buscar por juego..."
+              placeholder="Search by game..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full"
             />
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Plataforma:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap">Platform:</label>
             <Select value={platformFilter} onValueChange={handlePlatformChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Filtrar por plataforma" />
+                <SelectValue placeholder="Filter by platform" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="all">All</SelectItem>
                 <SelectItem value="PS5">PlayStation 5</SelectItem>
                 <SelectItem value="PS4">PlayStation 4</SelectItem>
                 <SelectItem value="PS3">PlayStation 3</SelectItem>
@@ -110,15 +133,15 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             </Select>
           </div>
           <div className="flex items-center gap-2 flex-1 min-w-[180px]">
-            <label className="text-sm font-medium sr-only sm:not-sr-only">Ordenar por:</label>
+            <label className="text-sm font-medium sr-only sm:not-sr-only whitespace-nowrap shrink-0">Sort by:</label>
             <Select value={sortOrder} onValueChange={handleSortChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Ordenar por" />
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">Recientes</SelectItem>
-                <SelectItem value="most-voted">Más votados</SelectItem>
-                <SelectItem value="least-voted">Menos votados</SelectItem>
+                <SelectItem value="recent">Most recent</SelectItem>
+                <SelectItem value="most-voted">Most voted</SelectItem>
+                <SelectItem value="least-voted">Least voted</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -127,37 +150,40 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
 
       {items.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {items.map((item, index) => (
-              <PlatinumCard
-                key={item.platinum.id}
-                platinum={item.platinum}
-                user={item.user}
-                index={index}
-              />
+          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
+            {items.map((item) => (
+              <div key={item.platinum.id} className="mb-6 break-inside-avoid">
+                <PlatinumCard
+                  platinum={item.platinum}
+                  user={item.user}
+                />
+              </div>
             ))}
           </div>
 
           {hasMore && (
-            <div className="mt-12 flex justify-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-              >
-                {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoadingMore ? 'Cargando...' : 'Cargar más'}
-              </Button>
-            </div>
+            <>
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+              <div className="mt-12 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoadingMore ? 'Loading...' : 'Load more'}
+                </Button>
+              </div>
+            </>
           )}
         </>
       ) : (
         <EmptyState
           icon={SearchX}
-          title="No se encontraron platinos"
-          description="Prueba a ajustar los filtros o vuelve más tarde."
-          actionLabel="Subir platino"
+          title="No platinums found"
+          description="Try tweaking the filters, or come back later."
+          actionLabel="Upload a platinum"
           actionHref="/upload"
         />
       )}

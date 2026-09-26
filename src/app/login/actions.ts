@@ -21,9 +21,9 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
-          return { error: "Email o contraseña incorrectos." };
+          return { error: "Incorrect email or password." };
         default:
-          return { error: "No se pudo iniciar sesión." };
+          return { error: "Could not sign in." };
       }
     }
     throw error;

@@ -28,14 +28,14 @@ export async function uploadPlatinum(formData: FormData) {
   if (!userId) {
     return {
       success: false as const,
-      error: "Debes iniciar sesión para subir un platino.",
+      error: "You need to sign in to upload a platinum.",
     };
   }
 
   if (!isStorageConfigured()) {
     return {
       success: false as const,
-      error: "El almacenamiento de imágenes no está configurado todavía.",
+      error: "Image storage is not configured yet.",
     };
   }
 
@@ -50,24 +50,24 @@ export async function uploadPlatinum(formData: FormData) {
   if (!parsed.success) {
     return {
       success: false as const,
-      error: "Los datos del formulario no son válidos.",
+      error: "The form data is not valid.",
     };
   }
 
   const file = formData.get("screenshot");
   if (!(file instanceof File) || file.size === 0) {
-    return { success: false as const, error: "La captura es obligatoria." };
+    return { success: false as const, error: "A screenshot is required." };
   }
   if (file.size > MAX_FILE_BYTES) {
     return {
       success: false as const,
-      error: "La imagen supera el tamaño máximo de 6 MB.",
+      error: "The image exceeds the 6 MB size limit.",
     };
   }
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return {
       success: false as const,
-      error: "Formato no soportado. Usa JPG, PNG o WEBP.",
+      error: "Unsupported format. Use JPG, PNG or WEBP.",
     };
   }
 
@@ -88,7 +88,7 @@ export async function uploadPlatinum(formData: FormData) {
   } catch {
     return {
       success: false as const,
-      error: "El archivo no es una imagen válida.",
+      error: "The file is not a valid image.",
     };
   }
 
@@ -102,7 +102,7 @@ export async function uploadPlatinum(formData: FormData) {
   if (existing) {
     return {
       success: false as const,
-      error: "Ya tienes un platino con esa misma captura.",
+      error: "You already have a platinum with that same screenshot.",
     };
   }
 
@@ -111,7 +111,7 @@ export async function uploadPlatinum(formData: FormData) {
   } catch {
     return {
       success: false as const,
-      error: "No se pudo subir la imagen. Inténtalo de nuevo.",
+      error: "Could not upload the image. Please try again.",
     };
   }
 
@@ -153,12 +153,12 @@ export async function uploadPlatinum(formData: FormData) {
     if ((error as { code?: string }).code === "P2002") {
       return {
         success: false as const,
-        error: "Ya tienes un platino con esa misma captura.",
+        error: "You already have a platinum with that same screenshot.",
       };
     }
     return {
       success: false as const,
-      error: "No se pudo guardar el platino. Inténtalo de nuevo.",
+      error: "Could not save the platinum. Please try again.",
     };
   }
 }
@@ -176,7 +176,7 @@ export async function deletePlatinum(id: string) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false as const, error: "Debes iniciar sesión." };
+    return { success: false as const, error: "You need to sign in." };
   }
 
   const platinum = await prisma.platinum.findUnique({
@@ -185,12 +185,12 @@ export async function deletePlatinum(id: string) {
   });
 
   if (!platinum) {
-    return { success: false as const, error: "El platino no existe." };
+    return { success: false as const, error: "This platinum does not exist." };
   }
   if (platinum.userId !== userId) {
     return {
       success: false as const,
-      error: "No puedes borrar un platino que no es tuyo.",
+      error: "You can't delete a platinum that isn't yours.",
     };
   }
 
@@ -250,7 +250,7 @@ export async function toggleVoteForPlatinum(
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false, error: "Debes iniciar sesión para votar." };
+    return { success: false, error: "You need to sign in to vote." };
   }
 
   const platinum = await prisma.platinum.findUnique({
@@ -262,12 +262,12 @@ export async function toggleVoteForPlatinum(
   });
 
   if (!platinum) {
-    return { success: false, error: "El platino no existe." };
+    return { success: false, error: "This platinum does not exist." };
   }
   if (platinum.userId === userId) {
     return {
       success: false,
-      error: "No puedes votar tu propio platino.",
+      error: "You can't vote for your own platinum.",
     };
   }
 
@@ -364,7 +364,7 @@ export async function toggleVoteForPlatinum(
 
     return {
       success: false,
-      error: "No se pudo registrar el voto. Inténtalo de nuevo.",
+      error: "Could not record the vote. Please try again.",
     };
   }
 }

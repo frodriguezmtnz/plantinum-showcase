@@ -17,7 +17,7 @@ interface PlatinumDetailCardProps {
 
 function Watermark({ username }: { username: string }) {
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-lg bg-black/50 p-2 text-xs text-white/80 opacity-70 pointer-events-none">
+    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-full bg-[hsl(212_38%_16%/0.6)] p-2 pr-3 text-xs text-white/85 opacity-80 pointer-events-none backdrop-blur-sm">
       <PlatinumTrophyIcon className="w-5 h-5" />
       <div>
         <p className="font-bold">Platinum Showcase</p>
@@ -41,7 +41,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className={cn("group/card block aspect-[16/9] bg-muted rounded-lg overflow-hidden relative cursor-zoom-in", !showSpoiler && "platinum-card-spoiler")}>
+        <div className={cn("group/card block aspect-[16/9] bg-muted rounded-xl overflow-hidden relative cursor-zoom-in ring-1 ring-white/70 shadow-lift", !showSpoiler && "platinum-card-spoiler")}>
           <Image
             src={platinum.imageUrl}
             alt={`Platinum screenshot for ${platinum.gameName}`}
@@ -53,15 +53,18 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
           />
           {user && showSpoiler && <Watermark username={user.username} />}
           {!showSpoiler && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20">
-                <p className="text-lg font-bold text-white mb-4">Spoiler Warning</p>
-              <Button onClick={handleShowSpoiler} variant="secondary">
-                <Eye className="mr-2 h-4 w-4" /> Show Screenshot
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[hsl(210_60%_99%/0.86)] backdrop-blur-[2px] z-20">
+                <p className="text-lg font-bold flex items-center gap-2 text-foreground">
+                  <Eye className="h-5 w-5 text-muted-foreground" />
+                  Spoiler protected
+                </p>
+              <Button onClick={handleShowSpoiler} variant="outline">
+                Reveal screenshot
               </Button>
             </div>
           )}
            <div className="absolute top-4 right-4 z-20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
-              <div className="bg-background/80 text-foreground p-2 rounded-full shadow-lg">
+              <div className="panel-solid text-foreground p-2 rounded-full shadow-lift">
                 <Expand className="w-5 h-5" />
               </div>
             </div>

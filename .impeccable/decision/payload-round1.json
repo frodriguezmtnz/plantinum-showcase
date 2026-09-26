@@ -1,0 +1,116 @@
+{
+  "title": "Choose the visual world",
+  "question": "The roll assigned The Strategy Guide. Keep it, take an alternate, or re-roll. Three more dealt challengers (tensegrity column, shader portal, warm consumer app) wait in the re-roll pool.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Strategy Guide",
+      "kicker": "THE ROLL",
+      "lineage": "Printed game guides: two-spot-ink interiors, completion tables, missable warnings, 100% seals",
+      "thesis": "The site is this month's official strategy guide: every plate a numbered exhibit, the race a completion table, the crown a printed seal.",
+      "palette": ["#f4f1ea", "#16150f", "#ff2f5e", "#1b7f79", "#ffd23f"],
+      "materials": ["cool guidebook paper", "black process ink", "one fluorescent alert spot", "one cold data ink"],
+      "viewport": "Full-bleed frontispiece: the month's leading plate as the cover exhibit, vertical spine masthead at left, contents strip and dated issue line at right, the race ticket as the only spot-ink action.",
+      "risk": "A paper world at 1am: contrast and dark screenshots must be worked hard or it reads as a flyer.",
+      "raised": [
+        {
+          "from": "challenger-metal-forging",
+          "raise": "Ink escalates like a forging heat: the race state (open to closing to crowned) drives one spot color at total material commitment, the discipline the forge donated."
+        }
+      ],
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "spine masthead", "x": 0, "y": 0, "w": 2, "h": 10, "accent": true },
+        { "label": "cover plate (leader)", "x": 2, "y": 0, "w": 7, "h": 7 },
+        { "label": "contents + issue line", "x": 9, "y": 0, "w": 3, "h": 7 },
+        { "label": "chapter strips", "x": 2, "y": 7, "w": 7, "h": 3 },
+        { "label": "enter-race ticket", "x": 2, "y": 8, "w": 4, "h": 2, "accent": true }
+      ]},
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "The Console Browse Screen",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "The console's own cross-media browse language: wave field, focused row, detail blooming under the icon",
+      "thesis": "The gallery is the screen the community already stares at daily: a horizontal row of plates over an ambient field, selection blooms into detail.",
+      "palette": ["#0a1230", "#2f7bd6", "#9db9e8", "#e8f0ff"],
+      "materials": ["soft depth-of-field field", "icon bloom", "wave gradient", "focus ring as cursor"],
+      "viewport": "One row of this month's plates floats mid-screen over a blurred wave field; the focused tile blooms its caption and vote ticket beneath itself.",
+      "risk": "This is where most runs in this category land, and its shapes sit next to trademarked console UI; familiar, not fearless.",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "ambient wave field", "x": 0, "y": 0, "w": 12, "h": 4 },
+        { "label": "plate row (focused tile)", "x": 0, "y": 4, "w": 12, "h": 2, "accent": true },
+        { "label": "bloomed detail card", "x": 3, "y": 6, "w": 6, "h": 4, "accent": true }
+      ]},
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-sapeur",
+      "label": "The Portrait Plate",
+      "verdict": "competitive",
+      "lineage": "Sapeur studio portrait plates: one figure, three coordinated colors, ruled caption naming every label",
+      "thesis": "Each platinum is a studio portrait: full-length plate on a painted backdrop, a ruled caption naming every provenance under the frame.",
+      "palette": ["#c8402f", "#2f4d8f", "#d9b23f", "#efe9df", "#23201c"],
+      "materials": ["painted flat backdrop", "printed thin frame", "ruled caption line"],
+      "viewport": "One full-bleed plate centered on a flat hue backdrop, caption ruled beneath, the rest of the month's plates as a spine series at the edge.",
+      "case": "Holds audience identification (showing off a proof like a portrait, captions per label) but loses the race clarity: a portrait series cannot carry a monthly tally or voting ritual.",
+      "risk": "One plate per screen makes browsing slow; the series rhythm can flatten into a carousel.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-sapeur-portrait-plate-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/pop-culture-shelf-sapeur-portrait-plate.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "painted backdrop + plate", "x": 3, "y": 0, "w": 6, "h": 8, "accent": true },
+        { "label": "ruled caption", "x": 3, "y": 8, "w": 6, "h": 1 },
+        { "label": "series spine thumbs", "x": 0, "y": 0, "w": 2, "h": 10 },
+        { "label": "next/prev plates", "x": 10, "y": 0, "w": 2, "h": 10 }
+      ]},
+      "comp": ".impeccable/mocks/decision/challenger-sapeur.webp"
+    },
+    {
+      "id": "challenger-cuttingbench",
+      "label": "The Select Rail",
+      "verdict": "competitive",
+      "lineage": "Film cutting bench: perforated rail, punched frames, grease marks, tape flags, trims on pins",
+      "thesis": "The gallery is a strip of frames on a rail: scrub, flag where you stopped, mark states with punches and grease crosses instead of colors.",
+      "palette": ["#0d0d0d", "#ff5a1f", "#f2ede4"],
+      "materials": ["coarse film grain", "perforation pitch", "one flag orange at a third of the screen"],
+      "viewport": "One rail crosses the page at a fixed height with this month's captures as frames; the flagged frame resumes where you left; spoiler marks are grease crosses, favorites hang on pins below.",
+      "case": "Strong product clarity (screenshots are literally frames; state-as-mark fits spoiler etiquette) but the audience identification is editor-craft, not trophy-shelf pride.",
+      "risk": "Novelty tax: every affordance is re-learned, and the rail fights long reading.",
+      "hero": "https://impeccable.style/worlds/cards/operate-a-cutting-bench-select-rail-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/operate-a-cutting-bench-select-rail.webp",
+      "wireframe": { "cols": 12, "rows": 10, "regions": [
+        { "label": "bench header", "x": 0, "y": 0, "w": 12, "h": 2 },
+        { "label": "perforated select rail", "x": 0, "y": 4, "w": 12, "h": 1, "accent": true },
+        { "label": "frame strip", "x": 0, "y": 5, "w": 12, "h": 3 },
+        { "label": "flagged last frame", "x": 6, "y": 4, "w": 1, "h": 4, "accent": true },
+        { "label": "trims bin (favorites)", "x": 0, "y": 8, "w": 12, "h": 2 }
+      ]},
+      "comp": ".impeccable/mocks/decision/challenger-cuttingbench.webp"
+    },
+    {
+      "id": "challenger-metalforging",
+      "label": "The Forge",
+      "verdict": "declined",
+      "lineage": "Blacksmith shop: heat states, blows as rows, chalk measurements",
+      "palette": ["#12100e", "#8a8f98", "#ff6b1a", "#fff4d6"],
+      "materials": ["forge-dark ground", "scale flecks", "stenciled caps"],
+      "case": "Loses both axes fused: trophy metal as forge labor misreads a showcase, and one-blow-per-row buries the gallery.",
+      "kept": "Total commitment to material state, whose ink-heat escalation the assigned card carries as a named raise.",
+      "hero": "https://impeccable.style/worlds/cards/metal-forging-patina-blacksmith-scale-shower-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "canon": true,
+  "canonCard": {
+    "id": "canon",
+    "label": "The category standard",
+    "thesis": "The dark PlayStation-adjacent trophy gallery every fan site ships, executed impeccably.",
+    "palette": ["#0a1230", "#121a3f", "#2f8bff", "#e6edf7"],
+    "materials": ["card grid gallery", "blue accent", "trophy icons"],
+    "viewport": "Dark hero band, monthly leaderboard card row, filter bar, grid of plates.",
+    "risk": "Indistinguishable from the competition is the point; you chose this branch to escape it.",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}

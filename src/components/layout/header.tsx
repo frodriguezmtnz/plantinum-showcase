@@ -35,19 +35,27 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Trophy },
-  { href: '/explore', label: 'Explorar', icon: Compass },
-  { href: '/hall-of-fame', label: 'Salón de la Fama', icon: Crown },
+  { href: '/explore', label: 'Explore', icon: Compass },
+  { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown },
 ];
+
+const navPill =
+  'flex h-10 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors duration-200';
+const navActive = 'bg-white/85 text-primary shadow-lift ring-1 ring-white';
+const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   return (
-    <Link href={href} passHref>
-      <Button variant={active ? 'secondary' : 'ghost'} className="justify-start w-full">
-        {children}
-      </Button>
+    <Link
+      href={href}
+      className={cn(navPill, 'justify-start w-full', active ? navActive : navIdle)}
+      aria-current={active ? 'page' : undefined}
+    >
+      {children}
     </Link>
   );
 }
@@ -57,17 +65,21 @@ export function Header() {
   const { user, logout } = useAuth();
   
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="flex items-center gap-6 mr-auto">
+    <header className="sticky top-0 z-50 w-full">
+      <div className="panel rounded-none border-x-0 border-t-0">
+      <div className="container flex h-16 items-center px-4 md:px-8">
+        <div className="flex items-center gap-2 md:gap-6 mr-auto min-w-0">
           <Logo />
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
             {navLinks.map((link) => (
-              <Link href={link.href} passHref key={link.href}>
-                  <Button variant={pathname === link.href ? 'secondary' : 'ghost'}>
-                      <link.icon className="mr-2 h-4 w-4" />
-                      {link.label}
-                  </Button>
+              <Link
+                href={link.href}
+                key={link.href}
+                className={cn(navPill, pathname === link.href ? navActive : navIdle)}
+                aria-current={pathname === link.href ? 'page' : undefined}
+              >
+                <link.icon className="h-4 w-4" />
+                {link.label}
               </Link>
             ))}
           </nav>
@@ -77,7 +89,7 @@ export function Header() {
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Subir</span>
+                <span className="hidden sm:inline">Upload</span>
               </Button>
             </Link>
             {user ? (
@@ -85,7 +97,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar>
-                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'Usuario'} />
+                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
                       <AvatarFallback>{(user.name ?? '?').slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
@@ -103,13 +115,13 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href={`/u/${user.name}`}>
                       <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Perfil</span>
+                      <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
+                    <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -118,13 +130,13 @@ export function Header() {
                 <Button variant="outline" asChild className="hidden sm:flex">
                     <Link href="/login">
                         <LogIn className="mr-2 h-4 w-4" />
-                        Iniciar sesión
+                        Sign in
                     </Link>
                 </Button>
-                <Button asChild className="hidden sm:flex">
+                <Button asChild variant="outline" className="hidden sm:flex">
                     <Link href="/register">
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Registrarse
+                        Sign up
                     </Link>
                 </Button>
                </>
@@ -158,13 +170,13 @@ export function Header() {
                         <SheetClose asChild>
                           <NavLink href="/login" active={pathname === '/login'}>
                             <LogIn className="mr-2 h-4 w-4" />
-                            Iniciar sesión
+                            Sign in
                           </NavLink>
                         </SheetClose>
                         <SheetClose asChild>
                           <NavLink href="/register" active={pathname === '/register'}>
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Registrarse
+                            Sign up
                           </NavLink>
                         </SheetClose>
                       </>
@@ -174,6 +186,7 @@ export function Header() {
               </Sheet>
             </div>
         </div>
+      </div>
       </div>
     </header>
   );

@@ -16,16 +16,16 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   const confirmPassword = formData.get("confirmPassword") as string;
 
   if (!username || username.length < 3) {
-    return { error: "El nombre de usuario debe tener al menos 3 caracteres." };
+    return { error: "Username must be at least 3 characters." };
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "El email no es válido." };
+    return { error: "That email address is not valid." };
   }
   if (!password || password.length < 6) {
-    return { error: "La contraseña debe tener al menos 6 caracteres." };
+    return { error: "Password must be at least 6 characters." };
   }
   if (password !== confirmPassword) {
-    return { error: "Las contraseñas no coinciden." };
+    return { error: "Passwords do not match." };
   }
 
   try {
@@ -37,8 +37,8 @@ export async function registerAction(_state: RegisterState, formData: FormData):
       return {
         error:
           existing.email === email
-            ? "Ya existe una cuenta con ese email."
-            : "Ese nombre de usuario ya está en uso.",
+            ? "An account with that email already exists."
+            : "That username is already taken.",
       };
     }
 
@@ -61,7 +61,7 @@ export async function registerAction(_state: RegisterState, formData: FormData):
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Cuenta creada, pero no se pudo iniciar sesión. Intenta de nuevo." };
+      return { error: "Account created, but sign-in failed. Try signing in manually." };
     }
     throw error;
   }

@@ -1,76 +1,67 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 @layer base {
   :root {
-    --background: hsl(0, 0%, 100%);
-    --foreground: hsl(0, 0%, 3.9%);
-    --card: hsl(0, 0%, 100%);
-    --card-foreground: hsl(0, 0%, 3.9%);
-    --popover: hsl(0, 0%, 100%);
-    --popover-foreground: hsl(0, 0%, 3.9%);
-    --primary: hsl(207, 70%, 53%);
-    --primary-foreground: hsl(0, 0%, 98%);
-    --secondary: hsl(0, 0%, 96.1%);
-    --secondary-foreground: hsl(0, 0%, 9%);
-    --muted: hsl(0, 0%, 96.1%);
-    --muted-foreground: hsl(0, 0%, 45.1%);
-    --accent: hsl(145, 63%, 49%);
-    --accent-foreground: hsl(0, 0%, 9%);
-    --destructive: hsl(0, 84.2%, 60.2%);
-    --destructive-foreground: hsl(0, 0%, 98%);
-    --border: hsl(0, 0%, 89.8%);
-    --input: hsl(0, 0%, 89.8%);
-    --ring: hsl(207, 70%, 53%);
-    --chart-1: hsl(12, 76%, 61%);
-    --chart-2: hsl(173, 58%, 39%);
-    --chart-3: hsl(197, 37%, 24%);
-    --chart-4: hsl(43, 74%, 66%);
-    --chart-5: hsl(27, 87%, 67%);
-    --radius: 0.5rem;
-  }
+    /* Console Browse world: cloud ground, ink text, frost panels, ice selection. */
+    --background: hsl(210 60% 98%);
+    --foreground: hsl(212 38% 16%);
+    --card: hsl(0 0% 100% / 0.82);
+    --card-foreground: hsl(212 38% 16%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(212 38% 16%);
+    --primary: hsl(209 62% 32%);
+    --primary-foreground: hsl(210 80% 98%);
+    --secondary: hsl(205 48% 91%);
+    --secondary-foreground: hsl(211 40% 20%);
+    --muted: hsl(206 42% 93%);
+    --muted-foreground: hsl(211 22% 36%);
+    --accent: hsl(203 72% 88%);
+    --accent-foreground: hsl(211 40% 18%);
+    --destructive: hsl(0 62% 42%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --border: hsl(206 30% 82%);
+    --input: hsl(206 30% 82%);
+    --ring: hsl(203 92% 52%);
+    --chart-1: hsl(203 72% 44%);
+    --chart-2: hsl(28 88% 52%);
+    --chart-3: hsl(168 44% 38%);
+    --chart-4: hsl(44 88% 52%);
+    --chart-5: hsl(248 36% 58%);
+    --radius: 0.625rem;
 
-  .dark {
-    --background: hsl(224, 71%, 4%);
-    --foreground: hsl(210, 40%, 98%);
-    --card: hsl(224, 71%, 8%);
-    --card-foreground: hsl(210, 40%, 98%);
-    --popover: hsl(224, 71%, 4%);
-    --popover-foreground: hsl(210, 40%, 98%);
-    --primary: hsl(210, 100%, 56%);
-    --primary-foreground: hsl(210, 40%, 98%);
-    --secondary: hsl(217, 33%, 17%);
-    --secondary-foreground: hsl(210, 40%, 98%);
-    --muted: hsl(217, 33%, 17%);
-    --muted-foreground: hsl(215, 20%, 65%);
-    --accent: hsl(217, 33%, 17%);
-    --accent-foreground: hsl(210, 40%, 98%);
-    --destructive: hsl(0, 63%, 31%);
-    --destructive-foreground: hsl(210, 40%, 98%);
-    --border: hsl(217, 33%, 17%);
-    --input: hsl(217, 33%, 17%);
-    --ring: hsl(210, 100%, 56%);
-    --chart-1: hsl(220, 70%, 50%);
-    --chart-2: hsl(160, 60%, 45%);
-    --chart-3: hsl(30, 80%, 55%);
-    --chart-4: hsl(280, 65%, 60%);
-    --chart-5: hsl(340, 75%, 55%);
+    /* Selection bloom: one ice language everywhere. */
+    --ice: hsl(203 92% 52%);
+    --ice-soft: hsl(203 88% 74%);
+    --bloom: 0 0 0 3px hsl(203 95% 68% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45);
+    --lift: 0 14px 34px -22px hsl(207 60% 28% / 0.4);
+    --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Legacy names, remapped so unrebuilt pages read in the new world. */
+    --platinum: hsl(206 28% 52%);
+    --platinum-bright: hsl(203 60% 84%);
+    --platinum-dim: hsl(208 20% 42%);
+    --spot: var(--lift);
+    --spot-strong: var(--bloom);
+    --champion-aura: 0 16px 40px -22px hsl(38 90% 42% / 0.45);
   }
 
   * {
     @apply border-border;
   }
 
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-transparent text-foreground;
+  }
+
   .container {
     margin-inline: auto;
     width: 100%;
     padding-inline: 2rem;
-  }
-
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
@@ -99,6 +90,16 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-ice: var(--ice);
+  --color-ice-soft: var(--ice-soft);
+  --color-platinum: var(--platinum);
+  --color-platinum-bright: var(--platinum-bright);
+  --color-platinum-dim: var(--platinum-dim);
+  --shadow-spot: var(--spot);
+  --shadow-spot-strong: var(--spot-strong);
+  --shadow-champion: var(--champion-aura);
+  --shadow-bloom: var(--bloom);
+  --shadow-lift: var(--lift);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -106,7 +107,7 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   --font-body: var(--font-body);
-  --font-headline: var(--font-headline);
+  --font-headline: var(--font-body);
 
   --container-sm: 100%;
   --container-md: 100%;
@@ -136,19 +137,203 @@
   }
 }
 
-.platinum-card-spoiler {
-  position: relative;
-  overflow: hidden;
+/* Frosted system panel: the browse screen's own material. */
+.panel {
+  background: hsl(210 60% 99% / 0.74);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid hsl(0 0% 100% / 0.65);
+  box-shadow: 0 18px 42px -30px hsl(209 60% 22% / 0.4);
 }
 
+.panel-solid {
+  background: hsl(210 60% 99% / 0.92);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  border: 1px solid hsl(207 36% 84%);
+}
+
+/* Small tracked caps: the field's section marks. */
+.field-mark {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: hsl(211 22% 36%);
+}
+
+/* Bloom: focused plates lift, the frosted caption rises under them. */
+.plate-bloom {
+  transition: transform 0.45s var(--ease-bloom), box-shadow 0.45s var(--ease-bloom);
+}
+
+.plate-bloom:where(a, [tabindex]):hover,
+.plate-bloom:where(a, [tabindex]):focus-visible {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow: var(--bloom);
+}
+
+.bloom-caption {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s var(--ease-bloom), transform 0.4s var(--ease-bloom);
+  pointer-events: none;
+}
+
+.plate-shell:hover .bloom-caption,
+.plate-shell:focus-within .bloom-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Resting selection: a browse screen always holds a selection without a mouse. */
+.plate-shell[data-selected] .plate-bloom {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow: var(--bloom);
+}
+
+.plate-shell[data-selected] .bloom-caption {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* The race row marquee: a slow continuous drift (track = two identical
+   halves, so -50% is a seamless loop). Pauses for hover/focus/off-screen;
+   data-static (keyboard/wheel/touch or ?motion=off) stops it for good and
+   hands the row to native scrolling. */
+.race-row {
+  overflow-x: hidden;
+}
+
+.race-track {
+  animation: race-marquee 50s linear infinite;
+  will-change: transform;
+}
+
+.race-row:hover .race-track,
+.race-row:focus-within .race-track,
+.race-row[data-paused] .race-track {
+  animation-play-state: paused;
+}
+
+.race-row[data-static] {
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.race-row[data-static] .race-track {
+  animation: none;
+}
+
+.race-row[data-static] a[data-dup] {
+  display: none;
+}
+
+@keyframes race-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-row {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .race-track {
+    animation: none;
+  }
+
+  .race-row a[data-dup] {
+    display: none;
+  }
+}
+
+/* The console field: a static dot-grid matrix over a sky that tracks the
+   race phase. No canvas, no perpetual motion; it only steps back while a
+   plate blooms (body[data-bloom] set by the race row). */
+.sky-field {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  background-image:
+    radial-gradient(hsl(212 38% 16% / 0.06) 1px, transparent 1.4px),
+    var(--field-sky);
+  background-size: 22px 22px, 100% 100%;
+  transition: filter 0.5s var(--ease-bloom);
+}
+
+body[data-phase='race'] .sky-field {
+  --field-sky: linear-gradient(180deg, hsl(202 82% 94%), hsl(203 64% 85%) 55%, hsl(206 48% 73%));
+}
+
+body[data-phase='closing'] .sky-field {
+  --field-sky: linear-gradient(180deg, hsl(38 78% 91%), hsl(27 68% 82%) 55%, hsl(210 34% 64%));
+}
+
+body[data-phase='final'] .sky-field {
+  --field-sky: linear-gradient(180deg, hsl(44 92% 88%), hsl(30 82% 76%) 55%, hsl(214 38% 54%));
+}
+
+body[data-bloom='deep'] .sky-field {
+  filter: blur(6px) saturate(1.1);
+}
+
+/* Spoiler plates: frost on the case, not a black hole on the field. */
 .platinum-card-spoiler > .spoiler-blur {
-  filter: blur(24px);
-  transform: scale(1.1);
-  transition: filter 0.3s ease;
+  filter: blur(22px);
+  transform: scale(1.08);
+  transition: filter 0.4s var(--ease-bloom);
 }
 
-.platinum-card-spoiler:hover > .spoiler-blur {
-  filter: blur(16px);
+.platinum-card-spoiler > .spoiler-frost {
+  background: hsl(210 60% 99% / 0.42);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Browser surfaces belong to this world too. */
+::selection {
+  background: hsl(203 92% 52% / 0.32);
+  color: hsl(212 38% 14%);
+}
+
+* {
+  caret-color: hsl(209 62% 32%);
+  scrollbar-width: thin;
+  scrollbar-color: hsl(207 30% 58%) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: hsl(207 30% 58%);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(207 32% 44%);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ice);
+  outline-offset: 2px;
 }
 
 .vote-button:active svg {
@@ -167,22 +352,52 @@
   }
 }
 
-.section-divider::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 38%;
-  height: 1px;
-  background: linear-gradient(to left, var(--border), transparent);
+@media (prefers-reduced-motion: reduce) {
+  .plate-bloom:where(a, [tabindex]):hover,
+  .plate-bloom:where(a, [tabindex]):focus-visible {
+    transform: none;
+  }
+
+  .sky-field {
+    transition: none;
+  }
+
+  body[data-bloom='deep'] .sky-field {
+    filter: none;
+  }
 }
 
+/* Legacy utilities kept until their last consumer is rebuilt. */
+.platinum-text {
+  color: var(--platinum-dim);
+}
+
+.platinum-edge {
+  border: 1px solid color-mix(in srgb, var(--platinum) 30%, transparent);
+}
+
+.platinum-plate {
+  background: hsl(206 42% 93%);
+}
+
+.stage-light {
+  background: transparent;
+}
+
+.section-divider::before,
 .section-divider::after {
   content: '';
   position: absolute;
-  right: 0;
   top: 50%;
   width: 38%;
   height: 1px;
-  background: linear-gradient(to right, var(--border), transparent);
+  background: var(--border);
+}
+
+.section-divider::before {
+  left: 0;
+}
+
+.section-divider::after {
+  right: 0;
 }

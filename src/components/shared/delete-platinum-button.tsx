@@ -42,7 +42,7 @@ export function DeletePlatinumButton({
       const result = await deletePlatinum(platinumId);
       if (!result.success) {
         toast({
-          title: 'No se pudo borrar',
+          title: 'Delete failed',
           description: result.error,
           variant: 'destructive',
         });
@@ -50,8 +50,8 @@ export function DeletePlatinumButton({
       }
       setOpen(false);
       toast({
-        title: 'Platino borrado',
-        description: 'Tu platino se ha eliminado correctamente.',
+        title: 'Platinum deleted',
+        description: 'Your platinum has been removed.',
       });
       if (redirectTo) {
         router.push(redirectTo);
@@ -70,26 +70,26 @@ export function DeletePlatinumButton({
           size={showLabel ? 'default' : 'sm'}
           className={cn('text-muted-foreground hover:text-destructive', className)}
           disabled={isPending}
-          aria-label="Borrar platino"
+          aria-label="Delete platinum"
         >
           {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Trash2 className="h-4 w-4" />
           )}
-          {showLabel && <span>{isPending ? 'Borrando...' : 'Borrar platino'}</span>}
+          {showLabel && <span>{isPending ? 'Deleting...' : 'Delete platinum'}</span>}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Borrar este platino?</AlertDialogTitle>
+          <AlertDialogTitle>Delete this platinum?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará la captura y el
-            registro de forma permanente.
+            This action cannot be undone. The screenshot and its record will be
+            removed permanently.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             disabled={isPending}
             onClick={(event) => {
@@ -98,7 +98,7 @@ export function DeletePlatinumButton({
             }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isPending ? 'Borrando...' : 'Borrar'}
+            {isPending ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

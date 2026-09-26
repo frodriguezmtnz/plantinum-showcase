@@ -17,14 +17,14 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      title="Iniciar Sesión"
-      description="Únete a la comunidad para votar y mostrar tus platinos."
+      title="Sign In"
+      description="Join the community to vote on and show off your platinums."
       error={state.error}
       footer={
         <>
-          ¿No tienes una cuenta?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="underline">
-            Regístrate
+            Sign up
           </Link>
         </>
       }
@@ -36,14 +36,14 @@ export default function LoginPage() {
         </div>
         <div className="grid gap-2">
           <div className="flex items-center">
-            <Label htmlFor="password">Contraseña</Label>
-            <span className="ml-auto inline-block text-sm underline opacity-40">¿Olvidaste tu contraseña?</span>
+            <Label htmlFor="password">Password</Label>
+            <span className="ml-auto inline-block text-sm underline opacity-40">Forgot your password?</span>
           </div>
           <PasswordInput id="password" name="password" required />
         </div>
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isPending ? "Iniciando..." : "Iniciar Sesión"}
+          {isPending ? "Signing in..." : "Sign In"}
         </Button>
       </form>
 
@@ -52,11 +52,12 @@ export default function LoginPage() {
           <div className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase text-muted-foreground">
-          <span className="bg-background px-2">o</span>
+          <span className="bg-background px-2">or</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" type="button" disabled title="Próximamente">
-        Iniciar sesión con Google
+      <Button variant="outline" className="w-full" type="button" disabled title="Coming soon">
+        Sign in with Google
+        <span className="field-mark ml-2 opacity-70">Coming soon</span>
       </Button>
     </AuthShell>
   );

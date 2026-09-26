@@ -16,10 +16,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, UploadCloud } from "lucide-react"
+import { CalendarIcon, UploadCloud, ImagePlus } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { Switch } from "@/components/ui/switch"
@@ -58,9 +59,14 @@ const uploadFormSchema = z.object({
 
 type UploadFormValues = z.infer<typeof uploadFormSchema>
 
+type UploadStage = 'idle' | 'compressing' | 'uploading'
+
 export default function UploadPage() {
   const { toast } = useToast()
   const [preview, setPreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [stage, setStage] = useState<UploadStage>('idle');
+  const [compressPct, setCompressPct] = useState(0);
   const { user } = useAuth();
   const router = useRouter();
 
@@ -78,13 +84,34 @@ export default function UploadPage() {
       comment: "",
     },
   })
+
+  function acceptFiles(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    form.setValue('screenshot', files);
+    form.clearErrors('screenshot');
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    acceptFiles(e.dataTransfer.files);
+  }
+
+  const busy = stage !== 'idle';
   
   async function onSubmit(data: UploadFormValues) {
     const originalFile = data.screenshot[0];
     if (!originalFile) {
       toast({
         title: "Upload Failed",
-        description: "La captura es obligatoria.",
+        description: "A screenshot is required.",
         variant: "destructive",
       });
       return;
@@ -92,11 +119,16 @@ export default function UploadPage() {
 
     try {
       // Compress in the browser to keep the request small (serverless-friendly).
+      setStage('compressing');
+      setCompressPct(0);
       const compressedFile = await imageCompression(originalFile, {
         maxSizeMB: 4,
         maxWidthOrHeight: 1600,
         useWebWorker: true,
+        onProgress: (progress) => setCompressPct(Math.round(progress)),
       });
+
+      setStage('uploading');
 
       const formData = new FormData();
       formData.set("gameName", data.gameName);
@@ -129,29 +161,27 @@ export default function UploadPage() {
     } catch {
       toast({
         title: "Upload Failed",
-        description: "Ha ocurrido un error inesperado. Inténtalo de nuevo.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setStage('idle');
+      setCompressPct(0);
     }
   }
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    const file = files?.[0];
-    if (file) {
-      form.setValue('screenshot', files);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    acceptFiles(e.target.files);
   };
   
   if (!user) {
-    return <div className="container text-center py-12">Redirigiendo a inicio de sesión...</div>;
+    return <div className="container text-center py-12">Redirecting to sign in&hellip;</div>;
   }
 
+  const submitLabel =
+    stage === 'compressing' ? `Compressing\u2026 ${compressPct}%` :
+    stage === 'uploading' ? 'Hanging it on the wall\u2026' :
+    form.formState.isSubmitting ? 'Uploading\u2026' : 'Upload Platinum';
 
   return (
     <div className="container max-w-2xl py-8 md:py-12">
@@ -248,19 +278,37 @@ export default function UploadPage() {
                       <FormLabel>Screenshot</FormLabel>
                        <FormControl>
                         <div className="flex items-center justify-center w-full">
-                            <label htmlFor="dropzone-file" className={cn("flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors", {'h-auto': preview})}>
+                            <label
+                              htmlFor="dropzone-file"
+                              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                              onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+                              onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+                              onDrop={handleDrop}
+                              className={cn(
+                                "flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200",
+                                dragActive
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:bg-muted/50",
+                                {'h-auto': preview}
+                              )}
+                            >
                                 {preview ? (
                                   <div className="relative w-full aspect-video">
                                     <Image src={preview} alt="Screenshot preview" fill className="object-contain rounded-lg p-2" />
+                                    <p className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-muted-foreground bg-background/80 rounded-full px-3 py-1">
+                                      Drop another file or click to replace
+                                    </p>
                                   </div>
                                 ) : (
                                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                      <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground" />
+                                      <div className={cn("mb-4 rounded-full bg-muted p-4 transition-colors", dragActive && "bg-primary/15 text-primary")}>
+                                        {dragActive ? <ImagePlus className="w-8 h-8" /> : <UploadCloud className="w-8 h-8 text-muted-foreground" />}
+                                      </div>
                                       <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold text-primary">Click to upload</span> or drag and drop</p>
                                       <p className="text-xs text-muted-foreground">PNG, JPG or WEBP (MAX. 5MB)</p>
                                   </div>
                                 )}
-                                <Input id="dropzone-file" type="file" className="hidden" accept=".jpg,.png,.webp" onChange={handleFileChange} />
+                                <Input id="dropzone-file" type="file" className="hidden" accept=".jpg,.png,.webp" onChange={handleFileChange} disabled={busy} />
                             </label>
                         </div> 
                       </FormControl>
@@ -307,15 +355,27 @@ export default function UploadPage() {
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
+                        disabled={busy}
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
+              {busy && (
+                <div className="space-y-2">
+                  <Progress value={stage === 'compressing' ? compressPct : 100} className="h-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {stage === 'compressing'
+                      ? 'Compressing your screenshot for a faster upload\u2026'
+                      : 'Posting your platinum to the gallery\u2026'}
+                  </p>
+                </div>
+              )}
+
               <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
                 <UploadCloud className="mr-2" />
-                {form.formState.isSubmitting ? "Uploading..." : "Upload Platinum"}
+                {submitLabel}
               </Button>
             </form>
           </Form>
