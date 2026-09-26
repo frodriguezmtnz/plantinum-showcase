@@ -197,17 +197,87 @@
   transform: translateY(0);
 }
 
-/* The field deepens while a plate is bloomed (set on body by the race row). */
+/* The race row marquee: a slow continuous drift (track = two identical
+   halves, so -50% is a seamless loop). Pauses for hover/focus/off-screen;
+   data-static (keyboard/wheel/touch or ?motion=off) stops it for good and
+   hands the row to native scrolling. */
+.race-row {
+  overflow-x: hidden;
+}
+
+.race-track {
+  animation: race-marquee 50s linear infinite;
+  will-change: transform;
+}
+
+.race-row:hover .race-track,
+.race-row:focus-within .race-track,
+.race-row[data-paused] .race-track {
+  animation-play-state: paused;
+}
+
+.race-row[data-static] {
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.race-row[data-static] .race-track {
+  animation: none;
+}
+
+.race-row[data-static] a[data-dup] {
+  display: none;
+}
+
+@keyframes race-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .race-row {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .race-track {
+    animation: none;
+  }
+
+  .race-row a[data-dup] {
+    display: none;
+  }
+}
+
+/* The console field: a static dot-grid matrix over a sky that tracks the
+   race phase. No canvas, no perpetual motion; it only steps back while a
+   plate blooms (body[data-bloom] set by the race row). */
 .sky-field {
   position: fixed;
   inset: 0;
   z-index: -10;
-  overflow: hidden;
+  background-image:
+    radial-gradient(hsl(212 38% 16% / 0.06) 1px, transparent 1.4px),
+    var(--field-sky);
+  background-size: 22px 22px, 100% 100%;
   transition: filter 0.5s var(--ease-bloom);
 }
 
+body[data-phase='race'] .sky-field {
+  --field-sky: linear-gradient(180deg, hsl(202 82% 94%), hsl(203 64% 85%) 55%, hsl(206 48% 73%));
+}
+
+body[data-phase='closing'] .sky-field {
+  --field-sky: linear-gradient(180deg, hsl(38 78% 91%), hsl(27 68% 82%) 55%, hsl(210 34% 64%));
+}
+
+body[data-phase='final'] .sky-field {
+  --field-sky: linear-gradient(180deg, hsl(44 92% 88%), hsl(30 82% 76%) 55%, hsl(214 38% 54%));
+}
+
 body[data-bloom='deep'] .sky-field {
-  filter: blur(7px) saturate(1.15);
+  filter: blur(6px) saturate(1.1);
 }
 
 /* Spoiler plates: frost on the case, not a black hole on the field. */

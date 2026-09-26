@@ -37,24 +37,16 @@ colors:
   chart-3: "hsl(168 44% 38%)"
   chart-4: "hsl(44 88% 52%)"
   chart-5: "hsl(248 36% 58%)"
+  field-dot: "hsl(212 38% 16% / 0.06)"
   race-top: "hsl(202 82% 94%)"
   race-mid: "hsl(203 64% 85%)"
   race-low: "hsl(206 48% 73%)"
-  race-wave-a: "hsl(204 72% 91%)"
-  race-wave-b: "hsl(208 42% 64%)"
-  race-glow: "hsl(203 90% 62%)"
   closing-top: "hsl(38 78% 91%)"
   closing-mid: "hsl(27 68% 82%)"
   closing-low: "hsl(210 34% 64%)"
-  closing-wave-a: "hsl(40 84% 88%)"
-  closing-wave-b: "hsl(212 30% 56%)"
-  closing-glow: "hsl(28 92% 58%)"
   final-top: "hsl(44 92% 88%)"
   final-mid: "hsl(30 82% 76%)"
   final-low: "hsl(214 38% 54%)"
-  final-wave-a: "hsl(46 95% 84%)"
-  final-wave-b: "hsl(218 34% 48%)"
-  final-glow: "hsl(38 96% 55%)"
 typography:
   display:
     fontFamily: "Mulish, sans-serif"
@@ -189,15 +181,15 @@ components:
 
 The site is the community's own console browse screen: a living sky you scroll across, frosted system panels for chrome, and plates that bloom when selection rests on them. It refuses the dark-gallery hero completely — the world is bright, cloud-lit, and quiet, and the trophy screenshots carry all the visual weight. Depth and heat come from the clock: the field's light tracks the real race state (cold sky when the month opens, amber dusk in the final week, sunrise gold in the last 48 hours), so the showcase reads as a living monthly event rather than a static archive.
 
-Materials are the identity. Two frosts — a 74% translucent `.panel` for chrome (header, footer, section shells) and a 92% `.panel-solid` for content you read (month strip, captions, cards) — sit over a full-bleed canvas wave field. Ink-blue text on cloud-white grounds replaces the old dark chrome entirely. Selection has exactly one language: the ice bloom — a 3px `hsl(203 95% 68% / 0.8)` ring plus an ink-tinted lift shadow, with the tile rising 10px at 1.04 scale — and unlike a hover-only system, a browse screen always holds a resting selection, moved by arrow keys.
+Materials are the identity. Two frosts — a 74% translucent `.panel` for chrome (header, footer, section shells) and a 92% `.panel-solid` for content you read (month strip, captions, cards) — sit over a full-bleed console field — a static dot-grid matrix (`hsl(212 38% 16% / 0.06)` dots on a 22px lattice) painted over a sky gradient that tracks the race phase. Ink-blue text on cloud-white grounds replaces the old dark chrome entirely. Selection has exactly one language: the ice bloom — a 3px `hsl(203 95% 68% / 0.8)` ring plus an ink-tinted lift shadow, with the tile rising 10px at 1.04 scale — and unlike a hover-only system, a browse screen always holds a resting selection, moved by arrow keys.
 
 **Key Characteristics:**
 - Light world: cloud grounds (`hsl(210 60% 98%)`), ink text (`hsl(212 38% 16%)`), frost panels; no dark chrome anywhere.
-- The sky is never chosen by a surface: `src/lib/race.ts` derives the phase palette from days-left (≤2 final, ≤7 closing, else race) and hands it to the canvas field.
+- The sky is never chosen by a surface: `src/lib/race.ts` derives the phase from days-left (≤2 final, ≤7 closing, else race), the root layout stamps `body[data-phase]`, and CSS paints the matching gradient.
 - One selection language: the ice bloom (`--bloom`), shared by hover, focus-visible, and the resting `[data-selected]` plate.
 - Mulish is the only family; `--font-headline` aliases `--font-body`. The voice is weight and tracking, not a second face.
 - Tracked micro-caps (11px, 0.22em) survive only as data labels — month name, PLATFORM, rank/status, countdown, footer column heads — never as kickers above headings.
-- All real motion is action-triggered or once-only: a console-boot intro that plays one time, scroll reveals that fire once, bloom-on-select, a uniform 500ms card mount fade with deliberately no per-card stagger. The ambient field is near-still (20fps, imperceptible drift, pauses when the tab hides, paints one static frame under reduced motion).
+- All real motion is action-triggered, once-only, or user-blessed ambience: a console-boot intro that plays one time (with the month strip's vote count ticking up), scroll reveals that fire once, bloom-on-select, a uniform 500ms card mount fade with deliberately no per-card stagger. The one ambient motion is the home race row's slow seamless marquee (50s CSS loop): it pauses for hover/focus/off-screen and stops permanently the moment the visitor takes control (keyboard, wheel, touch); reduced-motion and automated captures (`?motion=off`) get the static, scrollable row. The field itself is static.
 - English-only, honest numbers, and never a PlayStation logo or glyph — line marks are generic (Lucide) or self-drawn (`PlatinumTrophyIcon`).
 
 ## Colors
@@ -220,7 +212,7 @@ The palette is sky-derived: cloud and frost neutrals as ground, ink blues for te
 - **Ember Bronze** (`hsl(24 55% 45%)` ring at 0.5, `hsl(24 60% 34%)` ink, `hsl(28 65% 93%)` ground): 3rd place.
 
 ### Neutral
-- **Cloud** (`hsl(210 60% 98%)`, `--background`): the declared ground; in practice the body is transparent over the canvas field, and `--background` fills dialogs/sheets.
+- **Cloud** (`hsl(210 60% 98%)`, `--background`): the declared ground; in practice the body is transparent over the dot-grid field, and `--background` fills dialogs/sheets.
 - **Frost** (`hsl(210 60% 99%)`): material alpha, never a flat fill — 0.74 (`.panel` chrome) and 0.92 (`.panel-solid` content), both `blur(18px) saturate(1.3)`.
 - **Ink** (`hsl(212 38% 16%)`, `--foreground`): all primary text; also the modal scrim at 0.55 with a light backdrop blur, and the spoiler veil at 0.86.
 - **Ink Secondary** (`hsl(211 22% 36%)`, `--muted-foreground`): secondary text and the `.field-mark` color.
@@ -233,10 +225,10 @@ The palette is sky-derived: cloud and frost neutrals as ground, ink blues for te
 - **Ink Shadow** (`hsl(207 60% 28%)`): the only drop-shadow tint in the world — `--lift` at 0.4, `--bloom`'s drop at 0.45, panel drop in `hsl(209 60% 22%)` at 0.4. Shadows here are blue-inked, never black.
 
 ### Race Phase Fields (`src/lib/race.ts`)
-- **Cold Sky (race)** (`top hsl(202 82% 94%)`, `mid hsl(203 64% 85%)`, `low hsl(206 48% 73%)`, `waveA hsl(204 72% 91%)`, `waveB hsl(208 42% 64%)`, `glow hsl(203 90% 62%)`): month just opened.
-- **Amber Dusk (closing, ≤7 days)** (`hsl(38 78% 91%)` → `hsl(27 68% 82%)` → `hsl(210 34% 64%)`, waves `hsl(40 84% 88%)` / `hsl(212 30% 56%)`, glow `hsl(28 92% 58%)`): the light goes warm as polls near close.
-- **Sunrise Gold (final, ≤2 days)** (`hsl(44 92% 88%)` → `hsl(30 82% 76%)` → `hsl(214 38% 54%)`, waves `hsl(46 95% 84%)` / `hsl(218 34% 48%)`, glow `hsl(38 96% 55%)`): crown day; the gold lives in the sky, the chrome stays ice.
-- The canvas lerps between palettes (2% per frame); no surface picks its own weather. `viewport.themeColor` is `#e3f1f8`.
+- **Cold Sky (race)** (gradient `hsl(202 82% 94%)` → `hsl(203 64% 85%)` → `hsl(206 48% 73%)`): month just opened.
+- **Amber Dusk (closing, ≤7 days)** (`hsl(38 78% 91%)` → `hsl(27 68% 82%)` → `hsl(210 34% 64%)`): the light goes warm as polls near close.
+- **Sunrise Gold (final, ≤2 days)** (`hsl(44 92% 88%)` → `hsl(30 82% 76%)` → `hsl(214 38% 54%)`): crown day; the gold lives in the sky, the chrome stays ice.
+- The phase is server-rendered per request via `body[data-phase]`; no surface picks its own weather. `viewport.themeColor` is `#e3f1f8`.
 
 ### Named Rules
 **The Heat Rule.** The field's light escalates with the race clock — cold sky, amber dusk, sunrise gold — and it is the only place amber is allowed to flood the screen. Surfaces keep the same inks in every phase.
@@ -268,7 +260,7 @@ The palette is sky-derived: cloud and frost neutrals as ground, ink blues for te
 
 - Container: full width, `max-width: 1400px` (`--container-2xl`), `padding-inline: 2rem`.
 - Home first viewport: `min-height: calc(100dvh - 4rem)`; month strip floats at top, centered title/subtitle block, the race row as the hero, and the hint micro-caps beneath it. The field is the page; the race row is the hero.
-- Race row: horizontal scroll (`overflow-x-auto px-8 sm:px-12 pb-16 pt-6`), flex `gap-5` (20px), `snap-x snap-proximity`, plates fixed at 256px (288px at `sm`), the submit-plate slot always last.
+- Race row: `.race-row` (`px-8 sm:px-12 pb-16 pt-6`) hosting a `.race-track` flex of 256px plates (288px at `sm`, 20px `mr-5` gutters), duplicated once for the seamless 50s marquee; the duplicate set is `aria-hidden`, untabbable, and `display:none` once static. Auto-play: `overflow-x-hidden`; after take-over (`data-static`): `overflow-x-auto` + `snap-x snap-proximity` (duplicates hidden). The submit-plate slot always ends each half. Spoiler-protected plates never occupy the home row; rank chips keep true standing.
 - Below-fold sections sit in frost shells (`panel` / `panel-solid`, `rounded-2xl`, p-6 → p-10) with `scroll-mt-24` anchors; vertical rhythm in Tailwind steps (gap-6/gap-8, pb-16/pb-20, `section` = 64px).
 - Gallery: CSS multi-columns masonry — 1 / 2 (sm) / 3 (lg) / 4 (xl), gap 24px, cards keep their natural aspect ratio.
 - Detail page: 2/3 image + 1/3 solid-frost info panel at `md`, `max-w-4xl`.
@@ -278,7 +270,7 @@ The palette is sky-derived: cloud and frost neutrals as ground, ink blues for te
 
 ## Elevation & Depth
 
-Layered frosts on light: the canvas field sits at `z-index: -10` fixed behind everything, translucent chrome floats above it, solid frost carries content, and white pills sit on top of that. Depth is declared with blue-inked diffuse shadows (never black, never hard-offset) and the ice bloom marks selection. When a plate blooms, the field itself steps back — `body[data-bloom='deep']` blurs the canvas 7px and bumps saturation while the row is hovered/focused.
+Layered frosts on light: the dot-grid field sits at `z-index: -10` fixed behind everything, translucent chrome floats above it, solid frost carries content, and white pills sit on top of that. Depth is declared with blue-inked diffuse shadows (never black, never hard-offset) and the ice bloom marks selection. When a plate blooms, the field itself steps back — `body[data-bloom='deep']` blurs the field 6px and bumps saturation while the row is hovered/focused.
 
 ### Shadow Vocabulary
 - **Lift** (`--lift`: `0 14px 34px -22px hsl(207 60% 28% / 0.4)`): resting elevation on plates, cards, primary buttons, active nav pill.
@@ -330,7 +322,7 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 
 ### Do:
 - **Do** keep every surface light: frost on cloud, ink text; the only dark layer is the modal scrim (`hsl(212 38% 16% / 0.55)`).
-- **Do** let `race.ts` pick the sky from days-left; ship the phase palette straight into the canvas and nothing else.
+- **Do** let `race.ts` pick the sky from days-left; stamp `body[data-phase]` and let the field CSS paint it — nothing else picks weather.
 - **Do** use the single `--bloom` treatment for hover, focus, and resting selection, and keep exactly one resting selection per browse row.
 - **Do** reserve `.field-mark` (11px/700/0.22em) for data labels and render every changing count with `tabular-nums`.
 - **Do** use the two frosts correctly: 74% `.panel` for chrome, 92% `.panel-solid` for content surfaces.
@@ -350,4 +342,4 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 
 ## Legacy & Reserved (carried, not canonized)
 
-`--platinum` (`hsl(206 28% 52%)`), `--platinum-bright`, `--platinum-dim` and the `.platinum-*` / `.stage-light` utilities are remapped light-world stand-ins kept until their last consumer is rebuilt — `.platinum-text`/`.platinum-plate`/`.platinum-edge`/`.stage-light` currently have no consumers at all. `--chart-1…5` are defined in `:root` with no component consumers: a reserved data-viz series, not brand colors. `--ice-soft` is the defined soft step of the ice family with no consumer yet. The race clock reaches the DOM only through the canvas palette — there are no per-phase body classes.
+`--platinum` (`hsl(206 28% 52%)`), `--platinum-bright`, `--platinum-dim` and the `.platinum-*` / `.stage-light` utilities are remapped light-world stand-ins kept until their last consumer is rebuilt — `.platinum-text`/`.platinum-plate`/`.platinum-edge`/`.stage-light` currently have no consumers at all. `--chart-1…5` are defined in `:root` with no component consumers: a reserved data-viz series, not brand colors. `--ice-soft` is the defined soft step of the ice family with no consumer yet. The race clock reaches the DOM as `body[data-phase]` on the root layout.

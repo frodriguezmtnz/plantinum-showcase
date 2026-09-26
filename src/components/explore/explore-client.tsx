@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import type { PlatinumPageItem } from '@/lib/data';
@@ -81,6 +81,29 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
     }
   }
 
+  // Infinite scroll: a sentinel near the bottom pulls the next page through
+  // the same offset endpoint; the button stays as a keyboard/no-JS fallback.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    loadMoreRef.current = () => {
+      if (hasMore && !isLoadingMore) handleLoadMore();
+    };
+  });
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMoreRef.current();
+      },
+      { rootMargin: '600px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
     <div>
       <Card className="panel p-4 mb-12 rounded-2xl">
@@ -139,17 +162,20 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
           </div>
 
           {hasMore && (
-            <div className="mt-12 flex justify-center">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-              >
-                {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoadingMore ? 'Loading...' : 'Load more'}
-              </Button>
-            </div>
+            <>
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+              <div className="mt-12 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoadingMore ? 'Loading...' : 'Load more'}
+                </Button>
+              </div>
+            </>
           )}
         </>
       ) : (

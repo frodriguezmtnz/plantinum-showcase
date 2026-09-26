@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { Eye, Plus } from 'lucide-react';
-import { cn, isStoredImage } from '@/lib/utils';
+import { isStoredImage } from '@/lib/utils';
 
 export interface RaceEntry {
   id: string;
@@ -16,15 +16,17 @@ export interface RaceEntry {
   username: string;
   monthlyVotes: number;
   isSpoiler: boolean;
+  rank: number;
 }
 
-function PlateTile({ entry, rank, selected }: { entry: RaceEntry; rank: number; selected?: boolean }) {
+function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: boolean; dup?: boolean }) {
   return (
     <Link
       href={`/platinum/${entry.id}`}
       data-tile
-      {...(selected ? { 'data-selected': '' } : {})}
-      className="plate-shell group relative w-64 shrink-0 snap-center outline-none sm:w-72"
+      {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
+      {...(selected && !dup ? { 'data-selected': '' } : {})}
+      className="plate-shell group relative mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
     >
       <div className="plate-bloom relative aspect-video overflow-hidden rounded-xl bg-muted ring-1 ring-white/70 shadow-lift">
         {entry.isSpoiler ? (
@@ -43,7 +45,7 @@ function PlateTile({ entry, rank, selected }: { entry: RaceEntry; rank: number; 
           />
         )}
         <span className="tabular absolute left-2 top-2 rounded-full bg-white/85 px-2.5 py-0.5 text-xs font-bold text-primary backdrop-blur-md">
-          #{rank}
+          #{entry.rank}
         </span>
       </div>
       <div className="bloom-caption absolute inset-x-2 top-full z-10 mt-3">
@@ -54,6 +56,26 @@ function PlateTile({ entry, rank, selected }: { entry: RaceEntry; rank: number; 
             <span className="font-bold text-primary">{entry.monthlyVotes} votes</span>
           </p>
         </div>
+      </div>
+    </Link>
+  );
+}
+
+function SubmitTile({ dup }: { dup?: boolean }) {
+  return (
+    <Link
+      data-tile
+      href="/upload"
+      aria-label="Submit your own plate to this month's race"
+      {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
+      className="plate-shell group mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
+    >
+      <div className="plate-bloom flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/35 bg-white/45 backdrop-blur-md group-hover:border-primary/70 group-hover:bg-white/80">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift">
+          <Plus className="h-5 w-5" aria-hidden />
+        </span>
+        <span className="text-sm font-bold text-primary">Submit a plate</span>
+        <span className="text-xs text-muted-foreground">Join this month&apos;s race</span>
       </div>
     </Link>
   );
@@ -81,9 +103,40 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
     };
   }, []);
 
+  // Continuous marquee (CSS-driven, see .race-track): the row drifts on its
+  // own until the visitor takes the controls. Hover/focus pause it, it stops
+  // off-screen, and keyboard/wheel/touch stop it permanently (data-static).
+  // prefers-reduced-motion and automated captures (?motion=off) get the
+  // static, scrollable row.
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+    const stop = () => row.setAttribute('data-static', '');
+    if (new URLSearchParams(window.location.search).get('motion') === 'off') stop();
+    const io = new IntersectionObserver(
+      (list) => {
+        if (list[0]?.isIntersecting) row.removeAttribute('data-paused');
+        else row.setAttribute('data-paused', '');
+      },
+      { threshold: 0 },
+    );
+    io.observe(row);
+    row.addEventListener('wheel', stop, { passive: true });
+    row.addEventListener('touchstart', stop, { passive: true });
+    return () => {
+      io.disconnect();
+      row.removeEventListener('wheel', stop);
+      row.removeEventListener('touchstart', stop);
+    };
+  }, []);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    const tiles = Array.from(rowRef.current?.querySelectorAll<HTMLAnchorElement>('a[data-tile]') ?? []);
+    const row = rowRef.current;
+    row?.setAttribute('data-static', '');
+    const tiles = Array.from(
+      row?.querySelectorAll<HTMLAnchorElement>('a[data-tile]:not([data-dup])') ?? [],
+    );
     if (tiles.length === 0) return;
     const current = document.activeElement;
     const idx = tiles.findIndex((t) => t === current);
@@ -100,29 +153,16 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
   };
 
   return (
-    <div
-      ref={rowRef}
-      onKeyDown={onKeyDown}
-      className="overflow-x-auto px-8 pb-16 pt-6 sm:px-12"
-    >
-      <div className={cn('flex w-max snap-x snap-proximity gap-5', entries.length > 2 && 'mx-auto')}>
+    <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-16 pt-6 sm:px-12">
+      <div className="race-track flex w-max">
         {entries.map((entry, i) => (
-          <PlateTile key={entry.id} entry={entry} rank={i + 1} selected={i === selected} />
+          <PlateTile key={entry.id} entry={entry} selected={i === selected} />
         ))}
-        <Link
-          data-tile
-          href="/upload"
-          aria-label="Submit your own plate to this month's race"
-          className="plate-shell group w-64 shrink-0 snap-center outline-none sm:w-72"
-        >
-          <div className="plate-bloom flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/35 bg-white/45 backdrop-blur-md group-hover:border-primary/70 group-hover:bg-white/80">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift">
-              <Plus className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="text-sm font-bold text-primary">Submit a plate</span>
-            <span className="text-xs text-muted-foreground">Join this month&apos;s race</span>
-          </div>
-        </Link>
+        <SubmitTile />
+        {entries.map((entry) => (
+          <PlateTile key={`dup-${entry.id}`} entry={entry} dup />
+        ))}
+        <SubmitTile dup />
       </div>
     </div>
   );

@@ -36,23 +36,43 @@ export function HomeMotion({ children }: { children: ReactNode }) {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         const boot = gsap.timeline({ defaults: { ease: 'power3.out' } });
         boot
-          .from('.hm-strip', { y: -18, autoAlpha: 0, duration: 0.55 })
-          .from('.hm-title', { yPercent: 115, duration: 0.9 }, '-=0.15')
-          .from('.hm-sub', { y: 14, autoAlpha: 0, duration: 0.6 }, '-=0.55')
+          .from('.hm-strip', { y: -30, autoAlpha: 0, duration: 0.6 })
+          .from('.hm-title', { yPercent: 130, duration: 1.15, ease: 'power4.out' }, '-=0.2')
+          .from('.hm-sub', { y: 18, autoAlpha: 0, duration: 0.65 }, '-=0.6')
           .from(
             '.hm-row .plate-shell',
             {
-              y: 90,
+              y: 140,
               autoAlpha: 0,
-              scale: 0.9,
-              duration: 0.7,
-              stagger: 0.07,
-              ease: 'back.out(1.3)',
+              scale: 0.86,
+              duration: 0.85,
+              stagger: 0.08,
+              ease: 'back.out(1.7)',
               clearProps: 'transform,opacity,visibility',
             },
-            '-=0.35',
+            '-=0.4',
           )
-          .from('.hm-hint', { autoAlpha: 0, duration: 0.6 }, '-=0.2');
+          .from('.hm-hint', { autoAlpha: 0, duration: 0.6 }, '-=0.25');
+
+        const count = scope.current?.querySelector<HTMLElement>('.hm-count');
+        if (count) {
+          const target = Number(count.dataset.count ?? '0');
+          if (Number.isFinite(target) && target > 0) {
+            const obj = { v: 0 };
+            boot.to(
+              obj,
+              {
+                v: target,
+                duration: 1.7,
+                ease: 'power1.out',
+                onUpdate: () => {
+                  count.textContent = Math.round(obj.v).toLocaleString('en-US');
+                },
+              },
+              0.25,
+            );
+          }
+        }
 
         gsap.utils.toArray<HTMLElement>('.hm-reveal').forEach((el) => {
           gsap.from(el, {

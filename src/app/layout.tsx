@@ -8,7 +8,6 @@ import { SiteChrome } from '@/components/layout/site-chrome';
 import { cn } from '@/lib/utils';
 import { SessionProvider } from 'next-auth/react';
 import { Mulish } from 'next/font/google';
-import { SkyField } from '@/components/shared/sky-field';
 import { getRaceState } from '@/lib/race';
 
 const APP_NAME = "Platinum Showcase";
@@ -64,11 +63,11 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={cn(
+      <body data-phase={race.phase} className={cn(
         "min-h-screen font-body antialiased",
       )}>
         <SessionProvider>
-          <SkyField palette={race.palette} />
+          <div className="sky-field" aria-hidden />
           <SiteChrome header={<Header />} footer={<Footer />}>
             {children}
           </SiteChrome>

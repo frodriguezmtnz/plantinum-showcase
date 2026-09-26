@@ -23,8 +23,8 @@ export default async function Home() {
   const session = await auth();
   const currentUserId = session?.user?.id;
 
-  const [raceBoard, latestPlatinumsData, users, stats] = await Promise.all([
-    getHallOfFame(8, currentUserId),
+  const [raceBoardRaw, latestPlatinumsData, users, stats] = await Promise.all([
+    getHallOfFame(12, currentUserId),
     getLatestPlatinums(12, currentUserId),
     getUsers(),
     getMonthlyRaceStats(),
@@ -34,7 +34,16 @@ export default async function Home() {
   const latestPlatinums = latestPlatinumsData;
   const getUserById = (userId: string) => users.find((u) => u.id === userId);
 
-  const entries: RaceEntry[] = raceBoard.map((p) => ({
+  // The home row is a showcase, not a tease: spoiler-protected plates stay
+  // in the gallery (with their Reveal button) and never occupy the row.
+  // Ranks keep their true standing — if #1 hides a spoiler, the first tile
+  // on the row is honestly #3.
+  const raceBoard = raceBoardRaw
+    .map((p, i) => ({ p, rank: i + 1 }))
+    .filter(({ p }) => !p.isSpoiler)
+    .slice(0, 8);
+
+  const entries: RaceEntry[] = raceBoard.map(({ p, rank }) => ({
     id: p.id,
     gameName: p.gameName,
     imageUrl: p.imageUrl,
@@ -44,6 +53,7 @@ export default async function Home() {
     username: getUserById(p.userId)?.username ?? 'a hunter',
     monthlyVotes: p.monthlyVotes,
     isSpoiler: p.isSpoiler,
+    rank,
   }));
 
   return (
@@ -56,7 +66,7 @@ export default async function Home() {
             <span className="field-mark">{race.monthLabel}</span>
             <span aria-hidden className="hidden text-border sm:inline">|</span>
             <span className="tabular text-sm font-semibold">
-              {stats.plates} plates on the board · {stats.votes} votes cast
+              {stats.plates} plates on the board · <span className="hm-count" data-count={stats.votes}>{stats.votes.toLocaleString('en-US')}</span> votes cast
             </span>
             <span aria-hidden className="hidden text-border sm:inline">|</span>
             <span className="text-sm font-semibold text-primary">{closeCopy(race.daysLeft)}</span>

@@ -280,34 +280,6 @@
         "displayName": "Race Sky (cold morning, horizon)",
         "canonical": "hsl(206 48% 73%)"
       },
-      "race-wave-a": {
-        "role": "field",
-        "displayName": "Race Crest",
-        "canonical": "hsl(204 72% 91%)"
-      },
-      "race-wave-b": {
-        "role": "field",
-        "displayName": "Race Trough",
-        "canonical": "hsl(208 42% 64%)"
-      },
-      "race-glow": {
-        "role": "field",
-        "displayName": "Race Horizon Glow",
-        "canonical": "hsl(203 90% 62%)"
-      },
-      "race-field": {
-        "role": "field",
-        "displayName": "Cold Sky Field (race phase)",
-        "canonical": "hsl(203 64% 85%)",
-        "tonalRamp": [
-          "hsl(208 42% 64%)",
-          "hsl(206 48% 73%)",
-          "hsl(203 90% 62%)",
-          "hsl(203 64% 85%)",
-          "hsl(204 72% 91%)",
-          "hsl(202 82% 94%)"
-        ]
-      },
       "closing-top": {
         "role": "field",
         "displayName": "Dusk Sky (zenith)",
@@ -322,34 +294,6 @@
         "role": "field",
         "displayName": "Dusk Sky (deep horizon)",
         "canonical": "hsl(210 34% 64%)"
-      },
-      "closing-wave-a": {
-        "role": "field",
-        "displayName": "Dusk Crest",
-        "canonical": "hsl(40 84% 88%)"
-      },
-      "closing-wave-b": {
-        "role": "field",
-        "displayName": "Dusk Trough",
-        "canonical": "hsl(212 30% 56%)"
-      },
-      "closing-glow": {
-        "role": "field",
-        "displayName": "Dusk Horizon Glow",
-        "canonical": "hsl(28 92% 58%)"
-      },
-      "closing-field": {
-        "role": "field",
-        "displayName": "Amber Dusk Field (closing phase, ≤7 days)",
-        "canonical": "hsl(27 68% 82%)",
-        "tonalRamp": [
-          "hsl(212 30% 56%)",
-          "hsl(28 92% 58%)",
-          "hsl(210 34% 64%)",
-          "hsl(27 68% 82%)",
-          "hsl(40 84% 88%)",
-          "hsl(38 78% 91%)"
-        ]
       },
       "final-top": {
         "role": "field",
@@ -366,39 +310,17 @@
         "displayName": "Dawn Sky (deep horizon)",
         "canonical": "hsl(214 38% 54%)"
       },
-      "final-wave-a": {
-        "role": "field",
-        "displayName": "Dawn Crest",
-        "canonical": "hsl(46 95% 84%)"
-      },
-      "final-wave-b": {
-        "role": "field",
-        "displayName": "Dawn Trough",
-        "canonical": "hsl(218 34% 48%)"
-      },
-      "final-glow": {
-        "role": "field",
-        "displayName": "Dawn Horizon Glow",
-        "canonical": "hsl(38 96% 55%)"
-      },
-      "final-field": {
-        "role": "field",
-        "displayName": "Sunrise Gold Field (final phase, ≤2 days)",
-        "canonical": "hsl(30 82% 76%)",
-        "tonalRamp": [
-          "hsl(218 34% 48%)",
-          "hsl(214 38% 54%)",
-          "hsl(38 96% 55%)",
-          "hsl(30 82% 76%)",
-          "hsl(46 95% 84%)",
-          "hsl(44 92% 88%)"
-        ]
-      },
       "ink-void": {
         "role": "neutral",
         "displayName": "Selection Ink",
         "canonical": "hsl(212 38% 14%)",
         "note": "::selection text on the ice wash; the deepest step of the ink family."
+      },
+      "field-dot": {
+        "role": "neutral",
+        "displayName": "Field Dot",
+        "canonical": "hsl(212 38% 16% / 0.06)",
+        "note": "The console dot-grid: 1px ink dots on a 22px lattice over the phase sky gradient."
       }
     },
     "typographyMeta": {
@@ -489,7 +411,7 @@
       },
       {
         "name": "field-deepen",
-        "value": "filter blur(7px) saturate(1.15) over 0.5s ease-bloom",
+        "value": "filter blur(6px) saturate(1.1) over 0.5s ease-bloom",
         "purpose": "body[data-bloom='deep'] steps the sky field back while the browse row holds focus."
       },
       {
@@ -526,6 +448,11 @@
         "name": "reduced-motion-contract",
         "value": "field paints one static frame; bloom hover transform none; field-deepen filter none; boot intro and scroll reveals skipped (?motion=off also skips intro)",
         "purpose": "Selection survives on the ice ring alone when motion is reduced."
+      },
+      {
+        "name": "race-marquee",
+        "value": "translateX(-50%) over 50s linear infinite",
+        "purpose": "Home row continuous drift; pauses on hover/focus/off-screen, stops permanently on take-over (data-static), static under reduced-motion."
       }
     ],
     "breakpoints": [
