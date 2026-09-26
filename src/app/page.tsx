@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import {
   getHallOfFame,
   getLatestPlatinums,
@@ -10,8 +11,9 @@ import { RaceRow, type RaceEntry } from '@/components/shared/race-row';
 import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Upload } from 'lucide-react';
+import { Camera, Crown, Upload, Vote } from 'lucide-react';
 import { getRaceState } from '@/lib/race';
+import { isStoredImage } from '@/lib/utils';
 
 function closeCopy(daysLeft: number): string {
   if (daysLeft <= 0) return 'polls close today';
@@ -69,7 +71,7 @@ export default async function Home() {
               {stats.plates} plates on the board · <span className="hm-count" data-count={stats.votes}>{stats.votes.toLocaleString('en-US')}</span> votes cast
             </span>
             <span aria-hidden className="hidden text-border sm:inline">|</span>
-            <span className="text-sm font-semibold text-primary">{closeCopy(race.daysLeft)}</span>
+            <span className="text-sm font-semibold text-live">{closeCopy(race.daysLeft)}</span>
           </div>
         </div>
 
@@ -97,51 +99,137 @@ export default async function Home() {
         </p>
       </section>
 
-      {/* Latest plates: the gallery sheet on the field. */}
-      <section id="latest" className="container scroll-mt-24 pb-16">
-        <div className="hm-reveal panel rounded-2xl p-6 md:p-10">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-              Latest platinums
-            </h2>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/explore">Open the full gallery</Link>
-            </Button>
+      {/* The dealt hand: four sticky cards stacking one on top of the next. */}
+      <section className="container pb-24">
+        <div className="stack-deck">
+          {/* 01 — what this is */}
+          <div className="stack-card p-6 md:p-10">
+            <div className="grid items-center gap-8 md:grid-cols-2">
+              <div>
+                <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+                  What is Platinum Showcase?
+                </h2>
+                <p className="mt-3 max-w-md text-muted-foreground">
+                  A community gallery where PlayStation hunters post the
+                  screenshot of a hard-won platinum — and the board settles
+                  who wore it best.
+                </p>
+                <ul className="mt-6 grid gap-4">
+                  <li className="flex items-start gap-3">
+                    <Camera className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+                    <span><span className="font-bold">Post your plate.</span> Upload the screenshot, name the game, mark the platform.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Vote className="mt-0.5 h-5 w-5 shrink-0 text-live" aria-hidden />
+                    <span><span className="font-bold">The community votes.</span> One vote each, every month — no accounts for sale.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Crown className="mt-0.5 h-5 w-5 shrink-0 text-[hsl(38_88%_42%)]" aria-hidden />
+                    <span><span className="font-bold">One crown a month.</span> The podium is real ranking; the board resets when the clocks roll over.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-muted/40 p-10 text-center">
+                <Crown className="h-10 w-10 text-[hsl(38_88%_42%)]" aria-hidden />
+                <p className="max-w-[24ch] font-headline text-xl font-bold">
+                  {stats.plates} plates · {stats.votes.toLocaleString('en-US')} votes this month
+                </p>
+                <p className="text-sm text-muted-foreground">{closeCopy(race.daysLeft)} — {race.monthLabel}</p>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/explore">Browse the gallery</Link>
+                </Button>
+              </div>
+            </div>
           </div>
-          {latestPlatinums.length > 0 ? (
-            <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
+
+          {/* 02 — this month's podium (real top 3, spoiler-safe) */}
+          {entries.length >= 3 && (
+            <div className="stack-card p-6 md:p-10">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+                  This month&apos;s podium
+                </h2>
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/hall-of-fame">Full hall of fame</Link>
+                </Button>
+              </div>
+              <ol className="mt-6 grid gap-3">
+                {entries.slice(0, 3).map((entry) => (
+                  <li key={entry.id}>
+                    <Link
+                      href={`/platinum/${entry.id}`}
+                      className="flex items-center gap-4 rounded-xl border border-border bg-white/70 p-3 transition-shadow hover:shadow-bloom focus-visible:shadow-bloom"
+                    >
+                      <span className="tabular w-10 shrink-0 text-center text-lg font-extrabold text-primary">
+                        #{entry.rank}
+                      </span>
+                      <span className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/70">
+                        <Image
+                          src={entry.imageUrl}
+                          alt={`Platinum screenshot for ${entry.gameName}`}
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                          unoptimized={isStoredImage(entry.imageUrl)}
+                        />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold">{entry.gameName}</span>
+                        <span className="block truncate text-xs text-muted-foreground">@{entry.username} · {entry.platform}</span>
+                      </span>
+                      <span className="tabular shrink-0 text-sm font-bold text-live">
+                        {entry.monthlyVotes} votes
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* 03 — latest plates */}
+          <div id="latest" className="stack-card scroll-mt-24 p-6 md:p-10">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+                Latest platinums
+              </h2>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/explore">Open the full gallery</Link>
+              </Button>
+            </div>
+            {latestPlatinums.length > 0 ? (
+              <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
                 {latestPlatinums.map((platinum) => (
                   <div key={platinum.id} className="mb-6 break-inside-avoid">
                     <PlatinumCard
                       platinum={platinum}
                       user={getUserById(platinum.userId)}
                     />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-8 text-muted-foreground">
-              No plates on the shelves yet. Yours could open the show.
-            </p>
-          )}
-        </div>
-      </section>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-8 text-muted-foreground">
+                No plates on the shelves yet. Yours could open the show.
+              </p>
+            )}
+          </div>
 
-      {/* CTA */}
-      <section id="cta" className="container scroll-mt-24 pb-20">
-        <div className="hm-reveal panel mx-auto max-w-3xl rounded-2xl px-6 py-16 text-center">
-          <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
-            Your platinum belongs on this row.
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-            Post the screenshot, let the community vote it up, and take the month.
-          </p>
-          <Button asChild size="lg" className="mt-7">
-            <Link href="/upload">
-              <Upload className="h-4 w-4" />
-              Submit a plate
-            </Link>
-          </Button>
+          {/* 04 — CTA */}
+          <div id="cta" className="stack-card scroll-mt-24 px-6 py-16 text-center">
+            <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
+              Your platinum belongs on this row.
+            </h2>
+            <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+              Post the screenshot, let the community vote it up, and take the month.
+            </p>
+            <Button asChild size="lg" className="mt-7">
+              <Link href="/upload">
+                <Upload className="h-4 w-4" />
+                Submit a plate
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
     </div>

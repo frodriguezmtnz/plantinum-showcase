@@ -189,7 +189,7 @@ export default async function HallOfFamePage() {
                         )}
                       </div>
                       <div className="hidden sm:flex flex-col items-end text-right shrink-0">
-                        <div className="flex items-center gap-2 text-lg font-bold text-primary tabular">
+                        <div className="flex items-center gap-2 text-lg font-bold text-live tabular">
                           <span>{platinum.monthlyVotes}</span>
                           <Trophy className="w-5 h-5" />
                         </div>

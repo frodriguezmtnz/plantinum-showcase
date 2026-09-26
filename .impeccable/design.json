@@ -4,6 +4,12 @@
   "title": "Design System: Platinum Showcase",
   "extensions": {
     "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "hsl(0 0% 99%)",
+        "note": "The field's ground: flat white paper behind the graph grid."
+      },
       "cloud": {
         "role": "neutral",
         "displayName": "Cloud Ground",
@@ -40,6 +46,12 @@
           "hsl(208 40% 90%)"
         ]
       },
+      "ink-void": {
+        "role": "neutral",
+        "displayName": "Ink Void",
+        "canonical": "hsl(0 0% 10%)",
+        "note": "--primary: CTA fills, links, caret, active pill text; also ::selection text."
+      },
       "ink-secondary": {
         "role": "neutral",
         "displayName": "Ink Secondary",
@@ -53,53 +65,81 @@
         "note": "--secondary-foreground; text on frost-filled buttons and pills."
       },
       "sky-white": {
-        "role": "primary",
+        "role": "neutral",
         "displayName": "Sky White",
-        "canonical": "hsl(210 80% 98%)",
-        "note": "--primary-foreground; text on console-blue fills."
+        "canonical": "hsl(0 0% 98%)",
+        "note": "--primary-foreground: text on ink-black fills."
       },
-      "console-blue": {
-        "role": "primary",
-        "displayName": "Console Blue",
-        "canonical": "hsl(209 62% 32%)",
+      "ps-pink": {
+        "role": "accent",
+        "displayName": "Square Magenta",
+        "canonical": "hsl(322 100% 44%)",
+        "note": "PlayStation square — the selection signal: ring, focus outline, text-selection wash. Never a decorative fill.",
         "tonalRamp": [
-          "hsl(210 62% 12%)",
-          "hsl(210 62% 20%)",
-          "hsl(209 62% 32%)",
-          "hsl(208 62% 42%)",
-          "hsl(206 64% 54%)",
-          "hsl(204 72% 68%)",
-          "hsl(203 78% 80%)",
-          "hsl(202 60% 92%)"
+          "hsl(322 100% 28%)",
+          "hsl(322 100% 36%)",
+          "hsl(322 100% 44%)",
+          "hsl(322 100% 52%)",
+          "hsl(322 100% 65%)",
+          "hsl(322 90% 82%)",
+          "hsl(322 80% 92%)"
+        ]
+      },
+      "ps-green": {
+        "role": "accent",
+        "displayName": "Triangle Green",
+        "canonical": "hsl(147 100% 32%)",
+        "note": "PlayStation triangle — live counts and states only (--live / .text-live): vote totals, countdowns.",
+        "tonalRamp": [
+          "hsl(147 100% 18%)",
+          "hsl(147 100% 25%)",
+          "hsl(147 100% 32%)",
+          "hsl(147 90% 45%)",
+          "hsl(147 70% 65%)",
+          "hsl(147 50% 85%)"
         ]
       },
       "ice": {
-        "role": "primary",
-        "displayName": "Ice Blue",
-        "canonical": "hsl(203 92% 52%)",
-        "tonalRamp": [
-          "hsl(204 92% 16%)",
-          "hsl(204 92% 30%)",
-          "hsl(203 92% 42%)",
-          "hsl(203 92% 52%)",
-          "hsl(203 88% 66%)",
-          "hsl(203 88% 74%)",
-          "hsl(202 84% 84%)",
-          "hsl(201 72% 92%)"
-        ],
-        "note": "--ice / --ring: focus outline, selection tint at 0.32."
+        "role": "accent",
+        "displayName": "Selection Magenta",
+        "canonical": "hsl(322 100% 52%)",
+        "note": "--ice/--ring: focus outlines and selection halos in the magenta family."
       },
       "ice-soft": {
-        "role": "primary",
-        "displayName": "Ice Soft",
-        "canonical": "hsl(203 88% 74%)",
-        "note": "Defined in :root; no component consumer yet."
+        "role": "accent",
+        "displayName": "Magenta Soft",
+        "canonical": "hsl(322 90% 82%)",
+        "note": "Defined soft step of the magenta family, no consumer yet."
       },
       "bloom-glow": {
-        "role": "primary",
+        "role": "accent",
         "displayName": "Bloom Glow",
-        "canonical": "hsl(203 95% 68%)",
-        "note": "At 0.8 alpha inside --bloom: the 3px selection ring."
+        "canonical": "hsl(322 100% 65%)",
+        "note": "The 3px halo ring inside --bloom at 0.8 alpha."
+      },
+      "grid-line": {
+        "role": "neutral",
+        "displayName": "Grid Line",
+        "canonical": "hsl(210 18% 70% / 0.5)",
+        "note": "1px graph-paper lines on a 30px lattice, masked away by ~42vh."
+      },
+      "glow-pink": {
+        "role": "neutral",
+        "displayName": "Glow Pink",
+        "canonical": "hsl(322 100% 44% / 0.06)",
+        "note": "Fixed whisper wash top-left of the field — the square's light."
+      },
+      "glow-green": {
+        "role": "neutral",
+        "displayName": "Glow Green",
+        "canonical": "hsl(147 100% 32% / 0.05)",
+        "note": "Fixed whisper wash bottom-right of the field — the triangle's light."
+      },
+      "selection-wash": {
+        "role": "neutral",
+        "displayName": "Selection Wash",
+        "canonical": "hsl(322 100% 44% / 0.22)",
+        "note": "::selection ground over ink-void text."
       },
       "ink-shadow": {
         "role": "neutral",
@@ -160,9 +200,9 @@
         "note": "Scrollbar thumb hover."
       },
       "alert-red": {
-        "role": "secondary",
-        "displayName": "Alert Red",
-        "canonical": "hsl(0 62% 42%)",
+        "role": "accent",
+        "displayName": "Circle Red",
+        "canonical": "hsl(4 100% 45%)",
         "note": "--destructive: vote heart and destructive actions only."
       },
       "dusk-amber": {
@@ -264,63 +304,6 @@
         "displayName": "Chart Iris",
         "canonical": "hsl(248 36% 58%)",
         "note": "Defined in :root, no component consumer."
-      },
-      "race-top": {
-        "role": "field",
-        "displayName": "Race Sky (cold morning, zenith)",
-        "canonical": "hsl(202 82% 94%)"
-      },
-      "race-mid": {
-        "role": "field",
-        "displayName": "Race Sky (cold morning, haze)",
-        "canonical": "hsl(203 64% 85%)"
-      },
-      "race-low": {
-        "role": "field",
-        "displayName": "Race Sky (cold morning, horizon)",
-        "canonical": "hsl(206 48% 73%)"
-      },
-      "closing-top": {
-        "role": "field",
-        "displayName": "Dusk Sky (zenith)",
-        "canonical": "hsl(38 78% 91%)"
-      },
-      "closing-mid": {
-        "role": "field",
-        "displayName": "Dusk Sky (amber haze)",
-        "canonical": "hsl(27 68% 82%)"
-      },
-      "closing-low": {
-        "role": "field",
-        "displayName": "Dusk Sky (deep horizon)",
-        "canonical": "hsl(210 34% 64%)"
-      },
-      "final-top": {
-        "role": "field",
-        "displayName": "Dawn Sky (zenith)",
-        "canonical": "hsl(44 92% 88%)"
-      },
-      "final-mid": {
-        "role": "field",
-        "displayName": "Dawn Sky (sunrise gold)",
-        "canonical": "hsl(30 82% 76%)"
-      },
-      "final-low": {
-        "role": "field",
-        "displayName": "Dawn Sky (deep horizon)",
-        "canonical": "hsl(214 38% 54%)"
-      },
-      "ink-void": {
-        "role": "neutral",
-        "displayName": "Selection Ink",
-        "canonical": "hsl(212 38% 14%)",
-        "note": "::selection text on the ice wash; the deepest step of the ink family."
-      },
-      "field-dot": {
-        "role": "neutral",
-        "displayName": "Field Dot",
-        "canonical": "hsl(212 38% 16% / 0.06)",
-        "note": "The console dot-grid: 1px ink dots on a 22px lattice over the phase sky gradient."
       }
     },
     "typographyMeta": {
@@ -415,14 +398,22 @@
         "purpose": "body[data-bloom='deep'] steps the sky field back while the browse row holds focus."
       },
       {
-        "name": "boot-intro",
-        "value": "GSAP timeline, once: strip y-18/0.55s, title mask yPercent 115/0.9s, sub y14/0.6s, plates y90 scale0.9 stagger 0.07 back.out(1.3)/0.7s with clearProps, hint fade 0.6s",
-        "purpose": "The console boots once on first load; clearProps hands control back to CSS bloom."
+        "role": "motion",
+        "displayName": "Console Boot Intro",
+        "canonical": "GSAP timeline ~2.6s: strip drop, title mask rise, plate pop back.out(1.7) stagger 0.08, vote count-up",
+        "note": "Plays once on home load; skipped under reduced-motion and ?motion=off; clearProps keeps CSS bloom working."
       },
       {
-        "name": "scroll-reveal",
-        "value": "y42, 0.8s power2.out, ScrollTrigger start 'top 86%' once, clearProps",
-        "purpose": "Below-fold frost panels reveal exactly one time."
+        "role": "motion",
+        "displayName": "Sticky Card Deck",
+        "canonical": "position: sticky; top: calc(--stack-top + --stack-i * --stack-paso)",
+        "note": "Pure-CSS dealt-hand stacking of the four home cards; mobile paso 0.25rem; degrades to plain scroll under reduced-motion."
+      },
+      {
+        "role": "motion",
+        "displayName": "Race Marquee",
+        "canonical": "translateX(-50%) over 50s linear infinite",
+        "note": "Home row continuous drift; pauses on hover/focus/off-screen, stops permanently on take-over (data-static), static under reduced-motion."
       },
       {
         "name": "mount-fade",
@@ -440,19 +431,9 @@
         "purpose": "Spoiler-protected plates lift their frost veil."
       },
       {
-        "name": "field-drift",
-        "value": "3 wave layers, rAF gated at 50ms (20fps), DPR capped at 2, paused on tab hide, palette lerp 0.02/frame",
-        "purpose": "Near-imperceptible ambient breathing; never fidgets."
-      },
-      {
         "name": "reduced-motion-contract",
         "value": "field paints one static frame; bloom hover transform none; field-deepen filter none; boot intro and scroll reveals skipped (?motion=off also skips intro)",
         "purpose": "Selection survives on the ice ring alone when motion is reduced."
-      },
-      {
-        "name": "race-marquee",
-        "value": "translateX(-50%) over 50s linear infinite",
-        "purpose": "Home row continuous drift; pauses on hover/focus/off-screen, stops permanently on take-over (data-static), static under reduced-motion."
       }
     ],
     "breakpoints": [

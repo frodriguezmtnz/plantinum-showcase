@@ -2,18 +2,16 @@
 
 import { useRef, type ReactNode } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+gsap.registerPlugin(useGSAP);
 
 /**
  * One authored motion moment for the home: a console "boot" on load (title
- * mask reveal + plates flying up in a staggered pop) and gentle, once-only
- * scroll reveals for the panels below the fold. No perpetual motion — the
- * ambient field is intentionally near-still. Everything is skipped under
- * prefers-reduced-motion, and entrance tweens clearProps so the CSS Bloom
- * hover keeps working.
+ * mask reveal, vote count ticking up, plates flying in with a staggered
+ * pop). Below the fold the sticky card deck carries the scroll motion in
+ * pure CSS. Skipped under prefers-reduced-motion; entrance tweens clearProps
+ * so the CSS Bloom hover keeps working.
  */
 export function HomeMotion({ children }: { children: ReactNode }) {
   const scope = useRef<HTMLDivElement>(null);
@@ -74,20 +72,6 @@ export function HomeMotion({ children }: { children: ReactNode }) {
           }
         }
 
-        gsap.utils.toArray<HTMLElement>('.hm-reveal').forEach((el) => {
-          gsap.from(el, {
-            y: 42,
-            autoAlpha: 0,
-            duration: 0.8,
-            ease: 'power2.out',
-            clearProps: 'transform,opacity,visibility',
-            scrollTrigger: { trigger: el, start: 'top 86%', once: true },
-          });
-        });
-
-        const onLoad = () => ScrollTrigger.refresh();
-        window.addEventListener('load', onLoad);
-        return () => window.removeEventListener('load', onLoad);
       });
 
       return () => mm.revert();

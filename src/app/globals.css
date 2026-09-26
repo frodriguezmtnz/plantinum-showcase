@@ -10,19 +10,19 @@
     --card-foreground: hsl(212 38% 16%);
     --popover: hsl(0 0% 100%);
     --popover-foreground: hsl(212 38% 16%);
-    --primary: hsl(209 62% 32%);
-    --primary-foreground: hsl(210 80% 98%);
+    --primary: hsl(0 0% 10%);
+    --primary-foreground: hsl(0 0% 98%);
     --secondary: hsl(205 48% 91%);
     --secondary-foreground: hsl(211 40% 20%);
     --muted: hsl(206 42% 93%);
     --muted-foreground: hsl(211 22% 36%);
     --accent: hsl(203 72% 88%);
     --accent-foreground: hsl(211 40% 18%);
-    --destructive: hsl(0 62% 42%);
+    --destructive: hsl(4 100% 45%);
     --destructive-foreground: hsl(0 0% 98%);
     --border: hsl(206 30% 82%);
     --input: hsl(206 30% 82%);
-    --ring: hsl(203 92% 52%);
+    --ring: hsl(322 100% 44%);
     --chart-1: hsl(203 72% 44%);
     --chart-2: hsl(28 88% 52%);
     --chart-3: hsl(168 44% 38%);
@@ -30,12 +30,23 @@
     --chart-5: hsl(248 36% 58%);
     --radius: 0.625rem;
 
-    /* Selection bloom: one ice language everywhere. */
-    --ice: hsl(203 92% 52%);
-    --ice-soft: hsl(203 88% 74%);
-    --bloom: 0 0 0 3px hsl(203 95% 68% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45);
+    /* PlayStation duotone accents: square magenta selects, triangle green
+       is alive. Selection bloom is one language everywhere. */
+    --ps-pink: hsl(322 100% 44%);
+    --ps-green: hsl(147 100% 32%);
+    --live: var(--ps-green);
+    --ice: hsl(322 100% 52%);
+    --ice-soft: hsl(322 90% 82%);
+    --bloom: 0 0 0 3px hsl(322 100% 65% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45);
     --lift: 0 14px 34px -22px hsl(207 60% 28% / 0.4);
     --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Graph-paper field (eventarium trick): 1px lines on a 30px lattice,
+       masked away after ~42vh so it only whispers at the top of the page. */
+    --paper: hsl(0 0% 99%);
+    --grid-size: 30px;
+    --grid-line: hsl(210 18% 70% / 0.5);
+    --grid-fade: 42vh;
 
     /* Legacy names, remapped so unrebuilt pages read in the new world. */
     --platinum: hsl(206 28% 52%);
@@ -250,34 +261,73 @@
   }
 }
 
-/* The console field: a static dot-grid matrix over a sky that tracks the
-   race phase. No canvas, no perpetual motion; it only steps back while a
-   plate blooms (body[data-bloom] set by the race row). */
+/* The console field: flat white paper with a graph grid that fades out
+   below the first viewport, lit by two whisper-soft PlayStation duotone
+   glows (square magenta up-left, triangle green down-right). No gradient
+   wash; it only steps back while a plate blooms (body[data-bloom]). */
 .sky-field {
   position: fixed;
   inset: 0;
   z-index: -10;
-  background-image:
-    radial-gradient(hsl(212 38% 16% / 0.06) 1px, transparent 1.4px),
-    var(--field-sky);
-  background-size: 22px 22px, 100% 100%;
+  background:
+    radial-gradient(60% 50% at 12% 0%, hsl(322 100% 44% / 0.06), transparent 70%),
+    radial-gradient(55% 45% at 88% 100%, hsl(147 100% 32% / 0.05), transparent 70%),
+    hsl(0 0% 99%);
   transition: filter 0.5s var(--ease-bloom);
 }
 
-body[data-phase='race'] .sky-field {
-  --field-sky: linear-gradient(180deg, hsl(202 82% 94%), hsl(203 64% 85%) 55%, hsl(206 48% 73%));
-}
-
-body[data-phase='closing'] .sky-field {
-  --field-sky: linear-gradient(180deg, hsl(38 78% 91%), hsl(27 68% 82%) 55%, hsl(210 34% 64%));
-}
-
-body[data-phase='final'] .sky-field {
-  --field-sky: linear-gradient(180deg, hsl(44 92% 88%), hsl(30 82% 76%) 55%, hsl(214 38% 54%));
+.sky-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 100% var(--grid-size),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / var(--grid-size) 100%;
+  mask-image: linear-gradient(180deg, var(--paper) 0, hsl(0 0% 99% / 0.55) calc(var(--grid-fade) * 0.6), transparent var(--grid-fade));
+  -webkit-mask-image: linear-gradient(180deg, var(--paper) 0, hsl(0 0% 99% / 0.55) calc(var(--grid-fade) * 0.6), transparent var(--grid-fade));
 }
 
 body[data-bloom='deep'] .sky-field {
   filter: blur(6px) saturate(1.1);
+}
+
+/* The sticky deck: cards pin one step below the previous and land on top,
+   like a dealt hand. Pure CSS — the stack IS the scroll animation. */
+.stack-deck {
+  display: grid;
+  gap: 2rem;
+  --stack-top: 5.5rem;
+  --stack-paso: 0.75rem;
+}
+
+.stack-card {
+  position: sticky;
+  top: calc(var(--stack-top) + var(--stack-i, 0) * var(--stack-paso));
+  background: hsl(0 0% 100% / 0.97);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow:
+    0 -1px 0 hsl(0 0% 100%),
+    0 -18px 48px -14px hsl(207 60% 28% / 0.35),
+    var(--lift);
+}
+
+.stack-card:nth-child(1) { --stack-i: 0; }
+.stack-card:nth-child(2) { --stack-i: 1; }
+.stack-card:nth-child(3) { --stack-i: 2; }
+.stack-card:nth-child(4) { --stack-i: 3; }
+
+@media (max-width: 640px) {
+  .stack-deck {
+    --stack-top: 5rem;
+    --stack-paso: 0.25rem;
+    gap: 1.25rem;
+  }
+}
+
+.text-live {
+  color: var(--live);
 }
 
 /* Spoiler plates: frost on the case, not a black hole on the field. */
@@ -299,12 +349,12 @@ body[data-bloom='deep'] .sky-field {
 
 /* Browser surfaces belong to this world too. */
 ::selection {
-  background: hsl(203 92% 52% / 0.32);
-  color: hsl(212 38% 14%);
+  background: hsl(322 100% 44% / 0.22);
+  color: hsl(0 0% 10%);
 }
 
 * {
-  caret-color: hsl(209 62% 32%);
+  caret-color: hsl(0 0% 10%);
   scrollbar-width: thin;
   scrollbar-color: hsl(207 30% 58%) transparent;
 }

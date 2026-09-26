@@ -1,7 +1,4 @@
-export type RacePhase = 'race' | 'closing' | 'final';
-
 export interface RaceState {
-  phase: RacePhase;
   daysLeft: number;
   monthLabel: string;
 }
@@ -13,9 +10,7 @@ export function daysUntilMonthEnd(now: Date): number {
 
 export function getRaceState(now: Date = new Date()): RaceState {
   const daysLeft = daysUntilMonthEnd(now);
-  const phase: RacePhase = daysLeft <= 2 ? 'final' : daysLeft <= 7 ? 'closing' : 'race';
   return {
-    phase,
     daysLeft,
     monthLabel: now.toLocaleString('en-US', { month: 'long', year: 'numeric' }),
   };

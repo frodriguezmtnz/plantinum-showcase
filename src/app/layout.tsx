@@ -8,7 +8,6 @@ import { SiteChrome } from '@/components/layout/site-chrome';
 import { cn } from '@/lib/utils';
 import { SessionProvider } from 'next-auth/react';
 import { Mulish } from 'next/font/google';
-import { getRaceState } from '@/lib/race';
 
 const APP_NAME = "Platinum Showcase";
 const APP_DESCRIPTION = "Showcase your PlayStation platinum trophies and climb the leaderboards.";
@@ -48,7 +47,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#e3f1f8",
+  themeColor: "#ffffff",
 };
 
 
@@ -57,13 +56,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const race = getRaceState();
   return (
     <html lang="en" className={cn(fontBody.variable)} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body data-phase={race.phase} className={cn(
+      <body className={cn(
         "min-h-screen font-body antialiased",
       )}>
         <SessionProvider>

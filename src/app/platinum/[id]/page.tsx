@@ -80,12 +80,12 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                 <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
                     <div className="flex min-w-0 items-center">
                         <Heart className="mr-2 shrink-0 fill-destructive text-destructive"/>
-                        <span className="font-bold tabular">{platinum.votes}</span>
+                        <span className="font-bold tabular text-live">{platinum.votes}</span>
                         <span className="text-muted-foreground ml-1">votes</span>
                     </div>
                      <div className="flex min-w-0 items-center">
                         <Trophy className="mr-2 shrink-0 text-muted-foreground"/>
-                        <span className="font-bold tabular">{platinum.monthlyVotes}</span>
+                        <span className="font-bold tabular text-live">{platinum.monthlyVotes}</span>
                         <span className="text-muted-foreground ml-1">this month</span>
                     </div>
                 </div>

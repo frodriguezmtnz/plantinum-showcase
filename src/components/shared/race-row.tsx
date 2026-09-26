@@ -53,7 +53,7 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
           <p className="truncate text-sm font-bold">{entry.gameName}</p>
           <p className="tabular mt-0.5 flex items-center justify-between text-xs text-muted-foreground">
             <span className="truncate">@{entry.username} · {entry.platform}</span>
-            <span className="font-bold text-primary">{entry.monthlyVotes} votes</span>
+            <span className="font-bold text-live">{entry.monthlyVotes} votes</span>
           </p>
         </div>
       </div>
