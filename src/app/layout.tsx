@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { SiteChrome } from '@/components/layout/site-chrome';
 import { cn } from '@/lib/utils';
+import { getSiteUrl } from '@/lib/site';
 import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider } from 'next-themes';
 import { Mulish } from 'next/font/google';
@@ -23,6 +24,7 @@ const fontBody = Mulish({
 // tracking, not a second face. --font-headline aliases --font-body in @theme.
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: 'Platinum Showcase',
   description: APP_DESCRIPTION,
   applicationName: APP_NAME,

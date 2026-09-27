@@ -28,9 +28,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const user = await getUserById(platinum.userId);
 
+  const title = `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`;
+  const description = `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`;
+
+  // Spoiler plates stay out of link previews so sharing never leaks a reveal.
+  const images = platinum.isSpoiler
+    ? []
+    : [
+        {
+          url: platinum.imageUrl,
+          width: platinum.width,
+          height: platinum.height,
+          alt: `Platinum screenshot for ${platinum.gameName}`,
+        },
+      ];
+
   return {
-    title: `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`,
-    description: `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`,
+    title,
+    description,
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      images,
+    },
+    twitter: {
+      card: images.length > 0 ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: images.map((image) => image.url),
+    },
   };
 }
 
