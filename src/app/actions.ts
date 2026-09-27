@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { getPlatinumsPage, PLATINUMS_PAGE_SIZE } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
+import { applyWatermark } from "@/lib/watermark";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -73,9 +74,9 @@ export async function uploadPlatinum(formData: FormData) {
 
   const inputBuffer = Buffer.from(await file.arrayBuffer());
 
-  let processed;
+  let processed: { data: Buffer; width: number; height: number };
   try {
-    processed = await sharp(inputBuffer)
+    const resized = await sharp(inputBuffer)
       .rotate()
       .resize({
         width: MAX_EDGE,
@@ -83,8 +84,11 @@ export async function uploadPlatinum(formData: FormData) {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .avif({ quality: 60, effort: 4 })
-      .toBuffer({ resolveWithObject: true });
+      .toBuffer();
+
+    // Free accounts always carry the baked-in site watermark; the Supporter
+    // entitlement (coming soon) is what will be able to skip it.
+    processed = await applyWatermark(resized, session.user?.name ?? "player");
   } catch {
     return {
       success: false as const,
@@ -139,8 +143,9 @@ export async function uploadPlatinum(formData: FormData) {
         monthlyVotes: 0,
         imageUrl: `/api/images/${key}`,
         imageHint,
-        width: processed.info.width,
-        height: processed.info.height,
+        width: processed.width,
+        height: processed.height,
+        watermarked: true,
       },
     });
 

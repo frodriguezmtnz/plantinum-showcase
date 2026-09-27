@@ -22,6 +22,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { CalendarIcon, UploadCloud, ImagePlus } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
 import { format } from "date-fns"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
@@ -362,8 +365,26 @@ export default function UploadPage() {
                 )}
               />
 
-              {busy && (
-                <div className="space-y-2">
+              <div className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="watermark-locked" className="text-base">
+                      Site watermark
+                    </Label>
+                    <span className="field-mark text-primary">Free</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Free uploads carry a small Platinum Showcase watermark.{' '}
+                    <Link href="/pricing" className="text-primary underline underline-offset-4">
+                      Supporters
+                    </Link>{' '}
+                    will be able to remove it.
+                  </p>
+                </div>
+                <Checkbox id="watermark-locked" checked disabled aria-label="Site watermark (on for free accounts)" />
+              </div>
+
+              {busy && (                <div className="space-y-2">
                   <Progress value={stage === 'compressing' ? compressPct : 100} className="h-2" />
                   <p className="text-sm text-muted-foreground">
                     {stage === 'compressing'

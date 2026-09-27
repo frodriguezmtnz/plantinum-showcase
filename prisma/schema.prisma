@@ -87,6 +87,7 @@ model Platinum {
   imageHint         String
   width             Int
   height            Int
+  watermarked       Boolean  @default(true)
 
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   voteRecords Vote[] @relation("PlatinumVotes")

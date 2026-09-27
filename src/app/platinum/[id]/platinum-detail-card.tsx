@@ -8,23 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Eye, Expand } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 
 interface PlatinumDetailCardProps {
   platinum: Platinum;
   user: User | null;
-}
-
-function Watermark({ username }: { username: string }) {
-  return (
-    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-full bg-[hsl(212_38%_16%/0.6)] p-2 pr-3 text-xs text-white/85 opacity-80 pointer-events-none backdrop-blur-sm">
-      <PlatinumTrophyIcon className="w-5 h-5" />
-      <div>
-        <p className="font-bold">Platinum Showcase</p>
-        <p>@{username}</p>
-      </div>
-    </div>
-  );
 }
 
 export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) {
@@ -51,7 +38,6 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             data-ai-hint={platinum.imageHint}
             unoptimized={isStoredImage(platinum.imageUrl)}
           />
-          {user && showSpoiler && <Watermark username={user.username} />}
           {!showSpoiler && (
             <div className="spoiler-frost-strong absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px] z-20">
                 <p className="text-lg font-bold flex items-center gap-2 text-foreground">
@@ -82,7 +68,6 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
               data-ai-hint={platinum.imageHint}
               unoptimized={isStoredImage(platinum.imageUrl)}
             />
-            {user && <Watermark username={user.username} />}
         </div>
       </DialogContent>
     </Dialog>
