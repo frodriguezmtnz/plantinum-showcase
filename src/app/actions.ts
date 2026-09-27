@@ -11,6 +11,7 @@ import { getCurrentPeriod } from "@/lib/period";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 import { applyWatermark } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { detectImageType } from "@/lib/image-signature";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -82,6 +83,13 @@ export async function uploadPlatinum(formData: FormData) {
   }
 
   const inputBuffer = Buffer.from(await file.arrayBuffer());
+
+  if (!detectImageType(inputBuffer)) {
+    return {
+      success: false as const,
+      error: "Unsupported format. Use JPG, PNG or WEBP.",
+    };
+  }
 
   let processed: { data: Buffer; width: number; height: number };
   try {
