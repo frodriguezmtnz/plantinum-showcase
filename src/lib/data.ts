@@ -265,8 +265,28 @@ export async function getLatestPlatinums(
   return attachVoteStatus(platinums, currentUserId);
 }
 
-export async function getMonthlyRaceStats(): Promise<{ plates: number; votes: number }> {
-  const [plates, agg] = await Promise.all([
+export async function getCommunityStats(): Promise<{
+  platinums: number;
+  votes: number;
+  hunters: number;
+  games: number;
+}> {
+  const [platinums, agg, hunters, games] = await Promise.all([
+    prisma.platinum.count(),
+    prisma.platinum.aggregate({ _sum: { votes: true } }),
+    prisma.user.count({ where: { platinums: { some: {} } } }),
+    prisma.platinum.groupBy({ by: ['gameName'] }),
+  ]);
+
+  return {
+    platinums,
+    votes: agg._sum.votes ?? 0,
+    hunters,
+    games: games.length,
+  };
+}
+
+export async function getMonthlyRaceStats(): Promise<{ plates: number; votes: number }> {  const [plates, agg] = await Promise.all([
     prisma.platinum.count({
       where: { monthlyVotesMonth: getCurrentPeriod(), monthlyVotes: { gt: 0 } },
     }),

@@ -271,6 +271,7 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 - Detail page: full site container (max 1400px); 3/5 image + 2/5 solid-frost info panel at `md` (`grid-cols-5`), so the screenshot dominates and the panel breathes.
 - Hall of Fame: podium is a 3-up `items-end` grid at `md` with champion lifted 12 steps (`-translate-y-12`); ranks 4–10 as list rows capped by the section-divider pill heading.
 - Auth: chromeless 50/50 split at `lg`; form lives in a `panel rounded-2xl p-8` capped at `max-w-sm`.
+- About: kicker + display statement, a strip of four `.panel` counters fed by real Prisma aggregates (`getCommunityStats`), two mission panels in frost, the five-step How It Works (neutral frost circles with ink lucide icons and `field-mark` numbers — no external media), four "rules of the board" chips, and a closing CTA panel; all copy stays claim-free (real numbers only).
 - Header: sticky `h-16` frost bar that tucks away (`translateY(-100%)`, 300ms `--ease-bloom`) on scroll-down past 96px and returns on scroll-up; `:focus-within` always reveals it and reduced-motion disables the behavior. Footer: the console's black shell (`ink-void`, both themes) — sky-white text, `white/70` links, `night-muted` field-marks, 3 columns at `md`.
 
 ## Elevation & Depth

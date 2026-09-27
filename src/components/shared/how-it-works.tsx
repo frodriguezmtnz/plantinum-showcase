@@ -1,42 +1,41 @@
-
-import Image from 'next/image';
+import { Heart, ImageUp, Share2, Trophy, UserPlus, type LucideIcon } from 'lucide-react';
 
 const SectionDivider = ({ title }: { title: string }) => (
-    <div className="relative text-center my-12">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-border"></div>
-        </div>
-        <div className="relative flex justify-center">
-            <span className="panel-solid rounded-full px-5 font-headline text-xl font-bold tracking-tight md:text-2xl">{title}</span>
-        </div>
+  <div className="relative text-center my-12">
+    <div className="absolute inset-0 flex items-center" aria-hidden="true">
+      <div className="w-full border-t border-border"></div>
     </div>
+    <div className="relative flex justify-center">
+      <span className="panel-solid rounded-full px-5 font-headline text-xl font-bold tracking-tight md:text-2xl">{title}</span>
+    </div>
+  </div>
 )
 
-const howItWorksSteps = [
+const howItWorksSteps: { icon: LucideIcon; title: string; description: string }[] = [
   {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExazA1cGUzdmY0ZTU0aGZtbGZ2c3JmdXRoM2Y5cWw3cXNrc3M2bGlkNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPb7b1Qp729QJcQ/giphy.gif',
+    icon: UserPlus,
     title: 'Create an account',
     description: 'Sign up to join the community of trophy hunters.'
   },
   {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3A1dWFqZ2RhaThnZ3Y1ZGQ2YmdicnRsemh1ZzJjMjk2ZGM0cGs3ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKS6a9G23a3g3p6/giphy.gif',
+    icon: ImageUp,
     title: 'Upload your platinum',
-    description: 'Post the screenshot of your latest PlayStation platinum trophy.'
+    description: 'Post the screenshot your console took the moment the platinum unlocked.'
   },
   {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExajVsYmlzazJ5N2k3ZmNhaWcwdjRzcGZtM25heWxhdzk4bXY2M2w3ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0NwC1pi85J5Ew5oI/giphy.gif',
+    icon: Share2,
     title: 'Show it off',
-    description: 'Share your achievement and skill with friends on social media.'
+    description: 'Every plate travels with the site mark and a link you can share anywhere.'
   },
   {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExd2Rtc2djaXd0a2Q2MXJzMWR6bWRuN3h1bWR2NWp2bHVxOXZoZ2N1dCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/S9oGIGurgrL8Y/giphy.gif',
+    icon: Heart,
     title: 'Vote and compete',
-    description: 'Vote on other hunters\u2019 screenshots to help them climb the ranking.'
+    description: 'One vote each per plate. Help the best screenshots climb the monthly board.'
   },
   {
-    gif: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTZxNjd6eXFqNWJhdXRtYnFqNTJzY2ZxcWxtMjJscW1jMmxzdnZpZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2zVf1kS3z4f72/giphy.gif',
+    icon: Trophy,
     title: 'Enjoy',
-    description: 'Enjoy the community and celebrate platinum trophy culture.'
+    description: 'Celebrate platinum culture with hunters who care about the craft.'
   }
 ];
 
@@ -44,17 +43,20 @@ export function HowItWorks() {
   return (
     <section className="mt-16">
       <SectionDivider title="How It Works" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 text-center mt-8">
+      <ol className="grid grid-cols-1 gap-8 text-center sm:grid-cols-2 md:grid-cols-5 mt-8">
         {howItWorksSteps.map((step, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <div className="flex items-center justify-center w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 text-primary mb-4 overflow-hidden">
-              <Image src={step.gif} alt={step.title} width={96} height={96} unoptimized className="object-cover w-full h-full" />
+          <li key={step.title} className="flex flex-col items-center">
+            <div className="relative mb-4 flex h-20 w-20 items-center justify-center rounded-full panel-solid">
+              <step.icon className="h-7 w-7 text-foreground" aria-hidden />
+              <span className="field-mark absolute -top-1 -right-2 rounded-full panel-solid px-2 py-0.5">
+                {String(index + 1).padStart(2, '0')}
+              </span>
             </div>
             <h3 className="text-lg font-semibold">{step.title}</h3>
             <p className="text-sm text-muted-foreground mt-1">{step.description}</p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }
