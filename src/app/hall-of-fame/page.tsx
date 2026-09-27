@@ -165,7 +165,7 @@ export default async function HallOfFamePage() {
               return (
                 <li key={platinum.id}>
                   <Link href={`/platinum/${platinum.id}`} className="block">
-                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition-all duration-300 hover:bg-white/95 hover:shadow-bloom focus-visible:shadow-bloom outline-hidden">
+                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition-all duration-300 hover:bg-popover hover:shadow-bloom focus-visible:shadow-bloom outline-hidden">
                       <div className={`text-2xl sm:text-3xl font-bold w-12 text-center shrink-0 text-muted-foreground tabular`}>#{rank}</div>
                       <Image 
                         src={platinum.imageUrl} 

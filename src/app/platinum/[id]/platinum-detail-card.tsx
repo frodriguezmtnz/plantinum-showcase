@@ -53,7 +53,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
           />
           {user && showSpoiler && <Watermark username={user.username} />}
           {!showSpoiler && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[hsl(210_60%_99%/0.86)] backdrop-blur-[2px] z-20">
+            <div className="spoiler-frost-strong absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px] z-20">
                 <p className="text-lg font-bold flex items-center gap-2 text-foreground">
                   <Eye className="h-5 w-5 text-muted-foreground" />
                   Spoiler protected

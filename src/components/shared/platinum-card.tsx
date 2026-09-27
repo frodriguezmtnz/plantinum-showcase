@@ -68,7 +68,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
                     </div>
                 )}
             </div>
-            <div className="absolute top-2 right-2 flex items-center gap-2 rounded-full px-2.5 py-1 font-bold backdrop-blur-md bg-white/85 ring-1 ring-white text-secondary-foreground">
+            <div className="photo-chip absolute top-2 right-2 flex items-center gap-2 rounded-full px-2.5 py-1 font-bold backdrop-blur-md ring-1 ring-white">
                 <Heart className="w-4 h-4 text-destructive fill-destructive" />
                 <span className="tabular">{monthlyVotes}</span>
             </div>

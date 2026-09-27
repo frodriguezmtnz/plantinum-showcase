@@ -47,6 +47,8 @@
     --grid-size: 30px;
     --grid-line: hsl(210 18% 70% / 0.5);
     --grid-fade: 42vh;
+    --glow-pink: hsl(322 100% 44% / 0.06);
+    --glow-green: hsl(147 100% 32% / 0.05);
 
     /* Legacy names, remapped so unrebuilt pages read in the new world. */
     --platinum: hsl(206 28% 52%);
@@ -211,9 +213,19 @@
 /* The race row marquee: a slow continuous drift (track = two identical
    halves, so -50% is a seamless loop). Pauses for hover/focus/off-screen;
    data-static (keyboard/wheel/touch or ?motion=off) stops it for good and
-   hands the row to native scrolling. */
+   hands the row to native scrolling. Edges dissolve into the field via an
+   alpha mask, and no scrollbars ever show — the hint text teaches the
+   interaction. */
 .race-row {
   overflow-x: hidden;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, transparent, hsl(0 0% 99%) 4%, hsl(0 0% 99%) 96%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, hsl(0 0% 99%) 4%, hsl(0 0% 99%) 96%, transparent);
+}
+
+.race-row::-webkit-scrollbar {
+  display: none;
 }
 
 .race-track {
@@ -270,9 +282,9 @@
   inset: 0;
   z-index: -10;
   background:
-    radial-gradient(60% 50% at 12% 0%, hsl(322 100% 44% / 0.06), transparent 70%),
-    radial-gradient(55% 45% at 88% 100%, hsl(147 100% 32% / 0.05), transparent 70%),
-    hsl(0 0% 99%);
+    radial-gradient(60% 50% at 12% 0%, var(--glow-pink), transparent 70%),
+    radial-gradient(55% 45% at 88% 100%, var(--glow-green), transparent 70%),
+    var(--paper);
   transition: filter 0.5s var(--ease-bloom);
 }
 
@@ -330,6 +342,13 @@ body[data-bloom='deep'] .sky-field {
   color: var(--live);
 }
 
+/* Pills that live on top of screenshots: physical white chips in both
+   themes, so their ink text never depends on the inverted tokens. */
+.photo-chip {
+  background: hsl(0 0% 100% / 0.85);
+  color: hsl(0 0% 10%);
+}
+
 /* Spoiler plates: frost on the case, not a black hole on the field. */
 .platinum-card-spoiler > .spoiler-blur {
   filter: blur(22px);
@@ -341,6 +360,11 @@ body[data-bloom='deep'] .sky-field {
   background: hsl(210 60% 99% / 0.42);
   backdrop-filter: blur(10px) saturate(1.4);
   -webkit-backdrop-filter: blur(10px) saturate(1.4);
+}
+
+/* Full-card spoiler veil: denser frost that keeps the reveal control legible. */
+.spoiler-frost-strong {
+  background: hsl(210 60% 99% / 0.86);
 }
 
 .tabular {
@@ -450,4 +474,140 @@ body[data-bloom='deep'] .sky-field {
 
 .section-divider::after {
   right: 0;
+}
+
+/* ── Night Console ──────────────────────────────────────────────────────
+   The same browse screen after lights-out: ink-navy ground, dark frosted
+   panels, inverted chrome (white CTAs with ink text). The duotone
+   discipline holds — magenta still selects, green still lives, only the
+   greens brighten to keep their contrast on the dark ground. */
+.dark {
+  color-scheme: dark;
+  --background: hsl(212 38% 10%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(212 34% 13% / 0.82);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(212 34% 13%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(0 0% 10%);
+  --secondary: hsl(212 30% 18%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(212 30% 18%);
+  --muted-foreground: hsl(211 22% 70%);
+  --accent: hsl(212 30% 22%);
+  --accent-foreground: hsl(0 0% 98%);
+  --border: hsl(212 25% 26%);
+  --input: hsl(212 25% 26%);
+  --ring: hsl(322 100% 52%);
+  --ps-pink: hsl(322 100% 52%);
+  --ps-green: hsl(147 70% 55%);
+  --live: var(--ps-green);
+  --ice: hsl(322 100% 58%);
+  --bloom: 0 0 0 3px hsl(322 100% 65% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.6);
+  --lift: 0 14px 34px -22px hsl(207 60% 28% / 0.55);
+  --paper: hsl(212 38% 10%);
+  --grid-line: hsl(210 18% 70% / 0.08);
+  --glow-pink: hsl(322 100% 44% / 0.12);
+  --glow-green: hsl(147 100% 32% / 0.1);
+}
+
+.dark .panel {
+  background: hsl(212 34% 13% / 0.74);
+  border-color: hsl(210 18% 70% / 0.12);
+  box-shadow: 0 18px 42px -30px hsl(207 60% 28% / 0.5);
+}
+
+.dark .panel-solid {
+  background: hsl(212 34% 13% / 0.92);
+  border-color: hsl(212 25% 26%);
+}
+
+.dark .field-mark {
+  color: hsl(211 22% 70%);
+}
+
+.dark .stack-card {
+  background: hsl(212 34% 13% / 0.97);
+  box-shadow:
+    0 -1px 0 hsl(210 18% 70% / 0.15),
+    0 -18px 48px -14px hsl(207 60% 28% / 0.5),
+    var(--lift);
+}
+
+.dark .platinum-card-spoiler > .spoiler-frost {
+  background: hsl(212 34% 13% / 0.42);
+}
+
+.dark .spoiler-frost-strong {
+  background: hsl(212 34% 13% / 0.86);
+}
+
+.dark ::selection {
+  background: hsl(322 100% 44% / 0.35);
+  color: hsl(0 0% 98%);
+}
+
+.dark * {
+  caret-color: hsl(0 0% 98%);
+  scrollbar-color: hsl(211 22% 70%) transparent;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: hsl(211 22% 70%);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 98%);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* The header tucks away on scroll-down and returns on scroll-up; keyboard
+   focus always brings it back. */
+header {
+  transition: transform 0.3s var(--ease-bloom);
+}
+
+header[data-hidden] {
+  transform: translateY(-100%);
+}
+
+header[data-hidden]:focus-within {
+  transform: none;
+}
+
+/* Footer: the console's black shell anchors the page in both themes. */
+.footer-shell {
+  background: hsl(0 0% 10%);
+  border-top: 1px solid hsl(0 0% 98% / 0.12);
+  color: hsl(0 0% 98%);
+}
+
+.footer-shell a {
+  color: hsl(0 0% 98% / 0.7);
+  transition: color 0.2s;
+}
+
+.footer-shell a:hover {
+  color: hsl(0 0% 98%);
+}
+
+.footer-shell .field-mark {
+  color: hsl(211 22% 70%);
+}
+
+.footer-shell .text-foreground {
+  color: hsl(0 0% 98%);
+}
+
+.footer-shell .footer-heart {
+  fill: hsl(0 0% 98%);
+  color: hsl(0 0% 98%);
+}
+
+.footer-shell .footer-divider {
+  border-color: hsl(0 0% 98% / 0.12);
 }

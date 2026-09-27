@@ -158,7 +158,7 @@ export default async function Home() {
                   <li key={entry.id}>
                     <Link
                       href={`/platinum/${entry.id}`}
-                      className="flex items-center gap-4 rounded-xl border border-border bg-white/70 p-3 transition-shadow hover:shadow-bloom focus-visible:shadow-bloom"
+                      className="flex items-center gap-4 rounded-xl border border-border bg-secondary/40 p-3 transition-shadow hover:shadow-bloom focus-visible:shadow-bloom"
                     >
                       <span className="tabular w-10 shrink-0 text-center text-lg font-extrabold text-primary">
                         #{entry.rank}

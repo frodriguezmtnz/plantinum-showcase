@@ -43,6 +43,13 @@ colors:
   glow-pink: "hsl(322 100% 44% / 0.06)"
   glow-green: "hsl(147 100% 32% / 0.05)"
   selection-wash: "hsl(322 100% 44% / 0.22)"
+  night-ground: "hsl(212 38% 10%)"
+  night-panel: "hsl(212 34% 13%)"
+  night-veil: "hsl(212 30% 18%)"
+  night-edge: "hsl(212 25% 26%)"
+  night-muted: "hsl(211 22% 70%)"
+  night-live: "hsl(147 70% 55%)"
+  night-ice: "hsl(322 100% 58%)"
 typography:
   display:
     fontFamily: "Mulish, sans-serif"
@@ -228,6 +235,8 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 
 ### Named Rules
 **The Duotone Discipline Rule.** Magenta only ever means selection; green only ever means a live count or state. A third saturated accent is never introduced, and neither color is ever used as a decorative fill.
+
+**The Night Console.** The same world after lights-out, switched by a header button that cycles light -> dark -> system (next-themes, class on `<html>`, default system). It is not a second design: every token flips to its night twin — ground `hsl(212 38% 10%)` (`night-ground`), dark frost `hsl(212 34% 13%)` (`night-panel`), veils `hsl(212 30% 18%)`, edges `hsl(212 25% 26%)`, muted text `hsl(211 22% 70%)` — and the chrome inverts (CTAs become sky-white with ink text via the swapped `--primary` pair). The duotone holds its meaning: magenta still selects (`--ice` lifts to `hsl(322 100% 58%)`), green still lives and brightens to `hsl(147 70% 55%)` to keep its contrast on the dark ground. Pills that sit on screenshots (rank chips, caption chips) stay physically white in both themes (`.photo-chip`: white 0.85 ground, ink-void text).
 **The No-Marks Rule.** No PlayStation logos, glyphs, or trademarked shapes are ever reproduced. Marks are generic line icons or the self-drawn `PlatinumTrophyIcon`. It is a fan community product and says so plainly.
 **The One Selection Rule.** Hover, focus, and resting selection all render the identical `--bloom` treatment. If a screen shows two blooms, one is wrong.
 
@@ -256,13 +265,13 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 
 - Container: full width, `max-width: 1400px` (`--container-2xl`), `padding-inline: 2rem`.
 - Home first viewport: `min-height: calc(100dvh - 4rem)`; month strip floats at top, centered title/subtitle block, the race row as the hero, and the hint micro-caps beneath it. The field is the page; the race row is the hero.
-- Race row: `.race-row` (`px-8 sm:px-12 pb-16 pt-6`) hosting a `.race-track` flex of 256px plates (288px at `sm`, 20px `mr-5` gutters), duplicated once for the seamless 50s marquee; the duplicate set is `aria-hidden`, untabbable, and `display:none` once static. Auto-play: `overflow-x-hidden`; after take-over (`data-static`): `overflow-x-auto` + `snap-x snap-proximity` (duplicates hidden). The submit-plate slot always ends each half. Spoiler-protected plates never occupy the home row; rank chips keep true standing.
+- Race row: `.race-row` (`px-8 sm:px-24 pb-16 pt-6`) hosting a `.race-track` flex of 256px plates (288px at `sm`, 20px `mr-5` gutters), duplicated once for the seamless 50s marquee; both edges dissolve into the field through an alpha mask (transparent -> solid at 4%/96%), and no scrollbar ever shows (`scrollbar-width: none`) — the row stays wheel/touch/arrow scrollable; the duplicate set is `aria-hidden`, untabbable, and `display:none` once static. Auto-play: `overflow-x-hidden`; after take-over (`data-static`): `overflow-x-auto` + `snap-x snap-proximity` (duplicates hidden). The submit-plate slot always ends each half. Spoiler-protected plates never occupy the home row; rank chips keep true standing.
 - Below the hero, the home is a `.stack-deck` of four `.stack-card` frost shells (explainer + real stats, this month's podium with real top-3 and links, latest platinums masonry, the submit CTA): each card `position: sticky` at `top: calc(--stack-top + --stack-i * --stack-paso)` with `--stack-paso: 0.75rem` (0.25rem on mobile), a solid top border, and `--card` shadow, so the next card deals over the previous as you scroll. Other below-fold pages keep frost shells (`panel` / `panel-solid`, `rounded-2xl`, p-6 → p-10) with `scroll-mt-24` anchors; vertical rhythm in Tailwind steps (gap-6/gap-8, pb-16/pb-20, `section` = 64px).
 - Gallery: CSS multi-columns masonry — 1 / 2 (sm) / 3 (lg) / 4 (xl), gap 24px, cards keep their natural aspect ratio.
-- Detail page: 2/3 image + 1/3 solid-frost info panel at `md`, `max-w-4xl`.
+- Detail page: full site container (max 1400px); 3/5 image + 2/5 solid-frost info panel at `md` (`grid-cols-5`), so the screenshot dominates and the panel breathes.
 - Hall of Fame: podium is a 3-up `items-end` grid at `md` with champion lifted 12 steps (`-translate-y-12`); ranks 4–10 as list rows capped by the section-divider pill heading.
 - Auth: chromeless 50/50 split at `lg`; form lives in a `panel rounded-2xl p-8` capped at `max-w-sm`.
-- Header: sticky `h-16` frost bar; footer: frost panel, 3 columns at `md`.
+- Header: sticky `h-16` frost bar that tucks away (`translateY(-100%)`, 300ms `--ease-bloom`) on scroll-down past 96px and returns on scroll-up; `:focus-within` always reveals it and reduced-motion disables the behavior. Footer: the console's black shell (`ink-void`, both themes) — sky-white text, `white/70` links, `night-muted` field-marks, 3 columns at `md`.
 
 ## Elevation & Depth
 
@@ -317,7 +326,7 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep every surface light: frost on cloud, ink text; the only dark layer is the modal scrim (`hsl(212 38% 16% / 0.55)`).
+- **Do** keep every surface light in the day world: frost on cloud, ink text; the only dark layer is the modal scrim (`hsl(212 38% 16% / 0.55)`). In the Night Console the same discipline inverts: dark frost on ink-navy ground, sky-white text.
 - **Do** keep the field fixed (paper, masked grid, whisper duotone glows); the only thing `race.ts` drives is the days-left copy — no surface picks weather.
 - **Do** use the single `--bloom` treatment for hover, focus, and resting selection, and keep exactly one resting selection per browse row.
 - **Do** reserve `.field-mark` (11px/700/0.22em) for data labels and render every changing count with `tabular-nums`.

@@ -50,12 +50,12 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
   const canDelete = currentUserId === platinum.userId;
 
   return (
-    <div className="container max-w-4xl py-8 md:py-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 min-w-0">
+    <div className="container py-8 md:py-12">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        <div className="md:col-span-3 min-w-0">
             <PlatinumDetailCard platinum={platinum} user={user ?? null} />
         </div>
-        <div className="md:col-span-1 min-w-0">
+        <div className="md:col-span-2 min-w-0">
             <div className="panel-solid p-6 rounded-2xl overflow-hidden">
                 <h2 className="text-2xl font-bold font-headline mb-4 break-words">{platinum.gameName}</h2>
                 {user && (

@@ -304,6 +304,48 @@
         "displayName": "Chart Iris",
         "canonical": "hsl(248 36% 58%)",
         "note": "Defined in :root, no component consumer."
+      },
+      "night-ground": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "hsl(212 38% 10%)",
+        "note": "Night Console: ink-navy ground that replaces paper after lights-out."
+      },
+      "night-panel": {
+        "role": "neutral",
+        "displayName": "Night Panel",
+        "canonical": "hsl(212 34% 13%)",
+        "note": "Night Console: the dark frost of panels, cards and stack cards."
+      },
+      "night-veil": {
+        "role": "neutral",
+        "displayName": "Night Veil",
+        "canonical": "hsl(212 30% 18%)",
+        "note": "Night Console: secondary/muted surface tint."
+      },
+      "night-edge": {
+        "role": "neutral",
+        "displayName": "Night Edge",
+        "canonical": "hsl(212 25% 26%)",
+        "note": "Night Console: borders and inputs."
+      },
+      "night-muted": {
+        "role": "neutral",
+        "displayName": "Night Muted",
+        "canonical": "hsl(211 22% 70%)",
+        "note": "Night Console: muted text, field-marks, scrollbar thumbs."
+      },
+      "night-live": {
+        "role": "accent",
+        "displayName": "Night Live",
+        "canonical": "hsl(147 70% 55%)",
+        "note": "Night Console: the green lift that keeps live counts legible on the dark ground."
+      },
+      "night-ice": {
+        "role": "accent",
+        "displayName": "Night Ice",
+        "canonical": "hsl(322 100% 58%)",
+        "note": "Night Console: the magenta lift for focus outlines on dark."
       }
     },
     "typographyMeta": {
@@ -398,24 +440,6 @@
         "purpose": "body[data-bloom='deep'] steps the sky field back while the browse row holds focus."
       },
       {
-        "role": "motion",
-        "displayName": "Console Boot Intro",
-        "canonical": "GSAP timeline ~2.6s: strip drop, title mask rise, plate pop back.out(1.7) stagger 0.08, vote count-up",
-        "note": "Plays once on home load; skipped under reduced-motion and ?motion=off; clearProps keeps CSS bloom working."
-      },
-      {
-        "role": "motion",
-        "displayName": "Sticky Card Deck",
-        "canonical": "position: sticky; top: calc(--stack-top + --stack-i * --stack-paso)",
-        "note": "Pure-CSS dealt-hand stacking of the four home cards; mobile paso 0.25rem; degrades to plain scroll under reduced-motion."
-      },
-      {
-        "role": "motion",
-        "displayName": "Race Marquee",
-        "canonical": "translateX(-50%) over 50s linear infinite",
-        "note": "Home row continuous drift; pauses on hover/focus/off-screen, stops permanently on take-over (data-static), static under reduced-motion."
-      },
-      {
         "name": "mount-fade",
         "value": "fade-in + slide-in-from-bottom-3, 500ms, uniform",
         "purpose": "Platinum cards mount in one wash — deliberately no per-card stagger."
@@ -434,6 +458,26 @@
         "name": "reduced-motion-contract",
         "value": "field paints one static frame; bloom hover transform none; field-deepen filter none; boot intro and scroll reveals skipped (?motion=off also skips intro)",
         "purpose": "Selection survives on the ice ring alone when motion is reduced."
+      },
+      {
+        "name": "boot-intro",
+        "value": "GSAP timeline ~2.6s: strip drop, title mask rise, plate pop back.out(1.7) stagger 0.08, vote count-up",
+        "purpose": "Plays once on home load; skipped under reduced-motion and ?motion=off; clearProps keeps CSS bloom working."
+      },
+      {
+        "name": "sticky-stack",
+        "value": "position: sticky; top: calc(--stack-top + --stack-i * --stack-paso)",
+        "purpose": "Pure-CSS dealt-hand stacking of the four home cards; mobile paso 0.25rem; degrades to plain scroll under reduced-motion."
+      },
+      {
+        "name": "race-marquee",
+        "value": "translateX(-50%) over 50s linear infinite",
+        "purpose": "Home row continuous drift with alpha-masked edges and no scrollbars; pauses on hover/focus/off-screen, stops permanently on take-over (data-static), static under reduced-motion."
+      },
+      {
+        "name": "header-tuck",
+        "value": "translateY(-100%) over 300ms --ease-bloom",
+        "purpose": "Bar hides on scroll-down past 96px, returns on scroll-up; :focus-within always reveals; disabled under reduced-motion."
       }
     ],
     "breakpoints": [

@@ -44,7 +44,7 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
             unoptimized={isStoredImage(entry.imageUrl)}
           />
         )}
-        <span className="tabular absolute left-2 top-2 rounded-full bg-white/85 px-2.5 py-0.5 text-xs font-bold text-primary backdrop-blur-md">
+        <span className="photo-chip tabular absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold backdrop-blur-md">
           #{entry.rank}
         </span>
       </div>
@@ -70,7 +70,7 @@ function SubmitTile({ dup }: { dup?: boolean }) {
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       className="plate-shell group mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
     >
-      <div className="plate-bloom flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/35 bg-white/45 backdrop-blur-md group-hover:border-primary/70 group-hover:bg-white/80">
+      <div className="plate-bloom flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/35 bg-card/60 backdrop-blur-md group-hover:border-primary/70 group-hover:bg-card">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift">
           <Plus className="h-5 w-5" aria-hidden />
         </span>
@@ -153,7 +153,7 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
   };
 
   return (
-    <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-16 pt-6 sm:px-12">
+    <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-16 pt-6 sm:px-24">
       <div className="race-track flex w-max">
         {entries.map((entry, i) => (
           <PlateTile key={entry.id} entry={entry} selected={i === selected} />

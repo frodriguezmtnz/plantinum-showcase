@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import {
   Menu,
   Trophy,
@@ -14,6 +15,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -45,7 +47,7 @@ const navLinks = [
 
 const navPill =
   'flex h-10 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors duration-200';
-const navActive = 'bg-white/85 text-primary shadow-lift ring-1 ring-white';
+const navActive = 'bg-primary/90 text-primary-foreground shadow-lift ring-1 ring-primary-foreground/60';
 const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
@@ -63,9 +65,31 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
 export function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
+  // Hide on scroll-down, reveal on scroll-up. Disabled for reduced-motion
+  // users; :focus-within (see globals.css) always brings the bar back.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < 96) setHidden(false);
+        else if (Math.abs(y - lastY.current) > 8) setHidden(y > lastY.current);
+        lastY.current = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header data-hidden={hidden || undefined} className="sticky top-0 z-50 w-full">
       <div className="panel rounded-none border-x-0 border-t-0">
       <div className="container flex h-16 items-center px-4 md:px-8">
         <div className="flex items-center gap-2 md:gap-6 mr-auto min-w-0">
@@ -86,6 +110,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
+            <ThemeToggle />
             <Link href="/upload" passHref>
               <Button>
                 <Upload className="mr-2 h-4 w-4" />

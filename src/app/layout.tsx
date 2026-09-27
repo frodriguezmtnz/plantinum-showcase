@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer';
 import { SiteChrome } from '@/components/layout/site-chrome';
 import { cn } from '@/lib/utils';
 import { SessionProvider } from 'next-auth/react';
+import { ThemeProvider } from 'next-themes';
 import { Mulish } from 'next/font/google';
 
 const APP_NAME = "Platinum Showcase";
@@ -65,11 +66,13 @@ export default function RootLayout({
         "min-h-screen font-body antialiased",
       )}>
         <SessionProvider>
-          <div className="sky-field" aria-hidden />
-          <SiteChrome header={<Header />} footer={<Footer />}>
-            {children}
-          </SiteChrome>
-          <Toaster />
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <div className="sky-field" aria-hidden />
+            <SiteChrome header={<Header />} footer={<Footer />}>
+              {children}
+            </SiteChrome>
+            <Toaster />
+          </ThemeProvider>
         </SessionProvider>
       </body>
     </html>
