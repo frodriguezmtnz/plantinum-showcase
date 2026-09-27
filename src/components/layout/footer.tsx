@@ -18,6 +18,7 @@ export function Footer() {
             <h4 className="field-mark">Links</h4>
             <Link href="/about" className="text-sm">About</Link>
             <Link href="/faq" className="text-sm">FAQ</Link>
+            <Link href="/pricing" className="text-sm">Pricing</Link>
             <Link href="/terms" className="text-sm">Terms</Link>
             <Link href="/privacy" className="text-sm">Privacy</Link>
           </div>
