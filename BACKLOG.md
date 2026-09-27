@@ -34,16 +34,16 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] `getUsers()` cargaba TODOS los usuarios en Explorar solo para mapear nombre (resuelto con #3).
 - [ ] Sin edición de un platino propio ya subido.
 - [ ] Sin snapshots históricos del Salón de la Fama: el ranking es solo del mes en curso; retirar un voto no puede reescribir el pasado porque no se archiva.
-- [ ] Rate limiting específico en `toggleVoteForPlatinum` (además del de upload).
+- [x] Rate limiting específico en `toggleVoteForPlatinum` (20/min por usuario, `src/lib/rate-limit.ts`) además del de upload.
 
 ## Moderación / seguridad
 
 - [x] Comentario del platino: visible **solo para el dueño** en su perfil (provisional, para revisar diseño). Ver `src/app/u/[username]/page.tsx` y `src/components/shared/platinum-card.tsx`.
 - [ ] Flujo de moderación: reportar platino/comentario.
 - [ ] Revisar los comentarios antes de hacerlos públicos (hoy no se muestran a terceros).
-- [ ] Rate limiting en la Server Action de subida (`uploadPlatinum` en `src/app/actions.ts`).
-- [ ] Validar la imagen por **magic bytes**, no solo `file.type` (es spoofeable) en `src/app/actions.ts`.
-- [ ] `next.config.ts`: quitar `remotePatterns` (unsplash/picsum/giphy/placehold) cuando todo venga de B2 y revisar la CSP (`connect-src 'self'`).
+- [x] Rate limiting en la Server Action de subida (`uploadPlatinum`: 10/hora por usuario). Limitador en memoria por instancia; en Vercel multi-instancia habrá que migrar a un store compartido (Upstash).
+- [x] Validar la imagen por **magic bytes**, no solo `file.type` (`src/lib/image-signature.ts`: JPEG/PNG/WEBP).
+- [ ] `next.config.ts`: quitar `remotePatterns` (unsplash/picsum/placehold — giphy ya no se usa tras el rediseño de /about) cuando todo venga de B2 y revisar la CSP (`connect-src 'self'`).
 
 ## UX / diseño
 
@@ -56,8 +56,8 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 
 ## SEO / share
 
-- [ ] `generateMetadata` sin `openGraph.images` con la captura (`src/app/platinum/[id]/page.tsx`); al compartir no sale imagen.
-- [ ] `sitemap.ts` / `robots.ts`.
+- [x] `generateMetadata` con `openGraph.images` + twitter `summary_large_image` (guard de spoilers: una placa spoiler no emite imagen de preview).
+- [x] `sitemap.ts` (estáticas + todas las placas, revalidate 1h) y `robots.ts` (bloquea /api, /login, /register, /upload).
 
 ## Calidad
 
