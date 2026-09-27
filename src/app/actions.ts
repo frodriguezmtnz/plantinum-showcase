@@ -10,6 +10,7 @@ import { getPlatinumsPage, PLATINUMS_PAGE_SIZE } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 import { applyWatermark } from "@/lib/watermark";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -37,6 +38,14 @@ export async function uploadPlatinum(formData: FormData) {
     return {
       success: false as const,
       error: "Image storage is not configured yet.",
+    };
+  }
+
+  const uploadLimit = checkRateLimit(`upload:${userId}`, 10, 60 * 60_000);
+  if (!uploadLimit.ok) {
+    return {
+      success: false as const,
+      error: "Too many uploads in a short time. Please wait a bit and try again.",
     };
   }
 
@@ -256,6 +265,14 @@ export async function toggleVoteForPlatinum(
   const userId = session?.user?.id;
   if (!userId) {
     return { success: false, error: "You need to sign in to vote." };
+  }
+
+  const voteLimit = checkRateLimit(`vote:${userId}`, 20, 60_000);
+  if (!voteLimit.ok) {
+    return {
+      success: false,
+      error: "That is a lot of votes at once. Please wait a moment and try again.",
+    };
   }
 
   const platinum = await prisma.platinum.findUnique({
