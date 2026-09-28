@@ -32,6 +32,9 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 ## Funcional / bugs
 
 - [x] `getUsers()` cargaba TODOS los usuarios en Explorar solo para mapear nombre (resuelto con #3).
+- [x] Endurecido el acceso por email/contraseña: normalización de email al entrar, validación de username en servidor (max 20, charset) y P2002 traducido a mensaje.
+- [x] Login con throttle anti brute-force (8 intentos/5 min por email y 20 por IP, `src/lib/rate-limit.ts`).
+- [ ] Verificación de email al registrarse (hoy no se comprueba) y recuperación de contraseña real.
 - [ ] Sin edición de un platino propio ya subido.
 - [ ] Sin snapshots históricos del Salón de la Fama: el ranking es solo del mes en curso; retirar un voto no puede reescribir el pasado porque no se archiva.
 - [x] Rate limiting específico en `toggleVoteForPlatinum` (20/min por usuario, `src/lib/rate-limit.ts`) además del de upload.
