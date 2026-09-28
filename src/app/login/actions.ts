@@ -8,8 +8,12 @@ export interface LoginState {
 }
 
 export async function loginAction(_state: LoginState, formData: FormData): Promise<LoginState> {
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
   const password = formData.get("password") as string;
+
+  if (!email || !password) {
+    return { error: "Enter your email and password." };
+  }
 
   try {
     await signIn("credentials", {

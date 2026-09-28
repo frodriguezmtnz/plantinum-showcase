@@ -18,6 +18,12 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   if (!username || username.length < 3) {
     return { error: "Username must be at least 3 characters." };
   }
+  if (username.length > 20) {
+    return { error: "Username must be 20 characters or fewer." };
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    return { error: "Username can only use letters, numbers, dashes and underscores." };
+  }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "That email address is not valid." };
   }
@@ -60,6 +66,17 @@ export async function registerAction(_state: RegisterState, formData: FormData):
       redirectTo: "/",
     });
   } catch (error) {
+    // Two sign-ups racing on the same handle/email slip past the pre-check;
+    // the unique index catches them, so translate the violation for the user.
+    if ((error as { code?: string }).code === "P2002") {
+      const target = (error as { meta?: { target?: string[] | string } }).meta?.target;
+      const fields = Array.isArray(target) ? target.join(",") : String(target ?? "");
+      return {
+        error: fields.includes("username")
+          ? "That username is already taken."
+          : "An account with that email already exists.",
+      };
+    }
     if (error instanceof AuthError) {
       return { error: "Account created, but sign-in failed. Try signing in manually." };
     }
