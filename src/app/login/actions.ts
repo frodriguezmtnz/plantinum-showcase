@@ -1,7 +1,13 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import { signIn } from "@/auth";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+const MAX_ATTEMPTS_PER_EMAIL = 8;
+const MAX_ATTEMPTS_PER_IP = 20;
+const WINDOW_MS = 5 * 60_000;
 
 export interface LoginState {
   error?: string;
@@ -13,6 +19,15 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
+  }
+
+  // Brute-force barrier: cap attempts per account and per client address.
+  const headerList = await headers();
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  const perEmail = checkRateLimit(`login:${email}`, MAX_ATTEMPTS_PER_EMAIL, WINDOW_MS);
+  const perIp = checkRateLimit(`login-ip:${ip}`, MAX_ATTEMPTS_PER_IP, WINDOW_MS);
+  if (!perEmail.ok || !perIp.ok) {
+    return { error: "Too many sign-in attempts. Please wait a few minutes and try again." };
   }
 
   try {
