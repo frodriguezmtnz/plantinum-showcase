@@ -305,15 +305,20 @@ body[data-bloom='deep'] .sky-field {
 }
 
 /* The sticky deck: cards pin one step below the previous and land on top,
-   like a dealt hand. Pure CSS — the stack IS the scroll animation. */
+   like a dealt hand. Pure CSS — the stack IS the scroll animation.
+   minmax(0, 1fr) + min-width: 0 keep the track at the container width: without
+   them a card's intrinsic minimum grows the grid track and the deck bleeds
+   past the phone gutters. */
 .stack-deck {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2rem;
   --stack-top: 5.5rem;
   --stack-paso: 0.75rem;
 }
 
 .stack-card {
+  min-width: 0;
   position: sticky;
   top: calc(var(--stack-top) + var(--stack-i, 0) * var(--stack-paso));
   background: hsl(0 0% 100% / 0.97);
