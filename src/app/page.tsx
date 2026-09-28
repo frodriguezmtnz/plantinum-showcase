@@ -153,22 +153,22 @@ export default async function Home() {
                   <Link href="/hall-of-fame">Full hall of fame</Link>
                 </Button>
               </div>
-              <ol className="mt-6 grid gap-3">
+              <ol className="mt-6 grid grid-cols-1 gap-3">
                 {entries.slice(0, 3).map((entry) => (
-                  <li key={entry.id}>
+                  <li key={entry.id} className="min-w-0">
                     <Link
                       href={`/platinum/${entry.id}`}
-                      className="flex items-center gap-4 rounded-xl border border-border bg-secondary/40 p-3 transition-shadow hover:shadow-bloom focus-visible:shadow-bloom"
+                      className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-3 transition-shadow hover:shadow-bloom focus-visible:shadow-bloom sm:gap-4"
                     >
-                      <span className="tabular w-10 shrink-0 text-center text-lg font-extrabold text-primary">
+                      <span className="tabular w-6 shrink-0 text-center text-base font-extrabold text-primary sm:w-10 sm:text-lg">
                         #{entry.rank}
                       </span>
-                      <span className="relative aspect-video w-24 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/70">
+                      <span className="relative aspect-video w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/70 sm:w-24">
                         <Image
                           src={entry.imageUrl}
                           alt={`Platinum screenshot for ${entry.gameName}`}
                           fill
-                          sizes="96px"
+                          sizes="(min-width: 640px) 96px, 64px"
                           className="object-cover"
                           unoptimized={isStoredImage(entry.imageUrl)}
                         />
@@ -177,7 +177,7 @@ export default async function Home() {
                         <span className="block truncate text-sm font-bold">{entry.gameName}</span>
                         <span className="block truncate text-xs text-muted-foreground">@{entry.username} · {entry.platform}</span>
                       </span>
-                      <span className="tabular shrink-0 text-sm font-bold text-live">
+                      <span className="tabular shrink-0 text-xs font-bold text-live sm:text-sm">
                         {entry.monthlyVotes} votes
                       </span>
                     </Link>
