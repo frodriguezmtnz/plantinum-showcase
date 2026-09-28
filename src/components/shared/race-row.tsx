@@ -24,6 +24,7 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
     <Link
       href={`/platinum/${entry.id}`}
       data-tile
+      aria-label={`#${entry.rank} ${entry.gameName} — ${entry.monthlyVotes} votes`}
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       {...(selected && !dup ? { 'data-selected': '' } : {})}
       className="plate-shell group relative mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
@@ -47,15 +48,6 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
         <span className="photo-chip tabular absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold backdrop-blur-md">
           #{entry.rank}
         </span>
-      </div>
-      <div className="bloom-caption absolute inset-x-2 top-full z-10 mt-3">
-        <div className="panel-solid rounded-xl px-4 py-3 shadow-lift">
-          <p className="truncate text-sm font-bold">{entry.gameName}</p>
-          <p className="tabular mt-0.5 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="truncate">@{entry.username} · {entry.platform}</span>
-            <span className="font-bold text-live">{entry.monthlyVotes} votes</span>
-          </p>
-        </div>
       </div>
     </Link>
   );
@@ -153,7 +145,7 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
   };
 
   return (
-    <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-16 pt-6 sm:px-24">
+    <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-6 pt-6 sm:px-24 sm:pb-8">
       <div className="race-track flex w-max">
         {entries.map((entry, i) => (
           <PlateTile key={entry.id} entry={entry} selected={i === selected} />

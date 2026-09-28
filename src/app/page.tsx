@@ -94,7 +94,7 @@ export default async function Home() {
           <RaceRow entries={entries} />
         </div>
 
-        <p className="hm-hint field-mark">
+        <p className="hm-hint field-mark hidden sm:block">
           Arrows or scroll to browse · Enter opens the plate
         </p>
       </section>

@@ -175,7 +175,7 @@
   color: hsl(211 22% 36%);
 }
 
-/* Bloom: focused plates lift, the frosted caption rises under them. */
+/* Bloom: the selected plate lifts and rings; the tile carries no caption. */
 .plate-bloom {
   transition: transform 0.45s var(--ease-bloom), box-shadow 0.45s var(--ease-bloom);
 }
@@ -186,28 +186,10 @@
   box-shadow: var(--bloom);
 }
 
-.bloom-caption {
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.4s var(--ease-bloom), transform 0.4s var(--ease-bloom);
-  pointer-events: none;
-}
-
-.plate-shell:hover .bloom-caption,
-.plate-shell:focus-within .bloom-caption {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 /* Resting selection: a browse screen always holds a selection without a mouse. */
 .plate-shell[data-selected] .plate-bloom {
   transform: translateY(-10px) scale(1.04);
   box-shadow: var(--bloom);
-}
-
-.plate-shell[data-selected] .bloom-caption {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* The race row marquee: a slow continuous drift (track = two identical
