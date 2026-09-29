@@ -6,13 +6,12 @@ export function PlatinumMarkIcon({ className, ...props }: SVGProps<SVGSVGElement
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 512 512"
-      role="img"
-      aria-label="Platinum Showcase mark"
+      aria-hidden="true"
       className={cn('w-6 h-6', className)}
       {...props}
     >
       <g transform="translate(-16 18)">
-        <g fill="none" stroke-linecap="round">
+        <g fill="none" strokeLinecap="round">
           <path d="M170 176 C 118 182 116 240 176 248" stroke="#192838" strokeWidth="40" />
           <path d="M342 176 C 394 182 396 240 336 248" stroke="#192838" strokeWidth="40" />
           <path d="M170 176 C 118 182 116 240 176 248" stroke="#8FA6C4" strokeWidth="16" />
