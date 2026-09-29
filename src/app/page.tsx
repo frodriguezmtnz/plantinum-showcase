@@ -2,7 +2,7 @@ import Image from 'next/image';
 import {
   getHallOfFame,
   getLatestPlatinums,
-  getUsers,
+  getUsersByIds,
   getMonthlyRaceStats,
 } from '@/lib/data';
 import { auth } from '@/auth';
@@ -25,15 +25,18 @@ export default async function Home() {
   const session = await auth();
   const currentUserId = session?.user?.id;
 
-  const [raceBoardRaw, latestPlatinumsData, users, stats] = await Promise.all([
+  const [raceBoardRaw, latestPlatinumsData, stats] = await Promise.all([
     getHallOfFame(12, currentUserId),
     getLatestPlatinums(12, currentUserId),
-    getUsers(),
     getMonthlyRaceStats(),
   ]);
 
   const race = getRaceState();
   const latestPlatinums = latestPlatinumsData;
+  const users = await getUsersByIds([
+    ...raceBoardRaw.map((p) => p.userId),
+    ...latestPlatinums.map((p) => p.userId),
+  ]);
   const getUserById = (userId: string) => users.find((u) => u.id === userId);
 
   // The home row is a showcase, not a tease: spoiler-protected plates stay

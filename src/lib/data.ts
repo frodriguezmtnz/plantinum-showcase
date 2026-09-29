@@ -111,6 +111,14 @@ export async function getUsers(): Promise<User[]> {
   return users.map((u) => toUserView(u));
 }
 
+/** Targeted lookup for name/avatar mapping on boards — never loads the table. */
+export async function getUsersByIds(ids: string[]): Promise<User[]> {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return [];
+  const users = await prisma.user.findMany({ where: { id: { in: unique } } });
+  return users.map((u) => toUserView(u));
+}
+
 export async function getUserById(id: string): Promise<User | undefined> {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return undefined;

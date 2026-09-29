@@ -1,5 +1,5 @@
 
-import { getMonthlyRanking, getUsers, type User } from '@/lib/data';
+import { getMonthlyRanking, getUsersByIds, type User } from '@/lib/data';
 import { auth } from '@/auth';
 import { Trophy, Award } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,10 +19,8 @@ function daysUntilMonthEnd(now: Date): number {
 
 export default async function HallOfFamePage() {
   const session = await auth();
-  const [rankedPlatinums, users] = await Promise.all([
-    getMonthlyRanking(10, session?.user?.id),
-    getUsers(),
-  ]);
+  const rankedPlatinums = await getMonthlyRanking(10, session?.user?.id);
+  const users = await getUsersByIds(rankedPlatinums.map((p) => p.userId));
 
   const getUserById = (userId: string): User | undefined => users.find(u => u.id === userId);
 

@@ -50,12 +50,7 @@
     --glow-pink: hsl(322 100% 44% / 0.06);
     --glow-green: hsl(147 100% 32% / 0.05);
 
-    /* Legacy names, remapped so unrebuilt pages read in the new world. */
-    --platinum: hsl(206 28% 52%);
-    --platinum-bright: hsl(203 60% 84%);
-    --platinum-dim: hsl(208 20% 42%);
-    --spot: var(--lift);
-    --spot-strong: var(--bloom);
+    /* Champion aura: Hall of Fame 1st place only. */
     --champion-aura: 0 16px 40px -22px hsl(38 90% 42% / 0.45);
   }
 
@@ -105,11 +100,6 @@
   --color-chart-5: var(--chart-5);
   --color-ice: var(--ice);
   --color-ice-soft: var(--ice-soft);
-  --color-platinum: var(--platinum);
-  --color-platinum-bright: var(--platinum-bright);
-  --color-platinum-dim: var(--platinum-dim);
-  --shadow-spot: var(--spot);
-  --shadow-spot-strong: var(--spot-strong);
   --shadow-champion: var(--champion-aura);
   --shadow-bloom: var(--bloom);
   --shadow-lift: var(--lift);
@@ -282,8 +272,12 @@
   -webkit-mask-image: linear-gradient(180deg, var(--paper) 0, hsl(0 0% 99% / 0.55) calc(var(--grid-fade) * 0.6), transparent var(--grid-fade));
 }
 
-body[data-bloom='deep'] .sky-field {
-  filter: blur(6px) saturate(1.1);
+/* The field steps back only for hover-capable pointer devices: on touch,
+   tapping a plate focuses it but a full-screen blur is pure GPU cost. */
+@media (hover: hover) and (min-width: 640px) {
+  body[data-bloom='deep'] .sky-field {
+    filter: blur(6px) saturate(1.1);
+  }
 }
 
 /* The sticky deck: cards pin one step below the previous and land on top,
@@ -428,23 +422,7 @@ body[data-bloom='deep'] .sky-field {
   }
 }
 
-/* Legacy utilities kept until their last consumer is rebuilt. */
-.platinum-text {
-  color: var(--platinum-dim);
-}
-
-.platinum-edge {
-  border: 1px solid color-mix(in srgb, var(--platinum) 30%, transparent);
-}
-
-.platinum-plate {
-  background: hsl(206 42% 93%);
-}
-
-.stage-light {
-  background: transparent;
-}
-
+/* Legacy but live: hall-of-fame heading rule; retires with its last page. */
 .section-divider::before,
 .section-divider::after {
   content: '';

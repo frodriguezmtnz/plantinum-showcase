@@ -257,25 +257,7 @@
         "canonical": "hsl(24 60% 34%)",
         "note": "3rd-place rank text."
       },
-      "platinum-steel": {
-        "role": "legacy",
-        "displayName": "Platinum Steel (legacy remap)",
-        "canonical": "hsl(206 28% 52%)",
-        "note": "--platinum, remapped for unrebuilt pages; feeds .platinum-edge."
-      },
-      "platinum-glint": {
-        "role": "legacy",
-        "displayName": "Platinum Glint (legacy remap)",
-        "canonical": "hsl(203 60% 84%)",
-        "note": "--platinum-bright; no current consumer."
-      },
-      "platinum-ghost": {
-        "role": "legacy",
-        "displayName": "Platinum Ghost (legacy remap)",
-        "canonical": "hsl(208 20% 42%)",
-        "note": "--platinum-dim; feeds .platinum-text only."
-      },
-      "chart-1": {
+                        "chart-1": {
         "role": "reserved",
         "displayName": "Chart Steel",
         "canonical": "hsl(203 72% 44%)",
@@ -411,11 +393,6 @@
         "name": "ink-scrim",
         "value": "background: hsl(212 38% 16% / 0.55); backdrop-filter: blur(4px)",
         "purpose": "Dialog/sheet/alert overlay veil; the only dark layer in the world."
-      },
-      {
-        "name": "spot (legacy alias)",
-        "value": "var(--lift); strong alias: var(--bloom)",
-        "purpose": "Old dark-world shadow tokens kept so unrebuilt pages read in the new world."
       }
     ],
     "motion": [
@@ -632,7 +609,7 @@
       "Don't add looping or ambient motion beyond the near-still field; intro and reveals fire once and clearProps so bloom keeps working.",
       "Don't stagger platinum-card mount fades; the uniform 500ms wash is the deliberate choice.",
       "Don't let red (vote/destructive) or the amber podium family wander off their reserved jobs.",
-      "Don't build new surfaces on the legacy utilities (platinum-text, platinum-plate, platinum-edge, stage-light, section-divider, shadow-champion); they survive only for hall-of-fame and retire when it rebuilds."
+      "Don't build new surfaces on the last two legacy utilities (section-divider, shadow-champion); they survive only for hall-of-fame and retire when it rebuilds."
     ]
   }
 }

@@ -32,9 +32,6 @@ colors:
   runner-silver: "hsl(211 30% 55%)"
   ember-bronze: "hsl(24 55% 45%)"
   ember-ink: "hsl(24 60% 34%)"
-  platinum-steel: "hsl(206 28% 52%)"
-  platinum-glint: "hsl(203 60% 84%)"
-  platinum-ghost: "hsl(208 20% 42%)"
   chart-1: "hsl(203 72% 44%)"
   chart-2: "hsl(28 88% 52%)"
   chart-3: "hsl(168 44% 38%)"
@@ -346,8 +343,8 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 - **Don't** paint the field with gradients or phase skies — flat paper, whisper glows, masked grid, full stop.
 - **Don't** stagger platinum-card mount fades; the uniform 500ms wash is the deliberate choice.
 - **Don't** let red (vote/destructive) or the amber podium family wander off their reserved jobs.
-- **Don't** build new surfaces on the legacy utilities (`platinum-text`, `platinum-plate`, `platinum-edge`, `stage-light`, `section-divider`, `shadow-champion`); they survive only for their last consumers (hall-of-fame's `shadow-champion` + `section-divider`) and retire when those rebuild.
+- **Don't** build new surfaces on the last two legacy utilities (`section-divider`, `shadow-champion`); they survive only for hall-of-fame and retire when it rebuilds.
 
 ## Legacy & Reserved (carried, not canonized)
 
-`--platinum` (`hsl(206 28% 52%)`), `--platinum-bright`, `--platinum-dim` and the `.platinum-*` / `.stage-light` utilities are remapped light-world stand-ins kept until their last consumer is rebuilt — `.platinum-text`/`.platinum-plate`/`.platinum-edge`/`.stage-light` currently have no consumers at all. `--chart-1…5` are defined in `:root` with no component consumers: a reserved data-viz series, not brand colors. `--ice-soft` is the defined soft step of the magenta family with no consumer yet. The race clock no longer reaches the DOM as a visual phase — `getRaceState` supplies only `daysLeft` and `monthLabel` for copy.
+`--chart-1…5` are defined in `:root` with no component consumers: a reserved data-viz series, not brand colors. `--ice-soft` is the defined soft step of the magenta family with no consumer yet. The race clock no longer reaches the DOM as a visual phase — `getRaceState` supplies only `daysLeft` and `monthLabel` for copy. (The old `.platinum-text`/`.platinum-plate`/`.platinum-edge`/`.stage-light` utilities and their `--platinum*`/`--spot*` remaps had no consumers and were deleted.)

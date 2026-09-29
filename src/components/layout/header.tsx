@@ -112,7 +112,7 @@ export function Header() {
         <div className="flex items-center gap-2 ml-auto">
             <ThemeToggle />
             <Link href="/upload" passHref>
-              <Button>
+              <Button aria-label="Upload a platinum">
                 <Upload className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Upload</span>
               </Button>
@@ -120,7 +120,11 @@ export function Header() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full"
+                    aria-label={`Account menu for ${user.name ?? 'you'}`}
+                  >
                     <Avatar>
                       <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
                       <AvatarFallback>{(user.name ?? '?').slice(0, 2).toUpperCase()}</AvatarFallback>
