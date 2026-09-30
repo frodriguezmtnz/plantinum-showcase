@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from "react";
+import { use, useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,8 +12,13 @@ import { PasswordInput } from "@/components/shared/password-input";
 
 const initialState: { error?: string } = {};
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
+  const { callbackUrl } = use(searchParams);
 
   return (
     <AuthShell
@@ -30,6 +35,7 @@ export default function LoginPage() {
       }
     >
       <form action={formAction} className="grid gap-4">
+        <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" placeholder="m@example.com" required />

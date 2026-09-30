@@ -21,6 +21,13 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     return { error: "Enter your email and password." };
   }
 
+  // Only allow same-site relative paths back (never "//host" or absolute URLs).
+  const rawCallback = (formData.get("callbackUrl") as string | undefined)?.trim();
+  const callbackUrl =
+    rawCallback && rawCallback.startsWith("/") && !rawCallback.startsWith("//")
+      ? rawCallback
+      : "/";
+
   // Brute-force barrier: cap attempts per account and per client address.
   const headerList = await headers();
   const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
@@ -34,7 +41,7 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirectTo: callbackUrl,
     });
   } catch (error) {
     if (error instanceof AuthError) {
