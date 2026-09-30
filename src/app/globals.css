@@ -53,6 +53,12 @@
 
     /* Champion aura: Hall of Fame 1st place only. */
     --champion-aura: 0 16px 40px -22px hsl(38 90% 42% / 0.45);
+
+    /* Promoted from inline values: the cloud mat behind contained shots and
+       the dusk-amber crown family at the podium. */
+    --cloud-mat: hsl(206 45% 94%);
+    --dusk-amber: hsl(38 88% 42%);
+    --dusk-amber-bright: hsl(38 88% 45%);
   }
 
   * {
@@ -101,6 +107,9 @@
   --color-chart-5: var(--chart-5);
   --color-ice: var(--ice);
   --color-ice-soft: var(--ice-soft);
+  --color-mat: var(--cloud-mat);
+  --color-dusk: var(--dusk-amber);
+  --color-dusk-bright: var(--dusk-amber-bright);
   --shadow-champion: var(--champion-aura);
   --shadow-bloom: var(--bloom);
   --shadow-lift: var(--lift);

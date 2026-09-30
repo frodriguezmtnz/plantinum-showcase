@@ -15,7 +15,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h4 className="field-mark">Links</h4>
+            <h3 className="field-mark">Links</h3>
             <Link href="/about" className="text-sm">About</Link>
             <Link href="/faq" className="text-sm">FAQ</Link>
             <Link href="/pricing" className="text-sm">Pricing</Link>
@@ -24,7 +24,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h4 className="field-mark">Community</h4>
+            <h3 className="field-mark">Community</h3>
             <a href="https://github.com/frodriguezmtnz/plantinum-showcase" target="_blank" rel="noopener noreferrer" className="text-sm flex items-center gap-2">
               <Github className="h-4 w-4" /> GitHub
             </a>

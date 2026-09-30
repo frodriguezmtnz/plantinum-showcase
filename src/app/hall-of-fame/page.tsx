@@ -42,7 +42,7 @@ export default async function HallOfFamePage() {
     rankText: string;
   }> = {
     1: {
-      borderColor: 'ring-2 ring-[hsl(38_88%_45%/0.65)]',
+      borderColor: 'ring-2 ring-dusk-bright/65',
       textColor: 'text-[hsl(30_72%_32%)]',
       bgColor: 'bg-[hsl(44_92%_90%/0.8)]',
       shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
@@ -73,7 +73,7 @@ export default async function HallOfFamePage() {
   return (
     <div className="container py-8 md:py-12">
       <div className="text-center mb-16">
-        <Award className="mx-auto h-14 w-14 text-[hsl(38_88%_42%)]" />
+        <Award className="mx-auto h-14 w-14 text-dusk" />
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-2 text-balance">Monthly Hall of Fame</h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
           The community&apos;s favorite platinum screenshots of {monthYear.toLowerCase()}.
@@ -113,7 +113,7 @@ export default async function HallOfFamePage() {
                     styles.bgColor,
                     styles.shadowClass
                   )}>
-                    <div className="relative bg-[hsl(206_45%_94%)]" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
+                    <div className="relative bg-mat" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}

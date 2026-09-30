@@ -39,7 +39,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             disabled={!showSpoiler}
             aria-label={`Expand screenshot for ${platinum.gameName}`}
             className={cn(
-              "group/card relative block w-full bg-[hsl(206_45%_94%)] outline-none",
+              "group/card relative block w-full bg-mat outline-none",
               showSpoiler && "cursor-zoom-in",
             )}
           >

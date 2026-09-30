@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Award, Eye, Heart, Quote, User as UserIcon } from 'lucide-react';
+import { Award, Eye, Heart, Quote } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -16,16 +16,15 @@ import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 interface PlatinumCardProps {
   platinum: Platinum;
   user?: User;
-  variant?: 'default' | 'top';
   isPride?: boolean;
   showComment?: boolean;
   canDelete?: boolean;
   cover?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, variant = 'default', isPride = false, showComment = false, canDelete = false, cover = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, isPride = false, showComment = false, canDelete = false, cover = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
-  const { hasVoted, votes, monthlyVotes, isPending, isOwner, toggleVote } = useVotePlatinum({
+  const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
     ownerId: platinum.userId,
     initialVotes: platinum.votes,
@@ -46,35 +45,6 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
     e.preventDefault();
     toggleVote();
   };
-
-  if (variant === 'top') {
-    return (
-        <Link href={`/platinum/${platinum.id}`} className="group block relative aspect-[16/9] bg-muted rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-500 hover:shadow-bloom focus-visible:shadow-bloom ring-1 ring-white/70 transition-shadow duration-300">
-            <Image
-                src={platinum.imageUrl}
-                alt={`Platinum screenshot for ${platinum.gameName}`}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                data-ai-hint={platinum.imageHint}
-                unoptimized={isStoredImage(platinum.imageUrl)}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-            <div className="absolute bottom-0 left-0 p-4 text-white">
-                <h3 className="font-semibold text-lg">{platinum.gameName}</h3>
-                {user && (
-                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                        <UserIcon className="w-4 h-4" />
-                        <span>{user.username}</span>
-                    </div>
-                )}
-            </div>
-            <div className="photo-chip absolute top-2 right-2 flex items-center gap-2 rounded-full px-2.5 py-1 font-bold backdrop-blur-md ring-1 ring-white">
-                <Heart className="w-4 h-4 text-destructive fill-destructive" />
-                <span className="tabular">{monthlyVotes}</span>
-            </div>
-        </Link>
-    )
-  }
 
   return (
     <Card className={cn("panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom", isPride && "ring-2 ring-primary/60")}>

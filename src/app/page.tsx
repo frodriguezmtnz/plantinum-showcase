@@ -127,13 +127,13 @@ export default async function Home() {
                     <span><span className="font-bold">The community votes.</span> One vote each, every month — no accounts for sale.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <Crown className="mt-0.5 h-5 w-5 shrink-0 text-[hsl(38_88%_42%)]" aria-hidden />
+                    <Crown className="mt-0.5 h-5 w-5 shrink-0 text-dusk" aria-hidden />
                     <span><span className="font-bold">One crown a month.</span> The podium is real ranking; the board resets when the clocks roll over.</span>
                   </li>
                 </ul>
               </div>
               <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-muted/40 p-10 text-center">
-                <Crown className="h-10 w-10 text-[hsl(38_88%_42%)]" aria-hidden />
+                <Crown className="h-10 w-10 text-dusk" aria-hidden />
                 <p className="max-w-[24ch] font-headline text-xl font-bold">
                   {stats.plates} plates · {stats.votes.toLocaleString('en-US')} votes this month
                 </p>

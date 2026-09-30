@@ -27,7 +27,7 @@ export function EmptyState({
       <div className="rounded-full bg-muted p-4 mb-6">
         <Icon className="h-10 w-10 text-muted-foreground" />
       </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <h2 className="text-xl font-semibold mb-2">{title}</h2>
       <p className="text-muted-foreground max-w-sm mb-6">{description}</p>
       {actionLabel && actionHref && (
         <Button asChild>
