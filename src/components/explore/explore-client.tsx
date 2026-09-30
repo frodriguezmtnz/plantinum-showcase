@@ -215,16 +215,21 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
         </div>
       </Card>
 
-      <p className="sr-only" aria-live="polite">
-        {isPending
-          ? 'Updating results…'
-          : isLoadingMore
-            ? 'Loading more plates…'
-            : `Showing ${items.length} plate${items.length === 1 ? '' : 's'}${hasMore ? ', more available' : ''}.`}
-      </p>
-
       {items.length > 0 ? (
         <>
+          <p className="mb-6 text-sm text-muted-foreground" aria-live="polite">
+            {isPending ? (
+              'Updating results…'
+            ) : isLoadingMore ? (
+              'Loading more plates…'
+            ) : (
+              <>
+                <span className="tabular font-semibold text-foreground">{items.length}</span>{' '}
+                plate{items.length === 1 ? '' : 's'}
+                {hasMore ? ' · more available' : ''}
+              </>
+            )}
+          </p>
           <div className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
             {items.map((item) => (
               <div key={item.platinum.id} className="mb-6 break-inside-avoid">
