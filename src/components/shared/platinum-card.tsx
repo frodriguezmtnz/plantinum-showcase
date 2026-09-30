@@ -85,18 +85,27 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
         </div>
        )}
        <CardContent className="p-0">
-        <Link href={`/platinum/${platinum.id}`} className={cn("block overflow-hidden relative bg-muted", cover ? "aspect-video" : "", !showSpoiler && "platinum-card-spoiler")} style={cover ? undefined : frameStyle}>
-          <Image
-            src={platinum.imageUrl}
-            alt={`Platinum screenshot for ${platinum.gameName}`}
-            width={platinum.width}
-            height={platinum.height}
-            className={cn("w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300", !showSpoiler && "spoiler-blur")}
-            data-ai-hint={platinum.imageHint}
-            unoptimized={isStoredImage(platinum.imageUrl)}
-          />
+        <div
+          className={cn("relative overflow-hidden bg-muted", cover ? "aspect-video" : "", !showSpoiler && "platinum-card-spoiler")}
+          style={cover ? undefined : frameStyle}
+        >
+          <Link
+            href={`/platinum/${platinum.id}`}
+            aria-label={`View ${platinum.gameName}`}
+            className="block h-full w-full"
+          >
+            <Image
+              src={platinum.imageUrl}
+              alt={`Platinum screenshot for ${platinum.gameName}`}
+              width={platinum.width}
+              height={platinum.height}
+              className={cn("h-full w-full object-cover group-hover:scale-[1.02] transition-transform duration-300", !showSpoiler && "spoiler-blur")}
+              data-ai-hint={platinum.imageHint}
+              unoptimized={isStoredImage(platinum.imageUrl)}
+            />
+          </Link>
           {!showSpoiler && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[hsl(210_60%_99%/0.86)] backdrop-blur-[2px]">
+            <div className="spoiler-frost-strong absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
               <p className="text-lg font-bold flex items-center gap-2 text-foreground">
                 <Eye className="w-5 h-5 text-muted-foreground" />
                 Spoiler protected
@@ -106,7 +115,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
               </Button>
             </div>
           )}
-        </Link>
+        </div>
       </CardContent>
       <div className="p-4">
         <div className="flex justify-between items-start gap-2">
