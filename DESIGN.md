@@ -12,6 +12,7 @@ colors:
   sky-white: "hsl(0 0% 98%)"
   ps-pink: "hsl(322 100% 44%)"
   ps-green: "hsl(147 100% 32%)"
+  live: "hsl(147 100% 24%)"
   ice: "hsl(322 100% 52%)"
   ice-soft: "hsl(322 90% 82%)"
   bloom-glow: "hsl(322 100% 65%)"
@@ -205,7 +206,7 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 ### Secondary
 - **Dusk Amber** (`hsl(38 88% 42%)` and bright sibling `hsl(38 88% 45%)`): the crown family — Hall of Fame award icon, champion ring (0.65 alpha) and avatar border (0.8 alpha). Chrome gold exists only at the podium; the race clock's amber lives in the field itself, not on surfaces.
 - **Circle Red** (`hsl(4 100% 45%)`, `--destructive`): the vote heart and destructive actions only. Nothing else wears red.
-- **Triangle Green** (`hsl(147 100% 32%)`, `--ps-green` / `--live`, `.text-live`): only live counts and states — vote totals, "polls close in…", podium vote figures. Green means "this number is moving".
+- **Triangle Green** (`hsl(147 100% 32%)`, `--ps-green` / `.text-live`): only live counts and states — vote totals, "polls close in…", podium vote figures. Green means "this number is moving". Small text uses the darker `--live` step (`hsl(147 100% 24%)`) to clear WCAG AA on paper; Night keeps the luminous `hsl(147 70% 55%)` pair.
 
 ### Tertiary (podium metals)
 - **Sunrise Gold family** (`hsl(44 92% 90%)` ground at 0.8, `hsl(30 72% 32%)` / `hsl(30 72% 30%)` ink): 1st place. Champion is the only rank wearing `--champion-aura` (`shadow-champion`).
@@ -235,7 +236,7 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 
 **The Night Console.** The same world after lights-out, switched by a header button that cycles light -> dark -> system (next-themes, class on `<html>`, default system). It is not a second design: every token flips to its night twin — ground `hsl(212 38% 10%)` (`night-ground`), dark frost `hsl(212 34% 13%)` (`night-panel`), veils `hsl(212 30% 18%)`, edges `hsl(212 25% 26%)`, muted text `hsl(211 22% 70%)` — and the chrome inverts (CTAs become sky-white with ink text via the swapped `--primary` pair). The duotone holds its meaning: magenta still selects (`--ice` lifts to `hsl(322 100% 58%)`), green still lives and brightens to `hsl(147 70% 55%)` to keep its contrast on the dark ground. Pills that sit on screenshots (rank chips) stay physically white in both themes (`.photo-chip`: white 0.85 ground, ink-void text).
 **The No-Marks Rule.** No PlayStation logos, glyphs, or trademarked shapes are ever reproduced. Marks are generic line icons or the self-drawn `PlatinumTrophyIcon`. It is a fan community product and says so plainly.
-**The One Selection Rule.** Hover, focus, and resting selection all render the identical `--bloom` treatment. If a screen shows two blooms, one is wrong.
+**The One Selection Rule.** Hover, focus, and resting selection all render the identical `--bloom` treatment. If a screen shows two blooms, one is wrong — the active (hovered/focused) plate always wins: while the pointer or keyboard works inside the row, the resting `[data-selected]` plate steps back to its `--lift` so only the active one blooms.
 
 ## Typography
 
@@ -270,6 +271,7 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 - Auth: chromeless 50/50 split at `lg`; form lives in a `panel rounded-2xl p-8` capped at `max-w-sm`.
 - About: kicker + display statement, a strip of four `.panel` counters fed by real Prisma aggregates (`getCommunityStats`), two mission panels in frost, the five-step How It Works (neutral frost circles with ink lucide icons and `field-mark` numbers — no external media), four "rules of the board" chips, and a closing CTA panel; all copy stays claim-free (real numbers only).
 - Pricing: kicker + statement, three frost cards (Free in `panel-solid` as the current plan — 3 uploads/month, watermarked; PRO at 7€/month and PLATINUM as honest "Coming soon" with disabled buttons), a "what Supporters will never get" panel (no paid votes, ranks or shortcuts), a tip-jar panel (Ko-fi/PayPal, coming soon, unlocks nothing) and a note that nothing is purchasable until billing exists. Upload quotas and watermark entitlements live in `src/lib/plans.ts` — the single source of truth. Free/watermark FAQ answers deep-link here; footer Links column carries it.
+- Upload: under the card description a quota line — plan `field-mark` chip plus the live-green "N of M uploads left this month" (or "Unlimited uploads this month"); at 0 the submit button reads "Monthly limit reached" and the line offers the Pricing deep link. The watermark row shows the visitor's real plan chip and reflects `planConfig(plan).watermark` (locked checkbox, never editable).
 - Header: sticky `h-16` frost bar that tucks away (`translateY(-100%)`, 300ms `--ease-bloom`) on scroll-down past 96px and returns on scroll-up; `:focus-within` always reveals it and reduced-motion disables the behavior. Footer: the console's black shell (`ink-void`, both themes) — sky-white text, `white/70` links, `night-muted` field-marks, 3 columns at `md`.
 
 ## Elevation & Depth
