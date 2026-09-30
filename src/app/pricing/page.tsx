@@ -1,21 +1,22 @@
 import { type Metadata } from 'next';
 import Link from 'next/link';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Heart, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'Pricing | Platinum Showcase',
-  description: 'Platinum Showcase is free and always ad-free. A Supporter tier with cosmetic perks is coming soon.',
+  description:
+    'Voting and the Hall of Fame are free forever. Upload tiers keep the lights on: Free 3/month, PRO 10/month with no watermark, PLATINUM unlimited with supporter flair.',
 };
 
 const plans = [
   {
     name: 'Free',
-    price: '$0',
+    price: '0€',
     tagline: 'Everything the board offers today.',
     perks: [
-      'Unlimited platinum uploads',
-      'One vote per plate, every month',
+      '3 uploads per month',
+      'Vote on as many plates as you like',
       'Monthly races and the Hall of Fame',
       'A small site watermark on your uploads',
     ],
@@ -23,27 +24,28 @@ const plans = [
     current: true,
   },
   {
-    name: 'Supporter',
-    price: 'Coming soon',
-    tagline: 'A one-time thank-you for keeping the lights on.',
+    name: 'PRO',
+    price: '7€',
+    priceNote: '/month',
+    tagline: 'For hunters with more than a monthly highlight.',
     perks: [
-      'Uploads without the site watermark',
-      'Supporter badge on your profile',
-      'Your name on the backers wall',
-      'Every current feature, unchanged',
+      '10 uploads per month',
+      'No watermark on your uploads',
+      'Everything in Free, unchanged',
     ],
     cta: { label: 'Coming soon', href: '/pricing', disabled: true },
     current: false,
   },
   {
-    name: 'Supporter Monthly',
+    name: 'PLATINUM',
     price: 'Coming soon',
-    tagline: 'Ongoing support with room for what comes next.',
+    tagline: 'For the ones who wear the board.',
     perks: [
-      'Everything in the one-time tier',
-      'Early access to new features',
-      'Vote on what gets built next',
-      'Cancel whenever you like',
+      'Unlimited uploads (fair use)',
+      'No watermark',
+      'A platinum supporter mark on your avatar',
+      'A supporter chip on your plates',
+      'Everything in PRO',
     ],
     cta: { label: 'Coming soon', href: '/pricing', disabled: true },
     current: false,
@@ -56,11 +58,11 @@ export default function PricingPage() {
       <header className="mx-auto max-w-2xl text-center">
         <p className="field-mark">Pricing</p>
         <h1 className="mt-4 font-headline text-4xl font-bold tracking-tight md:text-5xl">
-          Free today, and always ad-free.
+          Free to vote. Fair to keep.
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          No ads, no pay-to-win, no locked boards. A Supporter tier is on the way for hunters who want to keep
-          it that way.
+          Voting, the monthly board and the Hall of Fame are free forever — no ads, no pay-to-win. Uploads come
+          in monthly tiers so hosting stays sustainable.
         </p>
       </header>
 
@@ -79,7 +81,12 @@ export default function PricingPage() {
               )}
             </div>
 
-            <p className="mt-5 font-headline text-3xl font-bold tracking-tight md:text-4xl">{plan.price}</p>
+            <p className="mt-5 font-headline text-3xl font-bold tracking-tight md:text-4xl">
+              {plan.price}
+              {'priceNote' in plan && plan.priceNote ? (
+                <span className="text-lg font-semibold text-muted-foreground">{plan.priceNote}</span>
+              ) : null}
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">{plan.tagline}</p>
 
             <ul className="mt-6 flex-1 space-y-3 text-sm">
@@ -110,11 +117,29 @@ export default function PricingPage() {
           <div>
             <h2 className="font-headline text-xl font-bold tracking-tight">What Supporters will never get</h2>
             <p className="mt-2 text-muted-foreground">
-              Extra votes, secret rankings or a shortcut onto the board. Supporter perks stay cosmetic — the race
-              is the same for everyone, and it always will be. Until Stripe is wired up, nothing on this page can
-              be bought.
+              Extra votes, secret rankings or a shortcut onto the board. Paid tiers raise your upload cap and
+              strip the watermark — the race itself stays the same for everyone, and it always will be. Until
+              Stripe is wired up, nothing on this page can be bought.
             </p>
           </div>
+        </div>
+      </section>
+
+      <section className="panel mt-8 rounded-2xl p-6 md:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <Heart className="mt-0.5 h-5 w-5 shrink-0 text-destructive" aria-hidden />
+            <div>
+              <h2 className="font-headline text-xl font-bold tracking-tight">Just passing through?</h2>
+              <p className="mt-2 text-muted-foreground">
+                A one-time tip jar (Ko-fi / PayPal) is on the way. Tips unlock nothing — they just keep the
+                servers humming.
+              </p>
+            </div>
+          </div>
+          <Button disabled variant="outline">
+            Tip jar — coming soon
+          </Button>
         </div>
       </section>
 

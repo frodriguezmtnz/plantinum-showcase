@@ -178,10 +178,10 @@ export async function getPlatinumsPage(options: {
 
   const orderBy =
     sort === 'most-voted'
-      ? { votes: 'desc' as const }
+      ? [{ votes: 'desc' as const }, { platinumDate: 'desc' as const }]
       : sort === 'least-voted'
-        ? { votes: 'asc' as const }
-        : { platinumDate: 'desc' as const };
+        ? [{ votes: 'asc' as const }, { platinumDate: 'desc' as const }]
+        : [{ platinumDate: 'desc' as const }];
 
   const platinums = await prisma.platinum.findMany({
     where,
@@ -220,6 +220,17 @@ export async function getPlatinumsByUserId(
 ): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({ where: { userId } });
   return attachVoteStatus(platinums, currentUserId);
+}
+
+/** Uploads created by the user in the current Europe/Madrid calendar month. */
+export async function countUploadsInCurrentPeriod(userId: string): Promise<number> {
+  const since = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000);
+  const rows = await prisma.platinum.findMany({
+    where: { userId, createdAt: { gte: since } },
+    select: { createdAt: true },
+  });
+  const period = getCurrentPeriod();
+  return rows.filter((r) => getCurrentPeriod(r.createdAt) === period).length;
 }
 
 export async function getHallOfFame(

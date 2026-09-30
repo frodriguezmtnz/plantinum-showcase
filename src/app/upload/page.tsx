@@ -376,9 +376,9 @@ export default function UploadPage() {
                   <p className="text-sm text-muted-foreground">
                     Free uploads carry a small Platinum Showcase watermark.{' '}
                     <Link href="/pricing" className="text-primary underline underline-offset-4">
-                      Supporters
+                      PRO and PLATINUM
                     </Link>{' '}
-                    will be able to remove it.
+                    (coming soon) skip it.
                   </p>
                 </div>
                 <Checkbox id="watermark-locked" checked disabled aria-label="Site watermark (on for free accounts)" />

@@ -74,20 +74,21 @@ export function buildWatermark(
   return { svg, top, left };
 }
 
-export async function applyWatermark(
+export async function encodePlate(
   resizedBuffer: Buffer,
   username: string,
+  watermark: boolean,
 ): Promise<{ data: Buffer; width: number; height: number }> {
   const meta = await sharp(resizedBuffer).metadata();
   const width = meta.width ?? 0;
   const height = meta.height ?? 0;
 
-  const { svg, top, left } = buildWatermark(width, height, username);
+  let img = sharp(resizedBuffer);
+  if (watermark) {
+    const { svg, top, left } = buildWatermark(width, height, username);
+    img = img.composite([{ input: Buffer.from(svg), top, left }]);
+  }
 
-  const data = await sharp(resizedBuffer)
-    .composite([{ input: Buffer.from(svg), top, left }])
-    .avif({ quality: 60, effort: 4 })
-    .toBuffer();
-
+  const data = await img.avif({ quality: 60, effort: 4 }).toBuffer();
   return { data, width, height };
 }

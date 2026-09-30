@@ -31,8 +31,9 @@ const faqGroups: { title: string; faqs: Faq[] }[] = [
         question: 'Is Platinum Showcase free?',
         answer: (
           <>
-            Yes — uploading, voting, the monthly board and the Hall of Fame are all free, and there are no ads
-            anywhere. A Supporter tier with cosmetic perks (including watermark-free uploads) is planned; see{' '}
+            Yes — voting, the monthly board and the Hall of Fame are free forever, and there are no ads
+            anywhere. Uploads come as a monthly allowance (3 on the Free tier); PRO and PLATINUM raise the cap
+            and drop the watermark — see{' '}
             <Link href="/pricing" className="text-primary underline underline-offset-4">
               Pricing
             </Link>
@@ -70,7 +71,7 @@ const faqGroups: { title: string; faqs: Faq[] }[] = [
         answer: (
           <>
             Free uploads carry a small Platinum Showcase mark baked into the corner, so a screenshot keeps
-            pointing back here wherever it is shared. Supporters will be able to upload without it — see{' '}
+            pointing back here wherever it is shared. PRO and PLATINUM uploads skip it — see{' '}
             <Link href="/pricing" className="text-primary underline underline-offset-4">
               Pricing
             </Link>
@@ -80,8 +81,32 @@ const faqGroups: { title: string; faqs: Faq[] }[] = [
       },
       {
         question: 'Is there a limit to how many platinums I can upload?',
-        answer:
-          'No cap. The only limit is that the same screenshot cannot be uploaded twice from the same account — duplicates are rejected automatically.',
+        answer: (
+          <>
+            Uploads come as a monthly allowance: 3 per month on Free, 10 on PRO, and unlimited on PLATINUM
+            (fair use). The Free and PRO allowances reset at the start of each calendar month (Europe/Madrid).
+            Separately, the same screenshot cannot be uploaded twice from the same account — duplicates are
+            rejected automatically. See{' '}
+            <Link href="/pricing" className="text-primary underline underline-offset-4">
+              Pricing
+            </Link>
+            .
+          </>
+        ),
+      },
+      {
+        question: 'What happens when I hit my monthly limit?',
+        answer: (
+          <>
+            Uploads pause until the allowance resets at the start of the next month (Europe/Madrid time) —
+            plates already on the board are untouched. If you would rather not wait, the higher tiers raise or
+            remove the cap; see{' '}
+            <Link href="/pricing" className="text-primary underline underline-offset-4">
+              Pricing
+            </Link>
+            .
+          </>
+        ),
       },
       {
         question: 'What is a spoiler plate?',
@@ -116,7 +141,7 @@ const faqGroups: { title: string; faqs: Faq[] }[] = [
       {
         question: 'Can I delete a platinum I uploaded?',
         answer:
-          'Yes. Open the platinum and use the delete button (also available from your profile). The stored image is removed along with it.',
+          'Yes. Open the platinum and use the delete button (also available from your profile). The stored image is removed along with it, and deleting a plate also frees its slot in that month\'s upload allowance.',
       },
       {
         question: 'Can I edit a platinum after uploading it?',

@@ -6,12 +6,13 @@ import sharp from "sharp";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlatinumsPage, PLATINUMS_PAGE_SIZE } from "@/lib/data";
+import { getPlatinumsPage, PLATINUMS_PAGE_SIZE, countUploadsInCurrentPeriod } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
-import { applyWatermark } from "@/lib/watermark";
+import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
+import { planConfig, quotaReached, nextPlan } from "@/lib/plans";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -47,6 +48,22 @@ export async function uploadPlatinum(formData: FormData) {
     return {
       success: false as const,
       error: "Too many uploads in a short time. Please wait a bit and try again.",
+    };
+  }
+
+  const account = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+  const usedThisMonth = await countUploadsInCurrentPeriod(userId);
+  if (quotaReached(usedThisMonth, account?.plan)) {
+    const limit = planConfig(account?.plan).monthlyUploadLimit;
+    const upgrade = nextPlan(account?.plan);
+    return {
+      success: false as const,
+      error: `That's all ${limit} uploads for this month.${
+        upgrade ? ` Upgrade to ${upgrade} for more, or come back next month.` : " Come back next month."
+      }`,
     };
   }
 
@@ -103,9 +120,8 @@ export async function uploadPlatinum(formData: FormData) {
       })
       .toBuffer();
 
-    // Free accounts always carry the baked-in site watermark; the Supporter
-    // entitlement (coming soon) is what will be able to skip it.
-    processed = await applyWatermark(resized, session.user?.name ?? "player");
+    const { watermark } = planConfig(account?.plan);
+    processed = await encodePlate(resized, session.user?.name ?? "player", watermark);
   } catch {
     return {
       success: false as const,
@@ -162,7 +178,7 @@ export async function uploadPlatinum(formData: FormData) {
         imageHint,
         width: processed.width,
         height: processed.height,
-        watermarked: true,
+        watermarked: planConfig(account?.plan).watermark,
       },
     });
 

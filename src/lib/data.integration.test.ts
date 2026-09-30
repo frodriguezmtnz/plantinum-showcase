@@ -24,6 +24,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     b: `it-${stamp}-plate-b`,
     c: `it-${stamp}-plate-c`,
     d: `it-${stamp}-plate-d`,
+    e: `it-${stamp}-plate-e`,
   };
   const period = getCurrentPeriod();
 
@@ -36,6 +37,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     monthlyVotes: number,
     monthlyVotesMonth: string | null,
     platinumDate: string,
+    createdAt?: string,
   ) => ({
     id,
     userId,
@@ -50,6 +52,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     monthlyVotes,
     monthlyVotesMonth,
     platinumDate: new Date(platinumDate),
+    createdAt: createdAt ? new Date(createdAt) : new Date(platinumDate),
   });
 
   beforeAll(async () => {
@@ -70,6 +73,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
         platinum(p.b, u.bob, 'Cyberpunk Integration', 'PS5', 4, 3, period, '2026-02-01'),
         platinum(p.c, u.carol, 'Ghost of Yotei Integration', 'PS5', 120, 99, '2020-01', '2026-03-01'),
         platinum(p.d, u.alice, 'Astro Bot Integration', 'PS5', 0, 0, null, '2026-04-01'),
+        platinum(p.e, u.alice, 'Hollow Knight Integration', 'PC', 0, 0, null, '2020-01-01', new Date().toISOString()),
       ],
     });
     await prisma.vote.createMany({
@@ -123,7 +127,10 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(page1.hasMore).toBe(true);
     const page2 = await data.getPlatinumsPage({ limit: 2, offset: 2 });
     expect(page2.items.map((x) => x.platinum.id)).toEqual([p.b, p.a]);
-    expect(page2.hasMore).toBe(false);
+    expect(page2.hasMore).toBe(true);
+    const page3 = await data.getPlatinumsPage({ limit: 2, offset: 4 });
+    expect(page3.items.map((x) => x.platinum.id)).toEqual([p.e]);
+    expect(page3.hasMore).toBe(false);
   });
 
   it('attaches the owning user to each page item', async () => {
@@ -178,5 +185,11 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     const alice = await data.getUserByUsername(`it_alice_${stamp}`);
     expect(alice?.id).toBe(u.alice);
     expect(alice?.pridePlatinumId).toBe(p.a);
+  });
+
+  it('counts uploads only inside the current period', async () => {
+    expect(await data.countUploadsInCurrentPeriod(u.alice)).toBe(1);
+    expect(await data.countUploadsInCurrentPeriod(u.bob)).toBe(0);
+    expect(await data.countUploadsInCurrentPeriod(u.carol)).toBe(0);
   });
 });
