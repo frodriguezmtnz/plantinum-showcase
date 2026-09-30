@@ -170,14 +170,28 @@
   transition: transform 0.45s var(--ease-bloom), box-shadow 0.45s var(--ease-bloom);
 }
 
-.plate-bloom:where(a, [tabindex]):hover,
-.plate-bloom:where(a, [tabindex]):focus-visible {
+.plate-shell:hover .plate-bloom,
+.plate-shell:focus-visible .plate-bloom {
   transform: translateY(-10px) scale(1.04);
   box-shadow: var(--bloom);
 }
 
 /* Resting selection: a browse screen always holds a selection without a mouse. */
 .plate-shell[data-selected] .plate-bloom {
+  transform: translateY(-10px) scale(1.04);
+  box-shadow: var(--bloom);
+}
+
+/* One Selection Rule: while the pointer or keyboard works inside the row,
+   the resting bloom steps back so only one plate ever blooms. */
+.race-row:hover .plate-shell[data-selected] .plate-bloom,
+.race-row:focus-within .plate-shell[data-selected] .plate-bloom {
+  transform: none;
+  box-shadow: var(--lift);
+}
+
+.race-row:hover .plate-shell[data-selected]:hover .plate-bloom,
+.race-row:focus-within .plate-shell[data-selected]:focus-visible .plate-bloom {
   transform: translateY(-10px) scale(1.04);
   box-shadow: var(--bloom);
 }
@@ -408,8 +422,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .plate-bloom:where(a, [tabindex]):hover,
-  .plate-bloom:where(a, [tabindex]):focus-visible {
+  .plate-shell:hover .plate-bloom,
+  .plate-shell:focus-visible .plate-bloom,
+  .plate-shell[data-selected] .plate-bloom {
     transform: none;
   }
 
