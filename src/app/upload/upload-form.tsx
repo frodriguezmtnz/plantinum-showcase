@@ -49,8 +49,8 @@ const uploadFormSchema = z.object({
   })
     .refine((files) => {
       const size = files[0]?.size;
-      return size !== undefined && size <= 5000000;
-    }, 'Max file size is 5MB.')
+      return size !== undefined && size <= 6 * 1024 * 1024;
+    }, 'Max file size is 6MB.')
     .refine((files) => {
       const type = files[0]?.type;
       return type !== undefined && ["image/jpeg", "image/png", "image/webp"].includes(type);
@@ -334,7 +334,7 @@ export function UploadForm() {
                                         {dragActive ? <ImagePlus className="w-8 h-8" /> : <UploadCloud className="w-8 h-8 text-muted-foreground" />}
                                       </div>
                                       <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold text-primary">Click to upload</span> or drag and drop</p>
-                                      <p className="text-xs text-muted-foreground">PNG, JPG or WEBP (MAX. 5MB)</p>
+                                      <p className="text-xs text-muted-foreground">PNG, JPG or WEBP (MAX. 6MB)</p>
                                   </div>
                                 )}
                                 <Input id="dropzone-file" type="file" className="hidden" accept=".jpg,.png,.webp" onChange={handleFileChange} disabled={busy} />
