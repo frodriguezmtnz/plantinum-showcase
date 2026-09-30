@@ -106,9 +106,9 @@ export default async function HallOfFamePage() {
             return (
               <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift)}>
                 <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
-                <Link href={`/platinum/${platinum.id}`} className="w-full">
+                <Link href={`/platinum/${platinum.id}`} className="w-full outline-none transition-transform duration-300 focus-visible:scale-[1.02]">
                   <Card className={cn(
-                    "panel-solid overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02] focus-visible:scale-[1.02]",
+                    "panel-solid overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02]",
                     styles.borderColor,
                     styles.bgColor,
                     styles.shadowClass
@@ -162,8 +162,8 @@ export default async function HallOfFamePage() {
               
               return (
                 <li key={platinum.id}>
-                  <Link href={`/platinum/${platinum.id}`} className="block">
-                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition-all duration-300 hover:bg-popover hover:shadow-bloom focus-visible:shadow-bloom outline-hidden">
+                  <Link href={`/platinum/${platinum.id}`} className="block rounded-xl outline-none transition-shadow duration-300 focus-visible:shadow-bloom">
+                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition-all duration-300 hover:bg-popover hover:shadow-bloom">
                       <div className={`text-2xl sm:text-3xl font-bold w-12 text-center shrink-0 text-muted-foreground tabular`}>#{rank}</div>
                       <Image 
                         src={platinum.imageUrl} 

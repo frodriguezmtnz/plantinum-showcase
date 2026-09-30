@@ -34,7 +34,8 @@
        is alive. Selection bloom is one language everywhere. */
     --ps-pink: hsl(322 100% 44%);
     --ps-green: hsl(147 100% 32%);
-    --live: var(--ps-green);
+    /* Text step of Triangle Green, darkened to clear WCAG AA on paper. */
+    --live: hsl(147 100% 24%);
     --ice: hsl(322 100% 52%);
     --ice-soft: hsl(322 90% 82%);
     --bloom: 0 0 0 3px hsl(322 100% 65% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45);
@@ -433,6 +434,16 @@ input[type='search']::-webkit-search-decoration {
   .plate-shell:focus-visible .plate-bloom,
   .plate-shell[data-selected] .plate-bloom {
     transform: none;
+  }
+
+  .race-row:hover .plate-shell[data-selected]:hover .plate-bloom,
+  .race-row:focus-within .plate-shell[data-selected]:focus-visible .plate-bloom {
+    transform: none;
+  }
+
+  .animate-pulse,
+  .animate-in {
+    animation: none;
   }
 
   .sky-field {

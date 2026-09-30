@@ -68,7 +68,7 @@ export function DeletePlatinumButton({
           type="button"
           variant="ghost"
           size={showLabel ? 'default' : 'sm'}
-          className={cn('text-muted-foreground hover:text-destructive', className)}
+          className={cn('text-muted-foreground hover:text-destructive', !showLabel && 'max-sm:size-11', className)}
           disabled={isPending}
           aria-label="Delete platinum"
         >

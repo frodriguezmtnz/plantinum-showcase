@@ -133,7 +133,7 @@ export function PlatinumCard({ platinum, user, variant = 'default', isPride = fa
               <Button
                 variant="ghost"
                 size="sm"
-                className={cn("vote-button transition-colors", hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
+                className={cn("vote-button max-sm:h-11 transition-colors", hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
                 onClick={handleVoteClick}
                 disabled={isPending || isOwner}
                 title={
