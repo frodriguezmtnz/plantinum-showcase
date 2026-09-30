@@ -29,7 +29,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
     <Dialog>
       <div
         className={cn(
-          "relative aspect-[16/9] overflow-hidden rounded-xl shadow-lift ring-1 ring-white/70 has-[button:focus-visible]:shadow-bloom",
+          "relative overflow-hidden rounded-xl shadow-lift ring-1 ring-white/70 has-[button:focus-visible]:shadow-bloom",
           !showSpoiler && "platinum-card-spoiler",
         )}
       >
@@ -39,7 +39,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             disabled={!showSpoiler}
             aria-label={`Expand screenshot for ${platinum.gameName}`}
             className={cn(
-              "group/card absolute inset-0 block h-full w-full bg-muted outline-none",
+              "group/card relative block w-full bg-[hsl(206_45%_94%)] outline-none",
               showSpoiler && "cursor-zoom-in",
             )}
           >
@@ -48,7 +48,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
               alt={`Platinum screenshot for ${platinum.gameName}`}
               width={platinum.width}
               height={platinum.height}
-              className={cn("h-full w-full object-cover transition-transform group-hover/card:scale-105", !showSpoiler && "spoiler-blur")}
+              className={cn("h-auto max-h-[75vh] w-full object-contain transition-transform group-hover/card:scale-105", !showSpoiler && "spoiler-blur")}
               data-ai-hint={platinum.imageHint}
               unoptimized={isStoredImage(platinum.imageUrl)}
             />

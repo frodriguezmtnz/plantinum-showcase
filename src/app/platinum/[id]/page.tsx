@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Heart, Trophy } from 'lucide-react';
+import { Heart, Trophy, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -78,6 +78,13 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="container py-8 md:py-12">
+      <Link
+        href="/explore"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Back to Explore
+      </Link>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
         <div className="md:col-span-3 min-w-0">
             <PlatinumDetailCard platinum={platinum} user={user ?? null} />
