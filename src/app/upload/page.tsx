@@ -33,7 +33,7 @@ import Image from "next/image"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 import imageCompression from "browser-image-compression"
-import { uploadPlatinum } from "@/app/actions"
+import { uploadPlatinum, getUploadQuota } from "@/app/actions"
 
 const uploadFormSchema = z.object({
   gameName: z.string().min(5, {
@@ -70,6 +70,7 @@ export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [stage, setStage] = useState<UploadStage>('idle');
   const [compressPct, setCompressPct] = useState(0);
+  const [quota, setQuota] = useState<Awaited<ReturnType<typeof getUploadQuota>>>(null);
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
@@ -78,6 +79,17 @@ export default function UploadPage() {
       router.push('/login');
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    getUploadQuota().then((q) => {
+      if (alive) setQuota(q);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [user]);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -188,7 +200,10 @@ export default function UploadPage() {
     );
   }
 
+  const quotaBlocked = quota !== null && quota.remaining === 0;
+
   const submitLabel =
+    quotaBlocked ? 'Monthly limit reached' :
     stage === 'compressing' ? `Compressing\u2026 ${compressPct}%` :
     stage === 'uploading' ? 'Hanging it on the wall\u2026' :
     form.formState.isSubmitting ? 'Uploading\u2026' : 'Upload Platinum';
@@ -199,6 +214,30 @@ export default function UploadPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Upload a Platinum</CardTitle>
           <CardDescription>Showcase your latest achievement to the community.</CardDescription>
+          {quota ? (
+            <p className="pt-2 text-sm text-muted-foreground" aria-live="polite">
+              <span className="field-mark mr-2">{quota.plan}</span>
+              {quota.remaining === null ? (
+                <>Unlimited uploads this month.</>
+              ) : quotaBlocked ? (
+                <>
+                  You&apos;ve used all {quota.limit} uploads for this month. The allowance resets next month,
+                  or raise it with a higher tier — see{' '}
+                  <Link href="/pricing" className="text-primary underline underline-offset-4">
+                    Pricing
+                  </Link>
+                  .
+                </>
+              ) : (
+                <>
+                  <span className="tabular font-semibold text-live">
+                    {quota.remaining} of {quota.limit}
+                  </span>{' '}
+                  uploads left this month.
+                </>
+              )}
+            </p>
+          ) : null}
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -378,17 +417,28 @@ export default function UploadPage() {
                     <Label htmlFor="watermark-locked" className="text-base">
                       Site watermark
                     </Label>
-                    <span className="field-mark text-primary">Free</span>
+                    <span className="field-mark text-primary">{quota?.plan ?? 'Free'}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Free uploads carry a small Platinum Showcase watermark.{' '}
-                    <Link href="/pricing" className="text-primary underline underline-offset-4">
-                      PRO and PLATINUM
-                    </Link>{' '}
-                    (coming soon) skip it.
+                    {quota && !quota.watermark ? (
+                      <>{quota.plan} uploads go up clean — no watermark on your screenshots.</>
+                    ) : (
+                      <>
+                        Free uploads carry a small Platinum Showcase watermark.{' '}
+                        <Link href="/pricing" className="text-primary underline underline-offset-4">
+                          PRO and PLATINUM
+                        </Link>{' '}
+                        (coming soon) skip it.
+                      </>
+                    )}
                   </p>
                 </div>
-                <Checkbox id="watermark-locked" checked disabled aria-label="Site watermark (on for free accounts)" />
+                <Checkbox
+                  id="watermark-locked"
+                  checked={quota?.watermark ?? true}
+                  disabled
+                  aria-label={`Site watermark (${(quota?.watermark ?? true) ? 'on' : 'off'} for your ${(quota?.plan ?? 'FREE').toLowerCase()} plan)`}
+                />
               </div>
 
               {busy && (                <div className="space-y-2">
@@ -401,7 +451,7 @@ export default function UploadPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting}>
+              <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting || quotaBlocked}>
                 <UploadCloud className="mr-2" />
                 {submitLabel}
               </Button>

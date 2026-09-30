@@ -12,11 +12,31 @@ import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/l
 import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
-import { planConfig, quotaReached, nextPlan } from "@/lib/plans";
+import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plans";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_EDGE = 1600;
+
+export async function getUploadQuota() {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const account = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+  const used = await countUploadsInCurrentPeriod(userId);
+  const config = planConfig(account?.plan);
+  const remaining = uploadsRemaining(used, account?.plan);
+  return {
+    plan: account?.plan ?? "FREE",
+    used,
+    limit: Number.isFinite(config.monthlyUploadLimit) ? config.monthlyUploadLimit : null,
+    remaining: Number.isFinite(remaining) ? remaining : null,
+    watermark: config.watermark,
+  };
+}
 
 const uploadSchema = z.object({
   gameName: z.string().trim().min(5).max(120),
