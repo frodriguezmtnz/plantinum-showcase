@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, UploadCloud, ImagePlus } from "lucide-react"
+import { CalendarIcon, UploadCloud, ImagePlus, Loader2 } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -70,14 +70,14 @@ export default function UploadPage() {
   const [dragActive, setDragActive] = useState(false);
   const [stage, setStage] = useState<UploadStage>('idle');
   const [compressPct, setCompressPct] = useState(0);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user === null) {
+    if (!isLoading && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, isLoading, router]);
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -177,8 +177,15 @@ export default function UploadPage() {
     acceptFiles(e.target.files);
   };
   
-  if (!user) {
-    return <div className="container text-center py-12">Redirecting to sign in&hellip;</div>;
+  if (isLoading || !user) {
+    return (
+      <div className="container flex items-center justify-center py-24" role="status">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden />
+        <span className="field-mark ml-3">
+          {isLoading ? 'Loading your console\u2026' : 'Redirecting to sign in\u2026'}
+        </span>
+      </div>
+    );
   }
 
   const submitLabel =
