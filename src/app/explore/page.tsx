@@ -32,7 +32,6 @@ export default async function ExplorePage({ searchParams }: Props) {
       </div>
 
       <ExploreClient
-        key={`${q}|${platform}|${sort}`}
         initialItems={items}
         initialHasMore={hasMore}
         q={q}
