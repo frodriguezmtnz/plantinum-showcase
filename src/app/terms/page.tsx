@@ -8,10 +8,10 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <div className="container max-w-3xl py-8 md:py-12">
-      <div className="prose prose-invert mx-auto">
+      <div className="mx-auto">
         <h1 className="text-4xl font-bold font-headline mb-8">Terms of Service</h1>
         <p className="text-lg text-muted-foreground">
-          Last updated: July 1, 2024
+          Last updated: September 30, 2026
         </p>
 
         <p className="italic text-muted-foreground mt-4">Platinum Showcase is an unofficial, fan-made website and is not affiliated with Sony or PlayStation in any way.</p>
