@@ -2,11 +2,20 @@ import { type Metadata } from 'next';
 import Link from 'next/link';
 import { Check, Heart, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PLANS } from '@/lib/plans';
+
+function uploadsPerMonth(limit: number): string {
+  return Number.isFinite(limit)
+    ? `${limit} upload${limit === 1 ? '' : 's'} per month`
+    : 'Unlimited uploads (fair use)';
+}
+
+const WATERMARK_PERK = 'A small site watermark on your uploads';
+const NO_WATERMARK_PERK = 'No watermark on your uploads';
 
 export const metadata: Metadata = {
   title: 'Pricing | Platinum Showcase',
-  description:
-    'Voting and the Hall of Fame are free forever. Upload tiers keep the lights on: Free 3/month, PRO 10/month with no watermark, PLATINUM unlimited with supporter flair.',
+  description: `Voting and the Hall of Fame are free forever. Upload tiers keep the lights on: Free ${PLANS.FREE.monthlyUploadLimit}/month, PRO ${PLANS.PRO.monthlyUploadLimit}/month with no watermark, PLATINUM unlimited with supporter flair.`,
 };
 
 const plans = [
@@ -15,10 +24,10 @@ const plans = [
     price: '0€',
     tagline: 'Everything the board offers today.',
     perks: [
-      '3 uploads per month',
+      uploadsPerMonth(PLANS.FREE.monthlyUploadLimit),
       'Vote on as many plates as you like',
       'Monthly races and the Hall of Fame',
-      'A small site watermark on your uploads',
+      PLANS.FREE.watermark ? WATERMARK_PERK : NO_WATERMARK_PERK,
     ],
     cta: { label: 'Start uploading', href: '/upload', disabled: false },
     current: true,
@@ -29,8 +38,8 @@ const plans = [
     priceNote: '/month',
     tagline: 'For hunters with more than a monthly highlight.',
     perks: [
-      '10 uploads per month',
-      'No watermark on your uploads',
+      uploadsPerMonth(PLANS.PRO.monthlyUploadLimit),
+      PLANS.PRO.watermark ? WATERMARK_PERK : NO_WATERMARK_PERK,
       'Everything in Free, unchanged',
     ],
     cta: { label: 'Coming soon', href: '/pricing', disabled: true },
@@ -41,8 +50,8 @@ const plans = [
     price: 'Coming soon',
     tagline: 'For the ones who wear the board.',
     perks: [
-      'Unlimited uploads (fair use)',
-      'No watermark',
+      uploadsPerMonth(PLANS.PLATINUM.monthlyUploadLimit),
+      PLANS.PLATINUM.watermark ? WATERMARK_PERK : 'No watermark',
       'A platinum supporter mark on your avatar',
       'A supporter chip on your plates',
       'Everything in PRO',
