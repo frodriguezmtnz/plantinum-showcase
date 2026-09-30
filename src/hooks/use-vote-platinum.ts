@@ -60,10 +60,25 @@ export function useVotePlatinum({
     }
     if (isOwner || isPending) return;
 
+    // Optimistic flip: the heart and count react instantly, then reconcile
+    // with the server's authoritative numbers (or roll back on failure).
+    const nextHasVoted = !state.hasVoted;
+    const delta = nextHasVoted ? 1 : -1;
+    setState((s) => ({
+      hasVoted: nextHasVoted,
+      votes: s.votes + delta,
+      monthlyVotes: s.monthlyVotes + delta,
+    }));
+
     startTransition(async () => {
       const result = await toggleVoteForPlatinum(platinumId);
 
       if (!result.success) {
+        setState((s) => ({
+          hasVoted: !nextHasVoted,
+          votes: s.votes - delta,
+          monthlyVotes: s.monthlyVotes - delta,
+        }));
         toast({
           title: 'Vote failed',
           description: result.error,
