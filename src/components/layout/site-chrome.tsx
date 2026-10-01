@@ -19,8 +19,22 @@ export function SiteChrome({ header, footer, children }: SiteChromeProps) {
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      {!hideChrome && header}
-      <main className={hideChrome ? 'flex-1' : 'flex-1 animate-in fade-in duration-300'}>
+      {!hideChrome && (
+        <>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+          >
+            Skip to content
+          </a>
+          {header}
+        </>
+      )}
+      <main
+        id="main"
+        tabIndex={-1}
+        className={hideChrome ? 'flex-1 outline-none' : 'flex-1 outline-none animate-in fade-in duration-300'}
+      >
         {children}
       </main>
       {!hideChrome && footer}

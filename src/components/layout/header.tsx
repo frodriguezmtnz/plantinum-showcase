@@ -2,6 +2,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import {
   Menu,
   Trophy,
@@ -14,6 +15,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,19 +37,27 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: Trophy },
-  { href: '/explore', label: 'Explorar', icon: Compass },
-  { href: '/hall-of-fame', label: 'Salón de la Fama', icon: Crown },
+  { href: '/explore', label: 'Explore', icon: Compass },
+  { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown },
 ];
+
+const navPill =
+  'flex h-10 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors duration-200';
+const navActive = 'bg-primary/90 text-primary-foreground shadow-lift ring-1 ring-primary-foreground/60';
+const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   return (
-    <Link href={href} passHref>
-      <Button variant={active ? 'secondary' : 'ghost'} className="justify-start w-full">
-        {children}
-      </Button>
+    <Link
+      href={href}
+      className={cn(navPill, 'justify-start w-full', active ? navActive : navIdle)}
+      aria-current={active ? 'page' : undefined}
+    >
+      {children}
     </Link>
   );
 }
@@ -55,37 +65,68 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
 export function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
+  // Hide on scroll-down, reveal on scroll-up. Disabled for reduced-motion
+  // users; :focus-within (see globals.css) always brings the bar back.
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (y < 96) setHidden(false);
+        else if (Math.abs(y - lastY.current) > 8) setHidden(y > lastY.current);
+        lastY.current = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="flex items-center gap-6 mr-auto">
+    <header data-hidden={hidden || undefined} className="sticky top-0 z-50 w-full">
+      <div className="panel rounded-none border-x-0 border-t-0">
+      <div className="container flex h-16 items-center px-4 md:px-8">
+        <div className="flex items-center gap-2 md:gap-6 mr-auto min-w-0">
           <Logo />
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
             {navLinks.map((link) => (
-              <Link href={link.href} passHref key={link.href}>
-                  <Button variant={pathname === link.href ? 'secondary' : 'ghost'}>
-                      <link.icon className="mr-2 h-4 w-4" />
-                      {link.label}
-                  </Button>
+              <Link
+                href={link.href}
+                key={link.href}
+                className={cn(navPill, pathname === link.href ? navActive : navIdle)}
+                aria-current={pathname === link.href ? 'page' : undefined}
+              >
+                <link.icon className="h-4 w-4" />
+                {link.label}
               </Link>
             ))}
           </nav>
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
+            <ThemeToggle />
             <Link href="/upload" passHref>
-              <Button>
+              <Button aria-label="Upload a platinum">
                 <Upload className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Subir</span>
+                <span className="hidden sm:inline">Upload</span>
               </Button>
             </Link>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full"
+                    aria-label={`Account menu for ${user.name ?? 'you'}`}
+                  >
                     <Avatar>
-                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'Usuario'} />
+                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
                       <AvatarFallback>{(user.name ?? '?').slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
@@ -103,13 +144,13 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href={`/u/${user.name}`}>
                       <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Perfil</span>
+                      <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Cerrar sesión</span>
+                    <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -118,13 +159,13 @@ export function Header() {
                 <Button variant="outline" asChild className="hidden sm:flex">
                     <Link href="/login">
                         <LogIn className="mr-2 h-4 w-4" />
-                        Iniciar sesión
+                        Sign in
                     </Link>
                 </Button>
-                <Button asChild className="hidden sm:flex">
+                <Button asChild variant="outline" className="hidden sm:flex">
                     <Link href="/register">
                         <UserPlus className="mr-2 h-4 w-4" />
-                        Registrarse
+                        Sign up
                     </Link>
                 </Button>
                </>
@@ -158,13 +199,13 @@ export function Header() {
                         <SheetClose asChild>
                           <NavLink href="/login" active={pathname === '/login'}>
                             <LogIn className="mr-2 h-4 w-4" />
-                            Iniciar sesión
+                            Sign in
                           </NavLink>
                         </SheetClose>
                         <SheetClose asChild>
                           <NavLink href="/register" active={pathname === '/register'}>
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Registrarse
+                            Sign up
                           </NavLink>
                         </SheetClose>
                       </>
@@ -174,6 +215,7 @@ export function Header() {
               </Sheet>
             </div>
         </div>
+      </div>
       </div>
     </header>
   );

@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Plan {
+  FREE
+  PRO
+  PLATINUM
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -15,6 +21,7 @@ model User {
   emailVerified DateTime?
   image         String?
   passwordHash  String?
+  plan          Plan      @default(FREE)
   createdAt     DateTime  @default(now())
 
   accounts  Account[]
@@ -87,6 +94,8 @@ model Platinum {
   imageHint         String
   width             Int
   height            Int
+  watermarked       Boolean    @default(true)
+  createdAt         DateTime   @default(now())
 
   user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   voteRecords Vote[] @relation("PlatinumVotes")
