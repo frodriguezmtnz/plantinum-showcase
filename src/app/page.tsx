@@ -66,16 +66,18 @@ export default async function Home() {
 
   // A fresh month opens with an empty board. Rather than leave the hero bare,
   // hand the row its most recent closed race — real votes, real standings —
-  // labelled so nobody mistakes it for the current month. The live month keeps
-  // the spoiler-safe filter above (a locked tile is a tease); a closed month is
-  // shown as it finished, spoiler-protected winners included but still locked.
+  // labelled so nobody mistakes it for the current month. Spoiler-protected
+  // plates are left out of the row entirely (a locked tile is a tease on a
+  // browse screen), so ranks keep their true standing without hiding winners
+  // behind a veil. We read a wider window and keep the best non-spoiler plates.
   let entries = currentEntries;
   let archivePeriod: string | null = null;
   if (currentEntries.length === 0) {
-    const closed = await getLatestClosedRanking(8);
-    if (closed && closed.entries.length > 0) {
+    const closed = await getLatestClosedRanking(24);
+    const visible = closed?.entries.filter((entry) => !entry.isSpoiler).slice(0, 8) ?? [];
+    if (closed && visible.length > 0) {
       archivePeriod = closed.period;
-      entries = closed.entries.map((entry) => ({
+      entries = visible.map((entry) => ({
         id: entry.id,
         gameName: entry.gameName,
         imageUrl: entry.imageUrl,
