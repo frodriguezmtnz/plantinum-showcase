@@ -319,15 +319,22 @@ input[type='search']::-webkit-search-decoration {
 .stack-deck {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 2rem;
+  /* Real travel between the dealt cards + room under the last one so it can
+     unpin; a pinned card taller than the screen would hide its own bottom. */
+  gap: 3rem;
+  padding-bottom: 5rem;
   --stack-top: 5.5rem;
-  --stack-paso: 0.75rem;
+  --stack-paso: 1.25rem;
 }
 
 .stack-card {
   min-width: 0;
   position: sticky;
   top: calc(var(--stack-top) + var(--stack-i, 0) * var(--stack-paso));
+  /* Cap every card to one screen so the cascade can never bury content; tall
+     cards fade out into their own edge (`.stack-clip`). */
+  overflow: hidden;
+  max-height: calc(100dvh - var(--stack-top) - 1rem);
   background: hsl(0 0% 100% / 0.97);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -345,9 +352,27 @@ input[type='search']::-webkit-search-decoration {
 @media (max-width: 640px) {
   .stack-deck {
     --stack-top: 5rem;
-    --stack-paso: 0.25rem;
-    gap: 1.25rem;
+    --stack-paso: 0.75rem;
+    gap: 1.75rem;
+    padding-bottom: 3rem;
   }
+}
+
+/* The tall card (latest plates) fades into its capped edge instead of slicing
+   an image in half; the gallery link carries the rest of the shelf. */
+.stack-fade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 5rem;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  background: linear-gradient(to top, hsl(0 0% 100% / 0.97), transparent);
+  pointer-events: none;
+}
+
+.dark .stack-fade {
+  background: linear-gradient(to top, hsl(212 34% 13% / 0.97), transparent);
 }
 
 .text-live {

@@ -170,14 +170,18 @@ export default async function Home() {
                   </li>
                 </ul>
               </div>
-              <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-muted/40 p-10 text-center">
-                <Crown className="h-10 w-10 text-dusk" aria-hidden />
-                <p className="max-w-[24ch] font-headline text-xl font-bold">
-                  {stats.plates} plates · {stats.votes.toLocaleString('en-US')} votes this month
-                </p>
-                <p className="text-sm text-muted-foreground">{closeCopy(race.daysLeft)} — {race.monthLabel}</p>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/explore">Browse the gallery</Link>
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+                <Crown className="h-8 w-8 shrink-0 text-dusk" aria-hidden />
+                <div className="min-w-0">
+                  <p className="font-headline text-base font-bold">
+                    {stats.plates} plates · {stats.votes.toLocaleString('en-US')} votes this month
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {closeCopy(race.daysLeft)} — {race.monthLabel}
+                  </p>
+                </div>
+                <Button asChild variant="outline" size="sm" className="ml-auto shrink-0">
+                  <Link href="/explore">Browse</Link>
                 </Button>
               </div>
             </div>
@@ -232,8 +236,8 @@ export default async function Home() {
             </div>
           )}
 
-          {/* 03 — latest plates */}
-          <div id="latest" className="stack-card scroll-mt-24 p-6 md:p-10">
+          {/* 03 — latest plates (tall: fades into its capped edge, gallery holds the rest) */}
+          <div id="latest" className="stack-card relative scroll-mt-24 p-6 md:p-10">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
                 Latest platinums
@@ -258,6 +262,7 @@ export default async function Home() {
                 No plates on the shelves yet. Yours could open the show.
               </p>
             )}
+            <div aria-hidden className="stack-fade" />
           </div>
 
           {/* 04 — CTA */}
