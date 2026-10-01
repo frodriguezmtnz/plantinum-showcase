@@ -76,7 +76,13 @@
   .container {
     margin-inline: auto;
     width: 100%;
-    padding-inline: 2rem;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-inline: 2rem;
+    }
   }
 }
 

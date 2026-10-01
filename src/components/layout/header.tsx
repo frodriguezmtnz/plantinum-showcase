@@ -91,7 +91,7 @@ export function Header() {
   return (
     <header data-hidden={hidden || undefined} className="sticky top-0 z-50 w-full">
       <div className="panel rounded-none border-x-0 border-t-0">
-      <div className="container flex h-16 items-center px-4 md:px-8">
+      <div className="container flex h-16 items-center">
         <div className="flex items-center gap-2 md:gap-6 mr-auto min-w-0">
           <Logo size="sm" />
           <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
