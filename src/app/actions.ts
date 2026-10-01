@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlatinumsPage, PLATINUMS_PAGE_SIZE, countUploadsInCurrentPeriod } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
+import { ensureSnapshots } from "@/lib/history";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -259,6 +260,13 @@ export async function deletePlatinum(id: string) {
     select: { username: true },
   });
 
+  // The frozen history keeps its display data; only the now-dead link is cut
+  // so archived rows never point at a 404.
+  await prisma.monthlyResult.updateMany({
+    where: { platinumId: id },
+    data: { platinumId: null },
+  });
+
   await prisma.platinum.delete({ where: { id } });
 
   if (key) {
@@ -338,6 +346,15 @@ export async function toggleVoteForPlatinum(
   }
 
   const period = getCurrentPeriod();
+
+  // A new calendar month starts a fresh race: freeze the month that just
+  // closed the first time anyone touches voting. Best-effort on purpose — a
+  // snapshot failure must never break the vote itself.
+  try {
+    await ensureSnapshots();
+  } catch {
+    // Ignored: the next vote (or the backfill script) will retry.
+  }
 
   const existingVote = await prisma.vote.findUnique({
     where: { userId_platinumId: { userId, platinumId } },

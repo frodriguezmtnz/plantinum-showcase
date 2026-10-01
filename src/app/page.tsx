@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Camera, Crown, Upload, Vote } from 'lucide-react';
 import { getRaceState } from '@/lib/race';
+import { getLatestClosedRanking } from '@/lib/history';
+import { formatPeriodLabel } from '@/lib/period';
 import { isStoredImage } from '@/lib/utils';
 
 function closeCopy(daysLeft: number): string {
@@ -39,16 +41,17 @@ export default async function Home() {
   ]);
   const getUserById = (userId: string) => users.find((u) => u.id === userId);
 
-  // The home row is a showcase, not a tease: spoiler-protected plates stay
-  // in the gallery (with their Reveal button) and never occupy the row.
-  // Ranks keep their true standing — if #1 hides a spoiler, the first tile
-  // on the row is honestly #3.
+  // The live home row is a showcase, not a tease: a spoiler-protected plate of
+  // the current race stays in the gallery (with its Reveal button) and never
+  // occupies the row. Ranks keep their true standing — if #1 hides a spoiler,
+  // the first tile on the row is honestly #3. (A closed month, below, is shown
+  // as it finished instead.)
   const raceBoard = raceBoardRaw
     .map((p, i) => ({ p, rank: i + 1 }))
     .filter(({ p }) => !p.isSpoiler)
     .slice(0, 8);
 
-  const entries: RaceEntry[] = raceBoard.map(({ p, rank }) => ({
+  const currentEntries: RaceEntry[] = raceBoard.map(({ p, rank }) => ({
     id: p.id,
     gameName: p.gameName,
     imageUrl: p.imageUrl,
@@ -60,6 +63,32 @@ export default async function Home() {
     isSpoiler: p.isSpoiler,
     rank,
   }));
+
+  // A fresh month opens with an empty board. Rather than leave the hero bare,
+  // hand the row its most recent closed race — real votes, real standings —
+  // labelled so nobody mistakes it for the current month. The live month keeps
+  // the spoiler-safe filter above (a locked tile is a tease); a closed month is
+  // shown as it finished, spoiler-protected winners included but still locked.
+  let entries = currentEntries;
+  let archivePeriod: string | null = null;
+  if (currentEntries.length === 0) {
+    const closed = await getLatestClosedRanking(8);
+    if (closed && closed.entries.length > 0) {
+      archivePeriod = closed.period;
+      entries = closed.entries.map((entry) => ({
+        id: entry.id,
+        gameName: entry.gameName,
+        imageUrl: entry.imageUrl,
+        width: entry.width,
+        height: entry.height,
+        platform: entry.platform,
+        username: entry.username,
+        monthlyVotes: entry.votes,
+        isSpoiler: entry.isSpoiler,
+        rank: entry.rank,
+      }));
+    }
+  }
 
   return (
     <HomeMotion>
@@ -94,7 +123,14 @@ export default async function Home() {
           </p>
         )}
         <div className="hm-row w-full">
-          <RaceRow entries={entries} />
+          <RaceRow
+            entries={entries}
+            contextLabel={
+              archivePeriod
+                ? `No votes in ${race.monthLabel} yet — showing how ${formatPeriodLabel(archivePeriod)} closed.`
+                : undefined
+            }
+          />
         </div>
 
         <p className="hm-hint field-mark hidden sm:block">
@@ -150,10 +186,14 @@ export default async function Home() {
             <div className="stack-card p-6 md:p-10">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-                  This month&apos;s podium
+                  {archivePeriod ? "Last month's podium" : "This month's podium"}
                 </h2>
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/hall-of-fame">Full hall of fame</Link>
+                  {archivePeriod ? (
+                    <Link href="/explore">Open the full gallery</Link>
+                  ) : (
+                    <Link href="/hall-of-fame">Full hall of fame</Link>
+                  )}
                 </Button>
               </div>
               <ol className="mt-6 grid grid-cols-1 gap-3">

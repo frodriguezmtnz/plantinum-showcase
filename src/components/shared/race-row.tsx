@@ -73,7 +73,13 @@ function SubmitTile({ dup }: { dup?: boolean }) {
   );
 }
 
-export function RaceRow({ entries }: { entries: RaceEntry[] }) {
+export function RaceRow({
+  entries,
+  contextLabel,
+}: {
+  entries: RaceEntry[];
+  contextLabel?: string;
+}) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
 
@@ -146,6 +152,9 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
 
   return (
     <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-6 pt-6 sm:px-24 sm:pb-8">
+      {contextLabel ? (
+        <p className="mb-4 text-center text-sm font-semibold text-primary">{contextLabel}</p>
+      ) : null}
       <div className="race-track flex w-max">
         {entries.map((entry, i) => (
           <PlateTile key={entry.id} entry={entry} selected={i === selected} />

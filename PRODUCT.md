@@ -29,7 +29,7 @@ Trophy culture: players screenshot the platinum toast / trophy list as proof, di
 - Stack already decided by the codebase: Next.js 16 App Router, Tailwind v4 + shadcn/ui, Prisma + PostgreSQL (Neon), Cloudflare/B2-style S3 object storage for images, NextAuth v5 (credentials today; Google OAuth button exists but disabled, "coming soon").
 - **Language: English only.** Spanish strings still exist in some components; they must be translated, and `html lang`/metadata must match. (Committed constraint, part of this work.)
 - Comments are owner-only today; **third-party public comments are out of scope** (decided, not postponed).
-- Hall of Fame has no historical snapshots yet: ranking reflects the current month only (known limitation).
+- Closed months are snapshotted into `MonthlyResult` when the next month's first vote lands (or via `pnpm snapshots`), so the home can show the last completed race while a fresh month is still empty. The Hall of Fame page itself still ranks the current month only.
 - Product is local-only, not launched; deployment target is Vercel ("Fase 2").
 - Known pending constraints recorded in BACKLOG.md: upload progress indicator, vote rate limiting, magic-bytes image validation, forgot-password flow, OG images for shares.
 
