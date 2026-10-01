@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  closeCopy,
   formatPeriodLabel,
   getCurrentPeriod,
   getPreviousPeriod,
@@ -65,5 +66,21 @@ describe('formatPeriodLabel', () => {
 
   it('does not slip a month on the first of the month', () => {
     expect(formatPeriodLabel('2026-01')).toBe('January 2026');
+  });
+});
+
+describe('closeCopy', () => {
+  it('reads as today at the wire', () => {
+    expect(closeCopy(0)).toBe('polls close today');
+    expect(closeCopy(-2)).toBe('polls close today');
+  });
+
+  it('reads as tomorrow at one day', () => {
+    expect(closeCopy(1)).toBe('polls close tomorrow');
+  });
+
+  it('counts the remaining days', () => {
+    expect(closeCopy(2)).toBe('polls close in 2 days');
+    expect(closeCopy(30)).toBe('polls close in 30 days');
   });
 });
