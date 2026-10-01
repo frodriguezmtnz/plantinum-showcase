@@ -1,10 +1,9 @@
 import Image from 'next/image';
 import {
-  getHallOfFame,
   getLatestPlatinums,
   getMostVotedPlatinums,
   getUsersByIds,
-  getMonthlyRaceStats,
+  getCommunityStats,
 } from '@/lib/data';
 import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
@@ -13,45 +12,30 @@ import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Camera, Crown, Upload, Vote } from 'lucide-react';
-import { getRaceState } from '@/lib/race';
-import { getLatestClosedRanking } from '@/lib/history';
 import { isStoredImage } from '@/lib/utils';
-
-function closeCopy(daysLeft: number): string {
-  if (daysLeft <= 0) return 'polls close today';
-  if (daysLeft === 1) return 'polls close tomorrow';
-  return `polls close in ${daysLeft} days`;
-}
 
 export default async function Home() {
   const session = await auth();
   const currentUserId = session?.user?.id;
 
-  const [raceBoardRaw, latestPlatinumsData, stats] = await Promise.all([
-    getHallOfFame(12, currentUserId),
-    getLatestPlatinums(12, currentUserId),
-    getMonthlyRaceStats(),
+  const [favourites, latestPlatinumsData, stats] = await Promise.all([
+    getMostVotedPlatinums(8, [], currentUserId),
+    getLatestPlatinums(24, currentUserId),
+    getCommunityStats(),
   ]);
 
-  const race = getRaceState();
   const latestPlatinums = latestPlatinumsData;
   const users = await getUsersByIds([
-    ...raceBoardRaw.map((p) => p.userId),
+    ...favourites.map((p) => p.userId),
     ...latestPlatinums.map((p) => p.userId),
   ]);
   const getUserById = (userId: string) => users.find((u) => u.id === userId);
 
-  // The live home row is a showcase, not a tease: a spoiler-protected plate of
-  // the current race stays in the gallery (with its Reveal button) and never
-  // occupies the row. Ranks keep their true standing — if #1 hides a spoiler,
-  // the first tile on the row is honestly #3. (A closed month, below, is shown
-  // as it finished instead.)
-  const raceBoard = raceBoardRaw
-    .map((p, i) => ({ p, rank: i + 1 }))
-    .filter(({ p }) => !p.isSpoiler)
-    .slice(0, 8);
-
-  const currentEntries: RaceEntry[] = raceBoard.map(({ p, rank }) => ({
+  // The home is an evergreen showcase, not a scoreboard: the row drifts through
+  // the community's all-time most-voted plates (spoiler-free) so it never reads
+  // as an empty shelf and never names a month. The live monthly race lives in
+  // Explore. Chips show real all-time votes instead of a month rank.
+  const entries: RaceEntry[] = favourites.map((p) => ({
     id: p.id,
     gameName: p.gameName,
     imageUrl: p.imageUrl,
@@ -59,72 +43,13 @@ export default async function Home() {
     height: p.height,
     platform: p.platform,
     username: getUserById(p.userId)?.username ?? 'a hunter',
-    monthlyVotes: p.monthlyVotes,
+    monthlyVotes: p.votes,
     isSpoiler: p.isSpoiler,
-    rank,
+    rank: 0,
+    fallback: true,
   }));
 
-  // The hero must never look like an empty shelf at the turn of a month. Show
-  // the current race first (real monthly ranks, spoiler-free), then fill the
-  // rest of the row with the community's all-time most-voted plates — real
-  // votes from earlier months, labelled by votes instead of a rank.
-  let entries = currentEntries;
-  if (currentEntries.length < 8) {
-    const fill = await getMostVotedPlatinums(
-      8 - currentEntries.length,
-      currentEntries.map((entry) => entry.id),
-      currentUserId,
-    );
-    if (fill.length > 0) {
-      const fillUsers = await getUsersByIds(fill.map((p) => p.userId));
-      const nameOf = (userId: string) =>
-        fillUsers.find((u) => u.id === userId)?.username ??
-        getUserById(userId)?.username ??
-        'a hunter';
-      entries = [
-        ...currentEntries,
-        ...fill.map((p) => ({
-          id: p.id,
-          gameName: p.gameName,
-          imageUrl: p.imageUrl,
-          width: p.width,
-          height: p.height,
-          platform: p.platform,
-          username: nameOf(p.userId),
-          monthlyVotes: p.votes,
-          isSpoiler: p.isSpoiler,
-          rank: 0,
-          fallback: true,
-        })),
-      ];
-    }
-  }
-
-  // The podium stays strictly monthly: this month's top 3, or the last closed
-  // month's frozen podium when the fresh board is too thin — never the fill.
-  let podiumEntries = currentEntries;
-  let podiumIsArchive = false;
-  if (currentEntries.length < 3) {
-    const closed = await getLatestClosedRanking(24);
-    const visible = closed?.entries.filter((entry) => !entry.isSpoiler) ?? [];
-    if (visible.length >= 3) {
-      podiumIsArchive = true;
-      podiumEntries = visible.map((entry) => ({
-        id: entry.id,
-        gameName: entry.gameName,
-        imageUrl: entry.imageUrl,
-        width: entry.width,
-        height: entry.height,
-        platform: entry.platform,
-        username: entry.username,
-        monthlyVotes: entry.votes,
-        isSpoiler: entry.isSpoiler,
-        rank: entry.rank,
-      }));
-    } else {
-      podiumEntries = [];
-    }
-  }
+  const mostLoved = favourites.slice(0, 3);
 
   return (
     <HomeMotion>
@@ -133,13 +58,16 @@ export default async function Home() {
       <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 pb-10 pt-24">
         <div className="absolute inset-x-0 top-4 flex justify-center px-4">
           <div className="hm-strip panel-solid flex max-w-full flex-wrap items-center justify-center gap-x-3 rounded-full px-5 py-2 text-center">
-            <span className="field-mark">{race.monthLabel}</span>
+            <span className="field-mark">Community</span>
             <span aria-hidden className="hidden text-border sm:inline">|</span>
             <span className="tabular text-sm font-semibold">
-              {stats.plates} plates on the board · <span className="hm-count" data-count={stats.votes}>{stats.votes.toLocaleString('en-US')}</span> votes cast
+              {stats.platinums.toLocaleString('en-US')} plates ·{' '}
+              <span className="hm-count" data-count={stats.votes}>{stats.votes.toLocaleString('en-US')}</span> votes
             </span>
             <span aria-hidden className="hidden text-border sm:inline">|</span>
-            <span className="text-sm font-semibold text-live">{closeCopy(race.daysLeft)}</span>
+            <span className="text-sm font-semibold text-live">
+              {stats.hunters.toLocaleString('en-US')} hunters
+            </span>
           </div>
         </div>
 
@@ -148,14 +76,14 @@ export default async function Home() {
             <span className="hm-title block">Show your platinum to the world.</span>
           </h1>
           <p className="hm-sub mx-auto mt-4 max-w-xl text-base font-semibold text-secondary-foreground/80 md:text-lg">
-            The community gallery for PlayStation platinums. One vote each, every month
-            — the board resets when the clocks roll over.
+            The community gallery for PlayStation platinums. Post the screenshot of a
+            hard-won platinum and let the hunters vote it up.
           </p>
         </div>
 
         {entries.length === 0 && (
           <p className="text-sm font-semibold text-primary">
-            The board is empty — be the first plate of {race.monthLabel}.
+            No plates yet — be the first to show one.
           </p>
         )}
         <div className="hm-row w-full">
@@ -189,11 +117,11 @@ export default async function Home() {
                   </li>
                   <li className="flex items-start gap-3">
                     <Vote className="mt-0.5 h-5 w-5 shrink-0 text-live" aria-hidden />
-                    <span><span className="font-bold">The community votes.</span> One vote each, every month — no accounts for sale.</span>
+                    <span><span className="font-bold">The community votes.</span> One vote each — no accounts for sale.</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Crown className="mt-0.5 h-5 w-5 shrink-0 text-dusk" aria-hidden />
-                    <span><span className="font-bold">One crown a month.</span> The podium is real ranking; the board resets when the clocks roll over.</span>
+                    <span><span className="font-bold">A favourite emerges.</span> The votes settle who wore it best.</span>
                   </li>
                 </ul>
               </div>
@@ -201,10 +129,10 @@ export default async function Home() {
                 <Crown className="h-8 w-8 shrink-0 text-dusk" aria-hidden />
                 <div className="min-w-0">
                   <p className="font-headline text-base font-bold">
-                    {stats.plates} plates · {stats.votes.toLocaleString('en-US')} votes this month
+                    {stats.platinums.toLocaleString('en-US')} plates · {stats.votes.toLocaleString('en-US')} votes · {stats.hunters.toLocaleString('en-US')} hunters
                   </p>
                   <p className="truncate text-sm text-muted-foreground">
-                    {closeCopy(race.daysLeft)} — {race.monthLabel}
+                    Every plate is a hard-won trophy.
                   </p>
                 </div>
                 <Button asChild variant="outline" size="sm" className="ml-auto shrink-0">
@@ -214,47 +142,45 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* 02 — this month's podium (real top 3, spoiler-safe) */}
-          {podiumEntries.length >= 3 && (
+          {/* 02 — the community's all-time most-loved plates (evergreen) */}
+          {mostLoved.length >= 3 && (
             <div className="stack-card p-6 md:p-10">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-                  {podiumIsArchive ? "Last month's podium" : "This month's podium"}
+                  Most loved plates
                 </h2>
                 <Button asChild variant="outline" size="sm">
-                  {podiumIsArchive ? (
-                    <Link href="/explore">Open the full gallery</Link>
-                  ) : (
-                    <Link href="/hall-of-fame">Full hall of fame</Link>
-                  )}
+                  <Link href="/explore">Open the full gallery</Link>
                 </Button>
               </div>
               <ol className="mt-6 grid grid-cols-1 gap-3">
-                {podiumEntries.slice(0, 3).map((entry) => (
-                  <li key={entry.id} className="min-w-0">
+                {mostLoved.map((platinum, i) => (
+                  <li key={platinum.id} className="min-w-0">
                     <Link
-                      href={`/platinum/${entry.id}`}
+                      href={`/platinum/${platinum.id}`}
                       className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-3 transition-shadow hover:shadow-bloom focus-visible:shadow-bloom sm:gap-4"
                     >
                       <span className="tabular w-6 shrink-0 text-center text-base font-extrabold text-primary sm:w-10 sm:text-lg">
-                        #{entry.rank}
+                        #{i + 1}
                       </span>
                       <span className="relative aspect-video w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-white/70 sm:w-24">
                         <Image
-                          src={entry.imageUrl}
-                          alt={`Platinum screenshot for ${entry.gameName}`}
+                          src={platinum.imageUrl}
+                          alt={`Platinum screenshot for ${platinum.gameName}`}
                           fill
                           sizes="(min-width: 640px) 96px, 64px"
                           className="object-cover"
-                          unoptimized={isStoredImage(entry.imageUrl)}
+                          unoptimized={isStoredImage(platinum.imageUrl)}
                         />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-bold">{entry.gameName}</span>
-                        <span className="block truncate text-xs text-muted-foreground">@{entry.username} · {entry.platform}</span>
+                        <span className="block truncate text-sm font-bold">{platinum.gameName}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          @{getUserById(platinum.userId)?.username ?? 'a hunter'} · {platinum.platform}
+                        </span>
                       </span>
                       <span className="tabular shrink-0 text-xs font-bold text-live sm:text-sm">
-                        {entry.monthlyVotes} votes
+                        {platinum.votes} votes
                       </span>
                     </Link>
                   </li>
@@ -263,8 +189,8 @@ export default async function Home() {
             </div>
           )}
 
-          {/* 03 — latest plates (tall: fades into its capped edge, gallery holds the rest) */}
-          <div id="latest" className="stack-card relative scroll-mt-24 p-6 md:p-10">
+          {/* 03 — latest plates (tall: the whole shelf, straight through) */}
+          <div id="latest" className="stack-card stack-card--flow relative scroll-mt-24 p-6 md:p-10">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
                 Latest platinums
@@ -289,7 +215,6 @@ export default async function Home() {
                 No plates on the shelves yet. Yours could open the show.
               </p>
             )}
-            <div aria-hidden className="stack-fade" />
           </div>
 
           {/* 04 — CTA */}
@@ -298,7 +223,7 @@ export default async function Home() {
               Your platinum belongs on this row.
             </h2>
             <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-              Post the screenshot, let the community vote it up, and take the month.
+              Post the screenshot, let the community vote it up, and let it take the crown.
             </p>
             <Button asChild size="lg" className="mt-7">
               <Link href="/upload">

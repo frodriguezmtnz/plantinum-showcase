@@ -344,6 +344,15 @@ input[type='search']::-webkit-search-decoration {
     var(--lift);
 }
 
+/* The gallery card is the long tail of the deck: it flows with the page so the
+   whole shelf is reachable, instead of pinning taller than the screen (which
+   would bury its own bottom). */
+.stack-card--flow {
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
+
 .stack-card:nth-child(1) { --stack-i: 0; }
 .stack-card:nth-child(2) { --stack-i: 1; }
 .stack-card:nth-child(3) { --stack-i: 2; }
@@ -356,23 +365,6 @@ input[type='search']::-webkit-search-decoration {
     gap: 1.75rem;
     padding-bottom: 3rem;
   }
-}
-
-/* The tall card (latest plates) fades into its capped edge instead of slicing
-   an image in half; the gallery link carries the rest of the shelf. */
-.stack-fade {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 5rem;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
-  background: linear-gradient(to top, hsl(0 0% 100% / 0.97), transparent);
-  pointer-events: none;
-}
-
-.dark .stack-fade {
-  background: linear-gradient(to top, hsl(212 34% 13% / 0.97), transparent);
 }
 
 .text-live {
