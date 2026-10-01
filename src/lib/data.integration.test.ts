@@ -226,4 +226,12 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(latest?.period).toBe(closedPeriod);
     expect(latest?.entries[0]?.id).toBe(p.c);
   });
+
+  it('fills from the all-time most-voted, spoiler-free pool', async () => {
+    const top = await data.getMostVotedPlatinums(3);
+    expect(top.map((x) => x.id)).toEqual([p.c, p.a, p.b]);
+
+    const filled = await data.getMostVotedPlatinums(8, [p.c]);
+    expect(filled.map((x) => x.id)).toEqual([p.a, p.b]);
+  });
 });

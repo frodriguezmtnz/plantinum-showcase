@@ -17,6 +17,8 @@ export interface RaceEntry {
   monthlyVotes: number;
   isSpoiler: boolean;
   rank: number;
+  /** Filled in from the all-time most-voted pool, not this month's race. */
+  fallback?: boolean;
 }
 
 function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: boolean; dup?: boolean }) {
@@ -24,7 +26,11 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
     <Link
       href={`/platinum/${entry.id}`}
       data-tile
-      aria-label={`#${entry.rank} ${entry.gameName} — ${entry.monthlyVotes} votes`}
+      aria-label={
+        entry.fallback
+          ? `${entry.gameName} — ${entry.monthlyVotes} votes`
+          : `#${entry.rank} ${entry.gameName} — ${entry.monthlyVotes} votes`
+      }
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       {...(selected && !dup ? { 'data-selected': '' } : {})}
       className="plate-shell group relative mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
@@ -46,7 +52,7 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
           />
         )}
         <span className="photo-chip tabular absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold backdrop-blur-md">
-          #{entry.rank}
+          {entry.fallback ? `★ ${entry.monthlyVotes}` : `#${entry.rank}`}
         </span>
       </div>
     </Link>

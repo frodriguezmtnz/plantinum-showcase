@@ -284,6 +284,28 @@ export async function getLatestPlatinums(
   return attachVoteStatus(platinums, currentUserId);
 }
 
+/**
+ * All-time most-voted plates, spoiler-free. Fills the home race row when the
+ * current month is thin or empty so a fresh board never reads as an empty
+ * shelf — the votes are real, the plates just come from earlier months.
+ */
+export async function getMostVotedPlatinums(
+  limit: number = 8,
+  excludeIds: string[] = [],
+  currentUserId?: string,
+): Promise<Platinum[]> {
+  const platinums = await prisma.platinum.findMany({
+    where: {
+      isSpoiler: false,
+      votes: { gt: 0 },
+      ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+    },
+    orderBy: [{ votes: 'desc' }, { platinumDate: 'desc' }],
+    take: limit,
+  });
+  return attachVoteStatus(platinums, currentUserId);
+}
+
 export async function getCommunityStats(): Promise<{
   platinums: number;
   votes: number;

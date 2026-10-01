@@ -2,6 +2,7 @@ import Image from 'next/image';
 import {
   getHallOfFame,
   getLatestPlatinums,
+  getMostVotedPlatinums,
   getUsersByIds,
   getMonthlyRaceStats,
 } from '@/lib/data';
@@ -14,7 +15,6 @@ import Link from 'next/link';
 import { Camera, Crown, Upload, Vote } from 'lucide-react';
 import { getRaceState } from '@/lib/race';
 import { getLatestClosedRanking } from '@/lib/history';
-import { formatPeriodLabel } from '@/lib/period';
 import { isStoredImage } from '@/lib/utils';
 
 function closeCopy(daysLeft: number): string {
@@ -64,20 +64,56 @@ export default async function Home() {
     rank,
   }));
 
-  // A fresh month opens with an empty board. Rather than leave the hero bare,
-  // hand the row its most recent closed race — real votes, real standings —
-  // labelled so nobody mistakes it for the current month. Spoiler-protected
-  // plates are left out of the row entirely (a locked tile is a tease on a
-  // browse screen), so ranks keep their true standing without hiding winners
-  // behind a veil. We read a wider window and keep the best non-spoiler plates.
+  // The hero must never look like an empty shelf at the turn of a month. Show
+  // the current race first (real monthly ranks, spoiler-free), then fill the
+  // rest of the row with the community's all-time most-voted plates — real
+  // votes from earlier months, labelled by votes instead of a rank.
   let entries = currentEntries;
-  let archivePeriod: string | null = null;
-  if (currentEntries.length === 0) {
+  let contextLabel: string | undefined;
+  if (currentEntries.length < 8) {
+    const fill = await getMostVotedPlatinums(
+      8 - currentEntries.length,
+      currentEntries.map((entry) => entry.id),
+      currentUserId,
+    );
+    if (fill.length > 0) {
+      const fillUsers = await getUsersByIds(fill.map((p) => p.userId));
+      const nameOf = (userId: string) =>
+        fillUsers.find((u) => u.id === userId)?.username ??
+        getUserById(userId)?.username ??
+        'a hunter';
+      entries = [
+        ...currentEntries,
+        ...fill.map((p) => ({
+          id: p.id,
+          gameName: p.gameName,
+          imageUrl: p.imageUrl,
+          width: p.width,
+          height: p.height,
+          platform: p.platform,
+          username: nameOf(p.userId),
+          monthlyVotes: p.votes,
+          isSpoiler: p.isSpoiler,
+          rank: 0,
+          fallback: true,
+        })),
+      ];
+    }
+    if (currentEntries.length === 0 && entries.length > 0) {
+      contextLabel = `No votes in ${race.monthLabel} yet — showing the community's most-voted plates.`;
+    }
+  }
+
+  // The podium stays strictly monthly: this month's top 3, or the last closed
+  // month's frozen podium when the fresh board is too thin — never the fill.
+  let podiumEntries = currentEntries;
+  let podiumIsArchive = false;
+  if (currentEntries.length < 3) {
     const closed = await getLatestClosedRanking(24);
-    const visible = closed?.entries.filter((entry) => !entry.isSpoiler).slice(0, 8) ?? [];
-    if (closed && visible.length > 0) {
-      archivePeriod = closed.period;
-      entries = visible.map((entry) => ({
+    const visible = closed?.entries.filter((entry) => !entry.isSpoiler) ?? [];
+    if (visible.length >= 3) {
+      podiumIsArchive = true;
+      podiumEntries = visible.map((entry) => ({
         id: entry.id,
         gameName: entry.gameName,
         imageUrl: entry.imageUrl,
@@ -89,6 +125,8 @@ export default async function Home() {
         isSpoiler: entry.isSpoiler,
         rank: entry.rank,
       }));
+    } else {
+      podiumEntries = [];
     }
   }
 
@@ -125,14 +163,7 @@ export default async function Home() {
           </p>
         )}
         <div className="hm-row w-full">
-          <RaceRow
-            entries={entries}
-            contextLabel={
-              archivePeriod
-                ? `No votes in ${race.monthLabel} yet — showing how ${formatPeriodLabel(archivePeriod)} closed.`
-                : undefined
-            }
-          />
+          <RaceRow entries={entries} contextLabel={contextLabel} />
         </div>
 
         <p className="hm-hint field-mark hidden sm:block">
@@ -188,14 +219,14 @@ export default async function Home() {
           </div>
 
           {/* 02 — this month's podium (real top 3, spoiler-safe) */}
-          {entries.length >= 3 && (
+          {podiumEntries.length >= 3 && (
             <div className="stack-card p-6 md:p-10">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-                  {archivePeriod ? "Last month's podium" : "This month's podium"}
+                  {podiumIsArchive ? "Last month's podium" : "This month's podium"}
                 </h2>
                 <Button asChild variant="outline" size="sm">
-                  {archivePeriod ? (
+                  {podiumIsArchive ? (
                     <Link href="/explore">Open the full gallery</Link>
                   ) : (
                     <Link href="/hall-of-fame">Full hall of fame</Link>
@@ -203,7 +234,7 @@ export default async function Home() {
                 </Button>
               </div>
               <ol className="mt-6 grid grid-cols-1 gap-3">
-                {entries.slice(0, 3).map((entry) => (
+                {podiumEntries.slice(0, 3).map((entry) => (
                   <li key={entry.id} className="min-w-0">
                     <Link
                       href={`/platinum/${entry.id}`}
