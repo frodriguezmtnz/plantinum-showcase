@@ -69,7 +69,6 @@ export default async function Home() {
   // rest of the row with the community's all-time most-voted plates — real
   // votes from earlier months, labelled by votes instead of a rank.
   let entries = currentEntries;
-  let contextLabel: string | undefined;
   if (currentEntries.length < 8) {
     const fill = await getMostVotedPlatinums(
       8 - currentEntries.length,
@@ -98,9 +97,6 @@ export default async function Home() {
           fallback: true,
         })),
       ];
-    }
-    if (currentEntries.length === 0 && entries.length > 0) {
-      contextLabel = `No votes in ${race.monthLabel} yet — showing the community's most-voted plates.`;
     }
   }
 
@@ -163,7 +159,7 @@ export default async function Home() {
           </p>
         )}
         <div className="hm-row w-full">
-          <RaceRow entries={entries} contextLabel={contextLabel} />
+          <RaceRow entries={entries} />
         </div>
 
         <p className="hm-hint field-mark hidden sm:block">

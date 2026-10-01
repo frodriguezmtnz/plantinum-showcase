@@ -215,10 +215,10 @@ input[type='search']::-webkit-search-decoration {
 
 /* The race row marquee: a slow continuous drift (track = two identical
    halves, so -50% is a seamless loop). Pauses for hover/focus/off-screen;
-   data-static (keyboard/wheel/touch or ?motion=off) stops it for good and
-   hands the row to native scrolling. Edges dissolve into the field via an
-   alpha mask, and no scrollbars ever show — the hint text teaches the
-   interaction. */
+   wheel/keys or ?motion=off hand the row to native scrolling for good, while
+   touch only pauses it under the finger and resumes shortly after it lifts.
+   Edges dissolve into the field via an alpha mask, and no scrollbars ever
+   show — the hint text teaches the interaction. */
 .race-row {
   overflow-x: hidden;
   overflow-y: hidden;

@@ -64,7 +64,7 @@ function SubmitTile({ dup }: { dup?: boolean }) {
     <Link
       data-tile
       href="/upload"
-      aria-label="Submit your own plate to this month's race"
+      aria-label="Submit your own plate to the gallery"
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       className="plate-shell group mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
     >
@@ -73,19 +73,13 @@ function SubmitTile({ dup }: { dup?: boolean }) {
           <Plus className="h-5 w-5" aria-hidden />
         </span>
         <span className="text-sm font-bold text-primary">Submit a plate</span>
-        <span className="text-xs text-muted-foreground">Join this month&apos;s race</span>
+        <span className="text-xs text-muted-foreground">Show it to the community</span>
       </div>
     </Link>
   );
 }
 
-export function RaceRow({
-  entries,
-  contextLabel,
-}: {
-  entries: RaceEntry[];
-  contextLabel?: string;
-}) {
+export function RaceRow({ entries }: { entries: RaceEntry[] }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
 
@@ -109,7 +103,9 @@ export function RaceRow({
 
   // Continuous marquee (CSS-driven, see .race-track): the row drifts on its
   // own until the visitor takes the controls. Hover/focus pause it, it stops
-  // off-screen, and keyboard/wheel/touch stop it permanently (data-static).
+  // off-screen, and wheel/keys stop it permanently (data-static). Touch only
+  // borrows the controls: the row pauses under the finger and resumes a beat
+  // after it lifts, so the showcase keeps moving on a phone.
   // prefers-reduced-motion and automated captures (?motion=off) get the
   // static, scrollable row.
   useEffect(() => {
@@ -125,12 +121,26 @@ export function RaceRow({
       { threshold: 0 },
     );
     io.observe(row);
+    let resumeTimer: ReturnType<typeof setTimeout> | undefined;
+    const hold = () => {
+      if (resumeTimer) clearTimeout(resumeTimer);
+      row.setAttribute('data-paused', '');
+    };
+    const release = () => {
+      if (resumeTimer) clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => row.removeAttribute('data-paused'), 2000);
+    };
     row.addEventListener('wheel', stop, { passive: true });
-    row.addEventListener('touchstart', stop, { passive: true });
+    row.addEventListener('touchstart', hold, { passive: true });
+    row.addEventListener('touchend', release, { passive: true });
+    row.addEventListener('touchcancel', release, { passive: true });
     return () => {
       io.disconnect();
+      if (resumeTimer) clearTimeout(resumeTimer);
       row.removeEventListener('wheel', stop);
-      row.removeEventListener('touchstart', stop);
+      row.removeEventListener('touchstart', hold);
+      row.removeEventListener('touchend', release);
+      row.removeEventListener('touchcancel', release);
     };
   }, []);
 
@@ -158,9 +168,6 @@ export function RaceRow({
 
   return (
     <div ref={rowRef} onKeyDown={onKeyDown} className="race-row px-8 pb-6 pt-6 sm:px-24 sm:pb-8">
-      {contextLabel ? (
-        <p className="mb-4 text-center text-sm font-semibold text-primary">{contextLabel}</p>
-      ) : null}
       <div className="race-track flex w-max">
         {entries.map((entry, i) => (
           <PlateTile key={entry.id} entry={entry} selected={i === selected} />
