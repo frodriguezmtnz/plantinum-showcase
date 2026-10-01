@@ -5,7 +5,7 @@ export function PlatinumMarkIcon({ className, ...props }: SVGProps<SVGSVGElement
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512 512"
+      viewBox="40 40 433 433"
       aria-hidden="true"
       className={cn('w-6 h-6', className)}
       {...props}
