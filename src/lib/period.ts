@@ -38,3 +38,10 @@ export function formatPeriodLabel(period: string): string {
   const [year, month] = period.split('-').map(Number);
   return PERIOD_LABEL_FORMATTER.format(new Date(Date.UTC(year!, month! - 1, 1)));
 }
+
+/** The countdown line shown next to the live race. */
+export function closeCopy(daysLeft: number): string {
+  if (daysLeft <= 0) return 'polls close today';
+  if (daysLeft === 1) return 'polls close tomorrow';
+  return `polls close in ${daysLeft} days`;
+}
