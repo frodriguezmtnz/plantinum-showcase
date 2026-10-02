@@ -100,7 +100,7 @@ export default async function Home() {
       <section className="container pb-8">
         <div className="stack-deck">
           {/* 01 — what this is */}
-          <div className="stack-card p-6 md:p-10">
+          <div data-tab="01" className="stack-card p-6 md:p-10">
             <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
               <div className="min-w-0">
                 <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
@@ -145,7 +145,7 @@ export default async function Home() {
 
           {/* 02 — the community's all-time most-loved plates (evergreen) */}
           {mostLoved.length >= 3 && (
-            <div className="stack-card p-6 md:p-10">
+            <div data-tab="02" className="stack-card p-6 md:p-10">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
                   Most loved plates
