@@ -7,6 +7,10 @@ import bcrypt from "bcrypt";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  // Trust the request host (and x-forwarded-*) so the app works behind a
+  // proxy/tunnel as well as on localhost and Vercel. Needed because an empty
+  // AUTH_URL ("") is not nullish and would otherwise flip this to false.
+  trustHost: true,
   pages: {
     signIn: "/login",
   },
