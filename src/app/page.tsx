@@ -95,13 +95,13 @@ export default async function Home() {
         </p>
       </section>
 
-      {/* The dealt hand: four sticky cards stacking one on top of the next. */}
-      <section className="container pb-24">
+      {/* The dealt hand: the two explainer cards stacking one on the next. */}
+      <section className="container pb-8">
         <div className="stack-deck">
           {/* 01 — what this is */}
           <div className="stack-card p-6 md:p-10">
-            <div className="grid items-center gap-8 md:grid-cols-2">
-              <div>
+            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+              <div className="min-w-0">
                 <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
                   What is Platinum Showcase?
                 </h2>
@@ -125,7 +125,7 @@ export default async function Home() {
                   </li>
                 </ul>
               </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+              <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-4">
                 <Crown className="h-8 w-8 shrink-0 text-dusk" aria-hidden />
                 <div className="min-w-0">
                   <p className="font-headline text-base font-bold">
@@ -189,49 +189,52 @@ export default async function Home() {
             </div>
           )}
 
-          {/* 03 — latest plates (tall: the whole shelf, straight through) */}
-          <div id="latest" className="stack-card stack-card--flow relative scroll-mt-24 p-6 md:p-10">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-                Latest platinums
-              </h2>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/explore">Open the full gallery</Link>
-              </Button>
-            </div>
-            {latestPlatinums.length > 0 ? (
-              <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
-                {latestPlatinums.map((platinum) => (
-                  <div key={platinum.id} className="mb-6 break-inside-avoid">
-                    <PlatinumCard
-                      platinum={platinum}
-                      user={getUserById(platinum.userId)}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-8 text-muted-foreground">
-                No plates on the shelves yet. Yours could open the show.
-              </p>
-            )}
-          </div>
+        </div>
+      </section>
 
-          {/* 04 — CTA */}
-          <div id="cta" className="stack-card scroll-mt-24 px-6 py-16 text-center">
-            <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
-              Your platinum belongs on this row.
-            </h2>
-            <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-              Post the screenshot, let the community vote it up, and let it take the crown.
-            </p>
-            <Button asChild size="lg" className="mt-7">
-              <Link href="/upload">
-                <Upload className="h-4 w-4" />
-                Submit a plate
-              </Link>
-            </Button>
+      {/* 03 — latest plates: the whole shelf, a plain section so the sticky deck never covers it */}
+      <section id="latest" className="container scroll-mt-24 pb-16 md:pb-20">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+            Latest platinums
+          </h2>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/explore">Open the full gallery</Link>
+          </Button>
+        </div>
+        {latestPlatinums.length > 0 ? (
+          <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
+            {latestPlatinums.map((platinum) => (
+              <div key={platinum.id} className="mb-6 break-inside-avoid">
+                <PlatinumCard
+                  platinum={platinum}
+                  user={getUserById(platinum.userId)}
+                />
+              </div>
+            ))}
           </div>
+        ) : (
+          <p className="mt-8 text-muted-foreground">
+            No plates on the shelves yet. Yours could open the show.
+          </p>
+        )}
+      </section>
+
+      {/* 04 — CTA */}
+      <section id="cta" className="container scroll-mt-24 pb-24">
+        <div className="panel-solid rounded-2xl px-6 py-16 text-center">
+          <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
+            Your platinum belongs on this row.
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+            Post the screenshot, let the community vote it up, and let it take the crown.
+          </p>
+          <Button asChild size="lg" className="mt-7">
+            <Link href="/upload">
+              <Upload className="h-4 w-4" />
+              Submit a plate
+            </Link>
+          </Button>
         </div>
       </section>
     </div>

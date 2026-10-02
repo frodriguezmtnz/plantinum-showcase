@@ -337,8 +337,7 @@ input[type='search']::-webkit-search-decoration {
   min-width: 0;
   position: sticky;
   top: calc(var(--stack-top) + var(--stack-i, 0) * var(--stack-paso));
-  /* Cap every card to one screen so the cascade can never bury content; tall
-     cards fade out into their own edge (`.stack-clip`). */
+  /* Cap each card to one screen so the cascade can never bury content. */
   overflow: hidden;
   max-height: calc(100dvh - var(--stack-top) - 1rem);
   background: hsl(0 0% 100% / 0.97);
@@ -350,19 +349,8 @@ input[type='search']::-webkit-search-decoration {
     var(--lift);
 }
 
-/* The gallery card is the long tail of the deck: it flows with the page so the
-   whole shelf is reachable, instead of pinning taller than the screen (which
-   would bury its own bottom). */
-.stack-card--flow {
-  position: static;
-  max-height: none;
-  overflow: visible;
-}
-
 .stack-card:nth-child(1) { --stack-i: 0; }
 .stack-card:nth-child(2) { --stack-i: 1; }
-.stack-card:nth-child(3) { --stack-i: 2; }
-.stack-card:nth-child(4) { --stack-i: 3; }
 
 @media (max-width: 640px) {
   .stack-deck {
