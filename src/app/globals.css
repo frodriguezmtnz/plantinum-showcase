@@ -475,6 +475,51 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
+/* The CTA's brand cup: a slow float and a twinkle so the panel reads alive
+   without shouting. The icon floats, its inner trojan pops on hover. */
+@keyframes cta-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes cta-twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.cta-trophy,
+.cta-trophy-icon {
+  animation: cta-float 4s ease-in-out infinite;
+}
+
+.cta-spark {
+  animation: cta-twinkle 3s ease-in-out infinite;
+}
+
+.cta-spark--late {
+  animation-delay: 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-trophy,
+  .cta-trophy-icon,
+  .cta-spark {
+    animation: none;
+  }
+}
+
 /* Legacy but live: hall-of-fame heading rule; retires with its last page. */
 .section-divider::before,
 .section-divider::after {

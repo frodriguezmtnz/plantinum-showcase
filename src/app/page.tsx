@@ -11,7 +11,8 @@ import { RaceRow, type RaceEntry } from '@/components/shared/race-row';
 import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Camera, Crown, Upload, Vote } from 'lucide-react';
+import { Camera, Crown, Sparkles, Trophy, Vote } from 'lucide-react';
+import { PlatinumMarkIcon } from '@/components/icons/platinum-mark-icon';
 import { isStoredImage } from '@/lib/utils';
 
 export default async function Home() {
@@ -220,21 +221,33 @@ export default async function Home() {
         )}
       </section>
 
-      {/* 04 — CTA */}
+      {/* 04 — CTA: the brand cup carries the panel, the copy and the button answer it */}
       <section id="cta" className="container scroll-mt-24 pb-24">
-        <div className="panel-solid rounded-2xl px-6 py-16 text-center">
-          <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
-            Your platinum belongs on this row.
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-            Post the screenshot, let the community vote it up, and let it take the crown.
-          </p>
-          <Button asChild size="lg" className="mt-7">
-            <Link href="/upload">
-              <Upload className="h-4 w-4" />
-              Submit a plate
-            </Link>
-          </Button>
+        <div className="panel-solid rounded-2xl p-6 md:p-10">
+          <div className="grid items-center gap-8 md:grid-cols-[minmax(0,240px)_1fr]">
+            <div className="relative mx-auto flex h-44 w-44 items-center justify-center sm:h-52 sm:w-52">
+              <span className="absolute inset-0 rounded-full bg-primary/5 blur-2xl" aria-hidden />
+              <PlatinumMarkIcon className="cta-trophy relative h-36 w-36 sm:h-44 sm:w-44" />
+              <Sparkles className="cta-spark absolute right-1 top-1 h-6 w-6 text-dusk" aria-hidden />
+              <Sparkles className="cta-spark cta-spark--late absolute bottom-2 left-0 h-4 w-4 text-live" aria-hidden />
+            </div>
+            <div className="text-center md:text-left">
+              <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
+                Your platinum belongs on this row.
+              </h2>
+              <p className="mx-auto mt-3 max-w-md text-muted-foreground md:mx-0">
+                Post the screenshot, let the community vote it up, and let it take the crown.
+              </p>
+              <Button asChild size="lg" className="group mt-7">
+                <Link href="/upload">
+                  <span className="cta-trophy-icon inline-flex">
+                    <Trophy className="transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-125" />
+                  </span>
+                  Submit a platinum
+                </Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
     </div>
