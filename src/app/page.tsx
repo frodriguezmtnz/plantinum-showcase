@@ -21,7 +21,7 @@ export default async function Home() {
 
   const [favourites, latestPlatinumsData, stats] = await Promise.all([
     getMostVotedPlatinums(8, [], currentUserId),
-    getLatestPlatinums(24, currentUserId),
+    getLatestPlatinums(12, currentUserId),
     getCommunityStats(),
   ]);
 
@@ -193,27 +193,29 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 03 — latest plates: the whole shelf, a plain section so the sticky deck never covers it */}
+      {/* 03 — latest plates: a balanced dozen, a plain section so the sticky deck never covers it */}
       <section id="latest" className="container scroll-mt-24 pb-16 md:pb-20">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
-            Latest platinums
-          </h2>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/explore">Open the full gallery</Link>
-          </Button>
-        </div>
+        <h2 className="font-headline text-2xl font-bold tracking-tight md:text-3xl">
+          Latest platinums
+        </h2>
         {latestPlatinums.length > 0 ? (
-          <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
-            {latestPlatinums.map((platinum) => (
-              <div key={platinum.id} className="mb-6 break-inside-avoid">
-                <PlatinumCard
-                  platinum={platinum}
-                  user={getUserById(platinum.userId)}
-                />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
+              {latestPlatinums.map((platinum) => (
+                <div key={platinum.id} className="mb-6 break-inside-avoid">
+                  <PlatinumCard
+                    platinum={platinum}
+                    user={getUserById(platinum.userId)}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-10 flex justify-center">
+              <Button asChild variant="outline" size="lg">
+                <Link href="/explore">See more in Gallery</Link>
+              </Button>
+            </div>
+          </>
         ) : (
           <p className="mt-8 text-muted-foreground">
             No plates on the shelves yet. Yours could open the show.
