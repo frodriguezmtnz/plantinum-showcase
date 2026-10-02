@@ -76,7 +76,13 @@
   .container {
     margin-inline: auto;
     width: 100%;
-    padding-inline: 2rem;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-inline: 2rem;
+    }
   }
 }
 
@@ -215,10 +221,10 @@ input[type='search']::-webkit-search-decoration {
 
 /* The race row marquee: a slow continuous drift (track = two identical
    halves, so -50% is a seamless loop). Pauses for hover/focus/off-screen;
-   data-static (keyboard/wheel/touch or ?motion=off) stops it for good and
-   hands the row to native scrolling. Edges dissolve into the field via an
-   alpha mask, and no scrollbars ever show — the hint text teaches the
-   interaction. */
+   wheel/keys or ?motion=off hand the row to native scrolling for good, while
+   touch only pauses it under the finger and resumes shortly after it lifts.
+   Edges dissolve into the field via an alpha mask, and no scrollbars ever
+   show — the hint text teaches the interaction. */
 .race-row {
   overflow-x: hidden;
   overflow-y: hidden;
@@ -319,15 +325,21 @@ input[type='search']::-webkit-search-decoration {
 .stack-deck {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 2rem;
+  /* Real travel between the dealt cards + room under the last one so it can
+     unpin; a pinned card taller than the screen would hide its own bottom. */
+  gap: 8rem;
+  padding-bottom: 7rem;
   --stack-top: 5.5rem;
-  --stack-paso: 0.75rem;
+  --stack-paso: 2.5rem;
 }
 
 .stack-card {
   min-width: 0;
   position: sticky;
   top: calc(var(--stack-top) + var(--stack-i, 0) * var(--stack-paso));
+  /* Cap each card to one screen so the cascade can never bury content. */
+  overflow: hidden;
+  max-height: calc(100dvh - var(--stack-top) - 1rem);
   background: hsl(0 0% 100% / 0.97);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -339,14 +351,38 @@ input[type='search']::-webkit-search-decoration {
 
 .stack-card:nth-child(1) { --stack-i: 0; }
 .stack-card:nth-child(2) { --stack-i: 1; }
-.stack-card:nth-child(3) { --stack-i: 2; }
-.stack-card:nth-child(4) { --stack-i: 3; }
+
+/* Dealt-hand index: a small numbered tab in the exposed top band so each card
+   reads like a numbered card in the stack. Top-right to clear the left-aligned
+   heading, and sized to fit the mobile step. */
+.stack-card[data-tab]::before {
+  content: attr(data-tab);
+  position: absolute;
+  top: 0.4rem;
+  right: 0.75rem;
+  z-index: 1;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: hsl(0 0% 100% / 0.6);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  color: hsl(211 22% 36%);
+}
+
+.dark .stack-card[data-tab]::before {
+  background: hsl(212 30% 18% / 0.7);
+  color: hsl(211 22% 70%);
+}
 
 @media (max-width: 640px) {
   .stack-deck {
     --stack-top: 5rem;
-    --stack-paso: 0.25rem;
-    gap: 1.25rem;
+    --stack-paso: 1.5rem;
+    gap: 4.5rem;
+    padding-bottom: 4rem;
   }
 }
 
@@ -461,6 +497,51 @@ input[type='search']::-webkit-search-decoration {
 
   body[data-bloom='deep'] .sky-field {
     filter: none;
+  }
+}
+
+/* The CTA's brand cup: a slow float and a twinkle so the panel reads alive
+   without shouting. The icon floats, its inner trojan pops on hover. */
+@keyframes cta-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes cta-twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.cta-trophy,
+.cta-trophy-icon {
+  animation: cta-float 4s ease-in-out infinite;
+}
+
+.cta-spark {
+  animation: cta-twinkle 3s ease-in-out infinite;
+}
+
+.cta-spark--late {
+  animation-delay: 1.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-trophy,
+  .cta-trophy-icon,
+  .cta-spark {
+    animation: none;
   }
 }
 

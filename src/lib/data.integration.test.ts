@@ -11,6 +11,7 @@ const url = process.env.TEST_DATABASE_URL;
 
 describe.skipIf(!url)('data.ts — Postgres integration', () => {
   let data: typeof import('@/lib/data');
+  let history: typeof import('@/lib/history');
   let prisma: (typeof import('@/lib/prisma'))['prisma'];
 
   const stamp = Date.now();
@@ -27,6 +28,9 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     e: `it-${stamp}-plate-e`,
   };
   const period = getCurrentPeriod();
+  // A far-past, test-only period: never collides with real history and is
+  // always behind the current Madrid month, so it is a closed race.
+  const closedPeriod = '2020-01';
 
   const platinum = (
     id: string,
@@ -58,6 +62,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
   beforeAll(async () => {
     process.env.DATABASE_URL = url;
     data = await import('@/lib/data');
+    history = await import('@/lib/history');
     prisma = (await import('@/lib/prisma')).prisma;
 
     await prisma.user.createMany({
@@ -80,12 +85,20 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
       data: [
         { userId: u.bob, platinumId: p.a, period },
         { userId: u.alice, platinumId: p.b, period },
+        // A closed month: p.c wins with 2 votes, p.a and p.b tie at 1.
+        { userId: u.alice, platinumId: p.c, period: closedPeriod },
+        { userId: u.bob, platinumId: p.c, period: closedPeriod },
+        { userId: u.carol, platinumId: p.a, period: closedPeriod },
+        { userId: u.carol, platinumId: p.b, period: closedPeriod },
       ],
     });
   });
 
   afterAll(async () => {
     await prisma.vote.deleteMany({ where: { platinumId: { in: Object.values(p) } } });
+    // Snapshots have no FK, so the frozen rows for the test period are cleared
+    // explicitly — this runs only against the dedicated test database.
+    await prisma.monthlyResult.deleteMany({ where: { period: closedPeriod } });
     await prisma.platinum.deleteMany({ where: { id: { in: Object.values(p) } } });
     await prisma.user.deleteMany({ where: { id: { in: Object.values(u) } } });
     await prisma.$disconnect();
@@ -191,5 +204,34 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(await data.countUploadsInCurrentPeriod(u.alice)).toBe(1);
     expect(await data.countUploadsInCurrentPeriod(u.bob)).toBe(0);
     expect(await data.countUploadsInCurrentPeriod(u.carol)).toBe(0);
+  });
+
+  it('reads the latest closed month from the live vote ledger', async () => {
+    const closed = await history.getLatestClosedRanking(5);
+    expect(closed?.period).toBe(closedPeriod);
+    expect(closed?.entries.map((entry) => entry.id)).toEqual([p.c, p.a, p.b]);
+    expect(closed?.entries[0]?.votes).toBe(2);
+    expect(closed?.entries[0]?.username).toBe(`it_carol_${stamp}`);
+  });
+
+  it('freezes closed months idempotently', async () => {
+    const created = await history.ensureSnapshots();
+    expect(created).toBeGreaterThanOrEqual(3);
+    expect(await history.ensureSnapshots()).toBe(0);
+
+    const frozen = await history.getArchivedRanking(closedPeriod, 5);
+    expect(frozen.entries.map((entry) => entry.id)).toEqual([p.c, p.a, p.b]);
+
+    const latest = await history.getLatestClosedRanking(5);
+    expect(latest?.period).toBe(closedPeriod);
+    expect(latest?.entries[0]?.id).toBe(p.c);
+  });
+
+  it('fills from the all-time most-voted, spoiler-free pool', async () => {
+    const top = await data.getMostVotedPlatinums(3);
+    expect(top.map((x) => x.id)).toEqual([p.c, p.a, p.b]);
+
+    const filled = await data.getMostVotedPlatinums(8, [p.c]);
+    expect(filled.map((x) => x.id)).toEqual([p.a, p.b]);
   });
 });

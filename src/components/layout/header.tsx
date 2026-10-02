@@ -91,9 +91,9 @@ export function Header() {
   return (
     <header data-hidden={hidden || undefined} className="sticky top-0 z-50 w-full">
       <div className="panel rounded-none border-x-0 border-t-0">
-      <div className="container flex h-16 items-center px-4 md:px-8">
+      <div className="container flex h-16 items-center">
         <div className="flex items-center gap-2 md:gap-6 mr-auto min-w-0">
-          <Logo />
+          <Logo size="sm" />
           <nav className="hidden md:flex items-center gap-1" aria-label="Primary">
             {navLinks.map((link) => (
               <Link
@@ -110,10 +110,12 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-            <ThemeToggle />
+            {/* The theme cycle lives in the side menu on phones to keep the bar
+                from crowding the logo; it returns to the bar from sm up. */}
+            <ThemeToggle className="hidden sm:inline-flex" />
             <Link href="/upload" passHref>
               <Button aria-label="Upload a platinum">
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Upload</span>
               </Button>
             </Link>
@@ -211,6 +213,10 @@ export function Header() {
                       </>
                     )}
                   </nav>
+                  <div className="flex items-center justify-between border-t p-4 sm:hidden">
+                    <span className="text-[15px] font-semibold text-muted-foreground">Theme</span>
+                    <ThemeToggle />
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>

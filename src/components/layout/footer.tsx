@@ -2,11 +2,19 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
 import { Github, Heart } from "lucide-react";
 
+const footerLinks = [
+  { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/terms", label: "Terms" },
+  { href: "/privacy", label: "Privacy" },
+];
+
 export function Footer() {
   return (
     <footer className="footer-shell mt-12">
       <div className="container py-8 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="flex flex-col gap-8 md:grid md:grid-cols-3 md:gap-8">
           <div className="flex flex-col gap-3">
             <Logo />
             <p className="text-sm flex items-center gap-1.5">
@@ -14,20 +22,29 @@ export function Footer() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <h3 className="field-mark">Links</h3>
-            <Link href="/about" className="text-sm">About</Link>
-            <Link href="/faq" className="text-sm">FAQ</Link>
-            <Link href="/pricing" className="text-sm">Pricing</Link>
-            <Link href="/terms" className="text-sm">Terms</Link>
-            <Link href="/privacy" className="text-sm">Privacy</Link>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 md:flex-col md:gap-2">
+              {footerLinks.map((link) => (
+                <Link key={link.href} href={link.href} className="text-sm">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <h3 className="field-mark">Community</h3>
-            <a href="https://github.com/frodriguezmtnz/plantinum-showcase" target="_blank" rel="noopener noreferrer" className="text-sm flex items-center gap-2">
-              <Github className="h-4 w-4" /> GitHub
-            </a>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 md:flex-col md:gap-2">
+              <a
+                href="https://github.com/frodriguezmtnz/plantinum-showcase"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm flex items-center gap-2"
+              >
+                <Github className="h-4 w-4" /> GitHub
+              </a>
+            </div>
           </div>
         </div>
 

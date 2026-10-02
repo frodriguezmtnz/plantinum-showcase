@@ -1,6 +1,7 @@
 import { getPlatinumsPage } from '@/lib/data';
 import { auth } from '@/auth';
 import { ExploreClient } from '@/components/explore/explore-client';
+import { MonthlyRace } from '@/components/explore/monthly-race';
 
 export const metadata = {
   title: 'Explore Gallery | Platinum Showcase',
@@ -29,6 +30,10 @@ export default async function ExplorePage({ searchParams }: Props) {
           Browse every platinum screenshot shared by the community. Use the filters to find exactly what
           you&apos;re looking for.
         </p>
+      </div>
+
+      <div className="mb-8">
+        <MonthlyRace />
       </div>
 
       <ExploreClient
