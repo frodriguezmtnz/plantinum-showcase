@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Trophy } from 'lucide-react';
 import { isStoredImage } from '@/lib/utils';
 
 export interface RaceEntry {
@@ -64,15 +64,15 @@ function SubmitTile({ dup }: { dup?: boolean }) {
     <Link
       data-tile
       href="/upload"
-      aria-label="Submit your own plate to the gallery"
+      aria-label="Submit your own platinum to the gallery"
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       className="plate-shell group mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
     >
       <div className="plate-bloom flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/35 bg-card/60 backdrop-blur-md group-hover:border-primary/70 group-hover:bg-card">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift">
-          <Plus className="h-5 w-5" aria-hidden />
+          <Trophy className="h-5 w-5" aria-hidden />
         </span>
-        <span className="text-sm font-bold text-primary">Submit a plate</span>
+        <span className="text-sm font-bold text-primary">Submit a platinum</span>
         <span className="text-xs text-muted-foreground">Show it to the community</span>
       </div>
     </Link>
