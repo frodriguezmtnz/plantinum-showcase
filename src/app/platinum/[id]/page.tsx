@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Heart } from 'lucide-react';
+import { Heart, Trophy, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -28,9 +28,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const user = await getUserById(platinum.userId);
 
+  const title = `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`;
+  const description = `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`;
+
+  // Spoiler plates stay out of link previews so sharing never leaks a reveal.
+  const images = platinum.isSpoiler
+    ? []
+    : [
+        {
+          url: platinum.imageUrl,
+          width: platinum.width,
+          height: platinum.height,
+          alt: `Platinum screenshot for ${platinum.gameName}`,
+        },
+      ];
+
   return {
-    title: `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`,
-    description: `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`,
+    title,
+    description,
+    openGraph: {
+      type: 'article',
+      title,
+      description,
+      images,
+    },
+    twitter: {
+      card: images.length > 0 ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: images.map((image) => image.url),
+    },
   };
 }
 
@@ -50,13 +77,20 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
   const canDelete = currentUserId === platinum.userId;
 
   return (
-    <div className="container max-w-4xl py-8 md:py-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 min-w-0">
+    <div className="container py-8 md:py-12">
+      <Link
+        href="/explore"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Back to Explore
+      </Link>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        <div className="md:col-span-3 min-w-0">
             <PlatinumDetailCard platinum={platinum} user={user ?? null} />
         </div>
-        <div className="md:col-span-1 min-w-0">
-            <div className="bg-card p-6 rounded-lg overflow-hidden">
+        <div className="md:col-span-2 min-w-0">
+            <div className="panel-solid p-6 rounded-2xl overflow-hidden">
                 <h2 className="text-2xl font-bold font-headline mb-4 break-words">{platinum.gameName}</h2>
                 {user && (
                   <div className="mb-6 flex min-w-0 items-center gap-4">
@@ -72,20 +106,20 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                     </div>
                   </div>
                 )}
-                <div className="space-y-3 text-sm mb-6">
-                    <p><strong>Platform:</strong> {platinum.platform}</p>
-                    <p><strong>Achieved on:</strong> {format(new Date(platinum.platinumDate), 'MMMM d, yyyy')}</p>
+                <div className="space-y-2 text-sm mb-6">
+                    <p className="flex justify-between gap-3 border-b border-border/60 pb-2"><span className="field-mark">Platform</span><span className="font-semibold">{platinum.platform}</span></p>
+                    <p className="flex justify-between gap-3"><span className="field-mark">Achieved on</span><span className="tabular font-semibold">{format(new Date(platinum.platinumDate), 'MMMM d, yyyy')}</span></p>
                 </div>
                 
                 <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-lg">
                     <div className="flex min-w-0 items-center">
-                        <Heart className="mr-2 shrink-0 text-primary"/>
-                        <span className="font-bold">{platinum.votes}</span>
+                        <Heart className="mr-2 shrink-0 fill-destructive text-destructive"/>
+                        <span className="font-bold tabular text-live">{platinum.votes}</span>
                         <span className="text-muted-foreground ml-1">votes</span>
                     </div>
                      <div className="flex min-w-0 items-center">
-                        <Heart className="mr-2 shrink-0 text-amber-400"/>
-                        <span className="font-bold">{platinum.monthlyVotes}</span>
+                        <Trophy className="mr-2 shrink-0 text-muted-foreground"/>
+                        <span className="font-bold tabular text-live">{platinum.monthlyVotes}</span>
                         <span className="text-muted-foreground ml-1">this month</span>
                     </div>
                 </div>

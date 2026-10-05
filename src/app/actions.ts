@@ -6,13 +6,38 @@ import sharp from "sharp";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlatinumsPage, PLATINUMS_PAGE_SIZE } from "@/lib/data";
+import { getPlatinumsPage, PLATINUMS_PAGE_SIZE, countUploadsInCurrentPeriod } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
+import { ensureSnapshots } from "@/lib/history";
 import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
+import { encodePlate } from "@/lib/watermark";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { detectImageType } from "@/lib/image-signature";
+import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plans";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_EDGE = 1600;
+
+export async function getUploadQuota() {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const account = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+  const used = await countUploadsInCurrentPeriod(userId);
+  const config = planConfig(account?.plan);
+  const remaining = uploadsRemaining(used, account?.plan);
+  return {
+    plan: account?.plan ?? "FREE",
+    used,
+    limit: Number.isFinite(config.monthlyUploadLimit) ? config.monthlyUploadLimit : null,
+    remaining: Number.isFinite(remaining) ? remaining : null,
+    watermark: config.watermark,
+  };
+}
 
 const uploadSchema = z.object({
   gameName: z.string().trim().min(5).max(120),
@@ -28,14 +53,38 @@ export async function uploadPlatinum(formData: FormData) {
   if (!userId) {
     return {
       success: false as const,
-      error: "Debes iniciar sesión para subir un platino.",
+      error: "You need to sign in to upload a platinum.",
     };
   }
 
   if (!isStorageConfigured()) {
     return {
       success: false as const,
-      error: "El almacenamiento de imágenes no está configurado todavía.",
+      error: "Image storage is not configured yet.",
+    };
+  }
+
+  const uploadLimit = checkRateLimit(`upload:${userId}`, 10, 60 * 60_000);
+  if (!uploadLimit.ok) {
+    return {
+      success: false as const,
+      error: "Too many uploads in a short time. Please wait a bit and try again.",
+    };
+  }
+
+  const account = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+  const usedThisMonth = await countUploadsInCurrentPeriod(userId);
+  if (quotaReached(usedThisMonth, account?.plan)) {
+    const limit = planConfig(account?.plan).monthlyUploadLimit;
+    const upgrade = nextPlan(account?.plan);
+    return {
+      success: false as const,
+      error: `That's all ${limit} uploads for this month.${
+        upgrade ? ` Upgrade to ${upgrade} for more, or come back next month.` : " Come back next month."
+      }`,
     };
   }
 
@@ -50,32 +99,39 @@ export async function uploadPlatinum(formData: FormData) {
   if (!parsed.success) {
     return {
       success: false as const,
-      error: "Los datos del formulario no son válidos.",
+      error: "The form data is not valid.",
     };
   }
 
   const file = formData.get("screenshot");
   if (!(file instanceof File) || file.size === 0) {
-    return { success: false as const, error: "La captura es obligatoria." };
+    return { success: false as const, error: "A screenshot is required." };
   }
   if (file.size > MAX_FILE_BYTES) {
     return {
       success: false as const,
-      error: "La imagen supera el tamaño máximo de 6 MB.",
+      error: "The image exceeds the 6 MB size limit.",
     };
   }
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return {
       success: false as const,
-      error: "Formato no soportado. Usa JPG, PNG o WEBP.",
+      error: "Unsupported format. Use JPG, PNG or WEBP.",
     };
   }
 
   const inputBuffer = Buffer.from(await file.arrayBuffer());
 
-  let processed;
+  if (!detectImageType(inputBuffer)) {
+    return {
+      success: false as const,
+      error: "Unsupported format. Use JPG, PNG or WEBP.",
+    };
+  }
+
+  let processed: { data: Buffer; width: number; height: number };
   try {
-    processed = await sharp(inputBuffer)
+    const resized = await sharp(inputBuffer)
       .rotate()
       .resize({
         width: MAX_EDGE,
@@ -83,12 +139,14 @@ export async function uploadPlatinum(formData: FormData) {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .avif({ quality: 60, effort: 4 })
-      .toBuffer({ resolveWithObject: true });
+      .toBuffer();
+
+    const { watermark } = planConfig(account?.plan);
+    processed = await encodePlate(resized, session.user?.name ?? "player", watermark);
   } catch {
     return {
       success: false as const,
-      error: "El archivo no es una imagen válida.",
+      error: "The file is not a valid image.",
     };
   }
 
@@ -102,7 +160,7 @@ export async function uploadPlatinum(formData: FormData) {
   if (existing) {
     return {
       success: false as const,
-      error: "Ya tienes un platino con esa misma captura.",
+      error: "You already have a platinum with that same screenshot.",
     };
   }
 
@@ -111,7 +169,7 @@ export async function uploadPlatinum(formData: FormData) {
   } catch {
     return {
       success: false as const,
-      error: "No se pudo subir la imagen. Inténtalo de nuevo.",
+      error: "Could not upload the image. Please try again.",
     };
   }
 
@@ -139,8 +197,9 @@ export async function uploadPlatinum(formData: FormData) {
         monthlyVotes: 0,
         imageUrl: `/api/images/${key}`,
         imageHint,
-        width: processed.info.width,
-        height: processed.info.height,
+        width: processed.width,
+        height: processed.height,
+        watermarked: planConfig(account?.plan).watermark,
       },
     });
 
@@ -153,12 +212,12 @@ export async function uploadPlatinum(formData: FormData) {
     if ((error as { code?: string }).code === "P2002") {
       return {
         success: false as const,
-        error: "Ya tienes un platino con esa misma captura.",
+        error: "You already have a platinum with that same screenshot.",
       };
     }
     return {
       success: false as const,
-      error: "No se pudo guardar el platino. Inténtalo de nuevo.",
+      error: "Could not save the platinum. Please try again.",
     };
   }
 }
@@ -176,7 +235,7 @@ export async function deletePlatinum(id: string) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false as const, error: "Debes iniciar sesión." };
+    return { success: false as const, error: "You need to sign in." };
   }
 
   const platinum = await prisma.platinum.findUnique({
@@ -185,12 +244,12 @@ export async function deletePlatinum(id: string) {
   });
 
   if (!platinum) {
-    return { success: false as const, error: "El platino no existe." };
+    return { success: false as const, error: "This platinum does not exist." };
   }
   if (platinum.userId !== userId) {
     return {
       success: false as const,
-      error: "No puedes borrar un platino que no es tuyo.",
+      error: "You can't delete a platinum that isn't yours.",
     };
   }
 
@@ -199,6 +258,13 @@ export async function deletePlatinum(id: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { username: true },
+  });
+
+  // The frozen history keeps its display data; only the now-dead link is cut
+  // so archived rows never point at a 404.
+  await prisma.monthlyResult.updateMany({
+    where: { platinumId: id },
+    data: { platinumId: null },
   });
 
   await prisma.platinum.delete({ where: { id } });
@@ -250,7 +316,15 @@ export async function toggleVoteForPlatinum(
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false, error: "Debes iniciar sesión para votar." };
+    return { success: false, error: "You need to sign in to vote." };
+  }
+
+  const voteLimit = checkRateLimit(`vote:${userId}`, 20, 60_000);
+  if (!voteLimit.ok) {
+    return {
+      success: false,
+      error: "That is a lot of votes at once. Please wait a moment and try again.",
+    };
   }
 
   const platinum = await prisma.platinum.findUnique({
@@ -262,16 +336,25 @@ export async function toggleVoteForPlatinum(
   });
 
   if (!platinum) {
-    return { success: false, error: "El platino no existe." };
+    return { success: false, error: "This platinum does not exist." };
   }
   if (platinum.userId === userId) {
     return {
       success: false,
-      error: "No puedes votar tu propio platino.",
+      error: "You can't vote for your own platinum.",
     };
   }
 
   const period = getCurrentPeriod();
+
+  // A new calendar month starts a fresh race: freeze the month that just
+  // closed the first time anyone touches voting. Best-effort on purpose — a
+  // snapshot failure must never break the vote itself.
+  try {
+    await ensureSnapshots();
+  } catch {
+    // Ignored: the next vote (or the backfill script) will retry.
+  }
 
   const existingVote = await prisma.vote.findUnique({
     where: { userId_platinumId: { userId, platinumId } },
@@ -364,7 +447,7 @@ export async function toggleVoteForPlatinum(
 
     return {
       success: false,
-      error: "No se pudo registrar el voto. Inténtalo de nuevo.",
+      error: "Could not record the vote. Please try again.",
     };
   }
 }

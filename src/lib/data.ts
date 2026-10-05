@@ -111,6 +111,14 @@ export async function getUsers(): Promise<User[]> {
   return users.map((u) => toUserView(u));
 }
 
+/** Targeted lookup for name/avatar mapping on boards — never loads the table. */
+export async function getUsersByIds(ids: string[]): Promise<User[]> {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return [];
+  const users = await prisma.user.findMany({ where: { id: { in: unique } } });
+  return users.map((u) => toUserView(u));
+}
+
 export async function getUserById(id: string): Promise<User | undefined> {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return undefined;
@@ -170,10 +178,10 @@ export async function getPlatinumsPage(options: {
 
   const orderBy =
     sort === 'most-voted'
-      ? { votes: 'desc' as const }
+      ? [{ votes: 'desc' as const }, { platinumDate: 'desc' as const }]
       : sort === 'least-voted'
-        ? { votes: 'asc' as const }
-        : { platinumDate: 'desc' as const };
+        ? [{ votes: 'asc' as const }, { platinumDate: 'desc' as const }]
+        : [{ platinumDate: 'desc' as const }];
 
   const platinums = await prisma.platinum.findMany({
     where,
@@ -212,6 +220,17 @@ export async function getPlatinumsByUserId(
 ): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({ where: { userId } });
   return attachVoteStatus(platinums, currentUserId);
+}
+
+/** Uploads created by the user in the current Europe/Madrid calendar month. */
+export async function countUploadsInCurrentPeriod(userId: string): Promise<number> {
+  const since = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000);
+  const rows = await prisma.platinum.findMany({
+    where: { userId, createdAt: { gte: since } },
+    select: { createdAt: true },
+  });
+  const period = getCurrentPeriod();
+  return rows.filter((r) => getCurrentPeriod(r.createdAt) === period).length;
 }
 
 export async function getHallOfFame(
@@ -263,6 +282,61 @@ export async function getLatestPlatinums(
     take: limit,
   });
   return attachVoteStatus(platinums, currentUserId);
+}
+
+/**
+ * All-time most-voted plates, spoiler-free. Fills the home race row when the
+ * current month is thin or empty so a fresh board never reads as an empty
+ * shelf — the votes are real, the plates just come from earlier months.
+ */
+export async function getMostVotedPlatinums(
+  limit: number = 8,
+  excludeIds: string[] = [],
+  currentUserId?: string,
+): Promise<Platinum[]> {
+  const platinums = await prisma.platinum.findMany({
+    where: {
+      isSpoiler: false,
+      votes: { gt: 0 },
+      ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+    },
+    orderBy: [{ votes: 'desc' }, { platinumDate: 'desc' }],
+    take: limit,
+  });
+  return attachVoteStatus(platinums, currentUserId);
+}
+
+export async function getCommunityStats(): Promise<{
+  platinums: number;
+  votes: number;
+  hunters: number;
+  games: number;
+}> {
+  const [platinums, agg, hunters, games] = await Promise.all([
+    prisma.platinum.count(),
+    prisma.platinum.aggregate({ _sum: { votes: true } }),
+    prisma.user.count({ where: { platinums: { some: {} } } }),
+    prisma.platinum.groupBy({ by: ['gameName'] }),
+  ]);
+
+  return {
+    platinums,
+    votes: agg._sum.votes ?? 0,
+    hunters,
+    games: games.length,
+  };
+}
+
+export async function getMonthlyRaceStats(): Promise<{ plates: number; votes: number }> {  const [plates, agg] = await Promise.all([
+    prisma.platinum.count({
+      where: { monthlyVotesMonth: getCurrentPeriod(), monthlyVotes: { gt: 0 } },
+    }),
+    prisma.platinum.aggregate({
+      where: { monthlyVotesMonth: getCurrentPeriod() },
+      _sum: { monthlyVotes: true },
+    }),
+  ]);
+  return { plates, votes: agg._sum.monthlyVotes ?? 0 };
 }
 
 export async function getMonthlyRanking(

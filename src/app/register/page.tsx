@@ -17,21 +17,21 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      title="Crear Cuenta"
-      description="Únete a la comunidad y muestra tus trofeos de platino."
+      title="Create Account"
+      description="Join the community and show off your platinum trophies."
       error={state.error}
       footer={
         <>
-          ¿Ya tienes una cuenta?{' '}
+          Already have an account?{' '}
           <Link href="/login" className="underline">
-            Inicia sesión
+            Sign in
           </Link>
         </>
       }
     >
       <form action={formAction} className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="username">Nombre de usuario</Label>
+          <Label htmlFor="username">Username</Label>
           <Input id="username" name="username" placeholder="trophy-hunter" required minLength={3} maxLength={20} />
         </div>
         <div className="grid gap-2">
@@ -39,16 +39,16 @@ export default function RegisterPage() {
           <Input id="email" name="email" type="email" placeholder="m@example.com" required />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="password">Contraseña</Label>
+          <Label htmlFor="password">Password</Label>
           <PasswordInput id="password" name="password" required minLength={6} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+          <Label htmlFor="confirmPassword">Confirm password</Label>
           <PasswordInput id="confirmPassword" name="confirmPassword" required minLength={6} />
         </div>
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {isPending ? "Creando cuenta..." : "Crear Cuenta"}
+          {isPending ? "Creating account..." : "Create Account"}
         </Button>
       </form>
 
@@ -57,11 +57,11 @@ export default function RegisterPage() {
           <div className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase text-muted-foreground">
-          <span className="bg-background px-2">o</span>
+          <span className="bg-background px-2">or</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" type="button" disabled title="Próximamente">
-        Registrarse con Google
+      <Button variant="outline" className="w-full" type="button" disabled title="Coming soon">
+        Sign up with Google
       </Button>
     </AuthShell>
   );

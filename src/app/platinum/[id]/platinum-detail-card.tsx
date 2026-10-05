@@ -8,23 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Eye, Expand } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 
 interface PlatinumDetailCardProps {
   platinum: Platinum;
   user: User | null;
-}
-
-function Watermark({ username }: { username: string }) {
-  return (
-    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-2 rounded-lg bg-black/50 p-2 text-xs text-white/80 opacity-70 pointer-events-none">
-      <PlatinumTrophyIcon className="w-5 h-5" />
-      <div>
-        <p className="font-bold">Platinum Showcase</p>
-        <p>@{username}</p>
-      </div>
-    </div>
-  );
 }
 
 export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) {
@@ -40,33 +27,52 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <div className={cn("group/card block aspect-[16/9] bg-muted rounded-lg overflow-hidden relative cursor-zoom-in", !showSpoiler && "platinum-card-spoiler")}>
-          <Image
-            src={platinum.imageUrl}
-            alt={`Platinum screenshot for ${platinum.gameName}`}
-            width={platinum.width}
-            height={platinum.height}
-            className={cn("w-full h-full object-cover transition-transform group-hover/card:scale-105", !showSpoiler && "spoiler-blur")}
-            data-ai-hint={platinum.imageHint}
-            unoptimized={isStoredImage(platinum.imageUrl)}
-          />
-          {user && showSpoiler && <Watermark username={user.username} />}
-          {!showSpoiler && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-20">
-                <p className="text-lg font-bold text-white mb-4">Spoiler Warning</p>
-              <Button onClick={handleShowSpoiler} variant="secondary">
-                <Eye className="mr-2 h-4 w-4" /> Show Screenshot
-              </Button>
-            </div>
-          )}
-           <div className="absolute top-4 right-4 z-20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300">
-              <div className="bg-background/80 text-foreground p-2 rounded-full shadow-lg">
-                <Expand className="w-5 h-5" />
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-xl shadow-lift ring-1 ring-white/70 has-[button:focus-visible]:shadow-bloom",
+          !showSpoiler && "platinum-card-spoiler",
+        )}
+      >
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            disabled={!showSpoiler}
+            aria-label={`Expand screenshot for ${platinum.gameName}`}
+            className={cn(
+              "group/card relative block w-full bg-mat outline-none",
+              showSpoiler && "cursor-zoom-in",
+            )}
+          >
+            <Image
+              src={platinum.imageUrl}
+              alt={`Platinum screenshot for ${platinum.gameName}`}
+              width={platinum.width}
+              height={platinum.height}
+              className={cn("h-auto max-h-[75vh] w-full object-contain transition-transform group-hover/card:scale-105", !showSpoiler && "spoiler-blur")}
+              data-ai-hint={platinum.imageHint}
+              unoptimized={isStoredImage(platinum.imageUrl)}
+            />
+            {showSpoiler && (
+              <div className="absolute top-4 right-4 z-20 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100 group-focus-visible/card:opacity-100">
+                <div className="panel-solid text-foreground p-2 rounded-full shadow-lift">
+                  <Expand className="w-5 h-5" aria-hidden />
+                </div>
               </div>
-            </div>
-        </div>
-      </DialogTrigger>
+            )}
+          </button>
+        </DialogTrigger>
+        {!showSpoiler && (
+          <div className="spoiler-frost-strong absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
+            <p className="text-lg font-bold flex items-center gap-2 text-foreground">
+              <Eye className="h-5 w-5 text-muted-foreground" aria-hidden />
+              Spoiler protected
+            </p>
+            <Button onClick={handleShowSpoiler} variant="outline">
+              Reveal screenshot
+            </Button>
+          </div>
+        )}
+      </div>
       <DialogContent className="max-w-7xl w-full p-2 bg-transparent border-none">
         <DialogTitle className="sr-only">Enlarged screenshot for {platinum.gameName}</DialogTitle>
         {user && <DialogDescription className="sr-only">Uploaded by {user.username}</DialogDescription>}
@@ -79,7 +85,6 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
               data-ai-hint={platinum.imageHint}
               unoptimized={isStoredImage(platinum.imageUrl)}
             />
-            {user && <Watermark username={user.username} />}
         </div>
       </DialogContent>
     </Dialog>
