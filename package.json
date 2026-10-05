@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
+    "snapshots": "tsx scripts/backfill-snapshots.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

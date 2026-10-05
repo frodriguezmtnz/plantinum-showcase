@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Eye, Plus } from 'lucide-react';
+import { Eye, Trophy } from 'lucide-react';
 import { isStoredImage } from '@/lib/utils';
 
 export interface RaceEntry {
@@ -17,6 +17,8 @@ export interface RaceEntry {
   monthlyVotes: number;
   isSpoiler: boolean;
   rank: number;
+  /** Filled in from the all-time most-voted pool, not this month's race. */
+  fallback?: boolean;
 }
 
 function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: boolean; dup?: boolean }) {
@@ -24,7 +26,11 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
     <Link
       href={`/platinum/${entry.id}`}
       data-tile
-      aria-label={`#${entry.rank} ${entry.gameName} — ${entry.monthlyVotes} votes`}
+      aria-label={
+        entry.fallback
+          ? `${entry.gameName} — ${entry.monthlyVotes} votes`
+          : `#${entry.rank} ${entry.gameName} — ${entry.monthlyVotes} votes`
+      }
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       {...(selected && !dup ? { 'data-selected': '' } : {})}
       className="plate-shell group relative mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
@@ -46,7 +52,7 @@ function PlateTile({ entry, selected, dup }: { entry: RaceEntry; selected?: bool
           />
         )}
         <span className="photo-chip tabular absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold backdrop-blur-md">
-          #{entry.rank}
+          {entry.fallback ? `★ ${entry.monthlyVotes}` : `#${entry.rank}`}
         </span>
       </div>
     </Link>
@@ -58,16 +64,16 @@ function SubmitTile({ dup }: { dup?: boolean }) {
     <Link
       data-tile
       href="/upload"
-      aria-label="Submit your own plate to this month's race"
+      aria-label="Submit your own platinum to the gallery"
       {...(dup ? { 'data-dup': '', 'aria-hidden': true, tabIndex: -1 } : {})}
       className="plate-shell group mr-5 w-64 shrink-0 snap-center outline-none sm:w-72"
     >
       <div className="plate-bloom flex aspect-video flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/35 bg-card/60 backdrop-blur-md group-hover:border-primary/70 group-hover:bg-card">
         <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lift">
-          <Plus className="h-5 w-5" aria-hidden />
+          <Trophy className="h-5 w-5" aria-hidden />
         </span>
-        <span className="text-sm font-bold text-primary">Submit a plate</span>
-        <span className="text-xs text-muted-foreground">Join this month&apos;s race</span>
+        <span className="text-sm font-bold text-primary">Submit a platinum</span>
+        <span className="text-xs text-muted-foreground">Show it to the community</span>
       </div>
     </Link>
   );
@@ -97,7 +103,9 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
 
   // Continuous marquee (CSS-driven, see .race-track): the row drifts on its
   // own until the visitor takes the controls. Hover/focus pause it, it stops
-  // off-screen, and keyboard/wheel/touch stop it permanently (data-static).
+  // off-screen, and wheel/keys stop it permanently (data-static). Touch only
+  // borrows the controls: the row pauses under the finger and resumes a beat
+  // after it lifts, so the showcase keeps moving on a phone.
   // prefers-reduced-motion and automated captures (?motion=off) get the
   // static, scrollable row.
   useEffect(() => {
@@ -113,12 +121,26 @@ export function RaceRow({ entries }: { entries: RaceEntry[] }) {
       { threshold: 0 },
     );
     io.observe(row);
+    let resumeTimer: ReturnType<typeof setTimeout> | undefined;
+    const hold = () => {
+      if (resumeTimer) clearTimeout(resumeTimer);
+      row.setAttribute('data-paused', '');
+    };
+    const release = () => {
+      if (resumeTimer) clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => row.removeAttribute('data-paused'), 2000);
+    };
     row.addEventListener('wheel', stop, { passive: true });
-    row.addEventListener('touchstart', stop, { passive: true });
+    row.addEventListener('touchstart', hold, { passive: true });
+    row.addEventListener('touchend', release, { passive: true });
+    row.addEventListener('touchcancel', release, { passive: true });
     return () => {
       io.disconnect();
+      if (resumeTimer) clearTimeout(resumeTimer);
       row.removeEventListener('wheel', stop);
-      row.removeEventListener('touchstart', stop);
+      row.removeEventListener('touchstart', hold);
+      row.removeEventListener('touchend', release);
+      row.removeEventListener('touchcancel', release);
     };
   }, []);
 

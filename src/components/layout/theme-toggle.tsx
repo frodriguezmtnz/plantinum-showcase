@@ -4,6 +4,7 @@ import { useSyncExternalStore } from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const themes = ['light', 'dark', 'system'] as const;
 type Theme = (typeof themes)[number];
@@ -19,12 +20,12 @@ function useHydrated() {
   return useSyncExternalStore(emptySubscribe, () => true, () => false);
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
   const hydrated = useHydrated();
 
   if (!hydrated) {
-    return <Button variant="ghost" size="icon" aria-hidden tabIndex={-1} />;
+    return <Button variant="ghost" size="icon" aria-hidden tabIndex={-1} className={className} />;
   }
 
   const current: Theme = themes.includes(theme as Theme) ? (theme as Theme) : 'system';
@@ -35,6 +36,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(next)}
+      className={cn(className)}
       aria-label={`Theme: ${labels[current]}. Switch to ${labels[next]}`}
       title={`Theme: ${labels[current]} — switch to ${labels[next]}`}
     >

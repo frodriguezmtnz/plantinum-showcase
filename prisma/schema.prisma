@@ -103,3 +103,28 @@ model Platinum {
   @@unique([userId, hash])
   @@index([monthlyVotesMonth, monthlyVotes])
 }
+
+// Frozen final ranking of a closed calendar month. Denormalised on purpose:
+// edits or deletions of a Platinum after the month closes must not rewrite
+// history. platinumId is a plain nullable reference (no FK) so a deleted
+// plate leaves its frozen row intact; deletePlatinum clears the link only.
+model MonthlyResult {
+  id         String   @id @default(cuid())
+  period     String
+  rank       Int
+  votes      Int
+  platinumId String?
+  gameName   String
+  imageUrl   String
+  imageHint  String
+  width      Int
+  height     Int
+  platform   String
+  isSpoiler  Boolean
+  username   String
+  avatarUrl  String
+  createdAt  DateTime @default(now())
+
+  @@unique([period, rank])
+  @@index([period, votes])
+}
