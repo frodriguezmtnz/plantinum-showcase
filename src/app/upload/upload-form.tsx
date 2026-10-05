@@ -33,17 +33,9 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import imageCompression from "browser-image-compression"
 import { uploadPlatinum, getUploadQuota } from "@/app/actions"
+import { platinumMetaSchema } from "@/lib/schemas"
 
-const uploadFormSchema = z.object({
-  gameName: z.string().min(5, {
-    message: "Game name must be at least 5 characters.",
-  }),
-  platform: z.enum(["PS3", "PS4", "PS5"], {
-    required_error: "You need to select a platform.",
-  }),
-  platinumDate: z.date({
-    required_error: "A date for your platinum is required.",
-  }),
+const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
     message: 'Image is required.',
   })
@@ -55,8 +47,6 @@ const uploadFormSchema = z.object({
       const type = files[0]?.type;
       return type !== undefined && ["image/jpeg", "image/png", "image/webp"].includes(type);
     }, '.jpg, .png and .webp files are accepted.'),
-  isSpoiler: z.boolean().default(false),
-  comment: z.string().max(500, "Comment is too long.").optional(),
 })
 
 type UploadFormValues = z.infer<typeof uploadFormSchema>

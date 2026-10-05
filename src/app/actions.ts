@@ -3,7 +3,6 @@
 import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import sharp from "sharp";
-import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPlatinumsPage, PLATINUMS_PAGE_SIZE, countUploadsInCurrentPeriod } from "@/lib/data";
@@ -14,6 +13,8 @@ import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
 import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plans";
+import { platinumMetaInputSchema } from "@/lib/schemas";
+import { buildImageHint } from "@/lib/image-hint";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -39,13 +40,7 @@ export async function getUploadQuota() {
   };
 }
 
-const uploadSchema = z.object({
-  gameName: z.string().trim().min(5).max(120),
-  platform: z.enum(["PS3", "PS4", "PS5"]),
-  platinumDate: z.coerce.date(),
-  isSpoiler: z.boolean(),
-  comment: z.string().trim().max(500).optional(),
-});
+const uploadSchema = platinumMetaInputSchema;
 
 export async function uploadPlatinum(formData: FormData) {
   const session = await auth();
@@ -173,15 +168,7 @@ export async function uploadPlatinum(formData: FormData) {
     };
   }
 
-  const imageHint =
-    parsed.data.gameName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim()
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 4)
-      .join("-") || "game screenshot";
+  const imageHint = buildImageHint(parsed.data.gameName);
 
   try {
     const platinum = await prisma.platinum.create({
@@ -220,6 +207,82 @@ export async function uploadPlatinum(formData: FormData) {
       error: "Could not save the platinum. Please try again.",
     };
   }
+}
+
+export interface EditPlatinumInput {
+  gameName: string;
+  platform: string;
+  platinumDate: string;
+  isSpoiler: boolean;
+  comment?: string;
+}
+
+/**
+ * Metadata-only edit: title, platform, date, spoiler flag and comment. The
+ * screenshot is immutable (content-addressed), and the frozen `MonthlyResult`
+ * history is intentionally left untouched — edits never rewrite the past.
+ */
+export async function editPlatinum(id: string, input: EditPlatinumInput) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in." };
+  }
+
+  const editLimit = checkRateLimit(`edit:${userId}`, 20, 60 * 60_000);
+  if (!editLimit.ok) {
+    return {
+      success: false as const,
+      error: "Too many edits in a short time. Please wait a bit and try again.",
+    };
+  }
+
+  const parsed = platinumMetaInputSchema.safeParse({
+    gameName: input.gameName,
+    platform: input.platform,
+    platinumDate: input.platinumDate,
+    isSpoiler: input.isSpoiler,
+    comment: input.comment || undefined,
+  });
+  if (!parsed.success) {
+    return { success: false as const, error: "The form data is not valid." };
+  }
+
+  const platinum = await prisma.platinum.findUnique({
+    where: { id },
+    select: { userId: true },
+  });
+  if (!platinum) {
+    return { success: false as const, error: "This platinum does not exist." };
+  }
+  if (platinum.userId !== userId) {
+    return {
+      success: false as const,
+      error: "You can't edit a platinum that isn't yours.",
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+
+  await prisma.platinum.update({
+    where: { id },
+    data: {
+      gameName: parsed.data.gameName,
+      platform: parsed.data.platform,
+      platinumDate: parsed.data.platinumDate,
+      isSpoiler: parsed.data.isSpoiler,
+      comment: parsed.data.comment ?? null,
+      // Alt text stays in sync with the title; the image itself never changes.
+      imageHint: buildImageHint(parsed.data.gameName),
+    },
+  });
+
+  revalidateVotePaths(id, user?.username);
+
+  return { success: true as const };
 }
 
 const IMAGE_URL_PREFIX = "/api/images/";
