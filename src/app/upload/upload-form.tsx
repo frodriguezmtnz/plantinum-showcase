@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import {
@@ -33,7 +33,8 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import imageCompression from "browser-image-compression"
 import { uploadPlatinum, getUploadQuota } from "@/app/actions"
-import { platinumMetaSchema } from "@/lib/schemas"
+import { platinumMetaSchema, watermarkPositionSchema } from "@/lib/schemas"
+import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-position"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -47,7 +48,22 @@ const uploadFormSchema = platinumMetaSchema.extend({
       const type = files[0]?.type;
       return type !== undefined && ["image/jpeg", "image/png", "image/webp"].includes(type);
     }, '.jpg, .png and .webp files are accepted.'),
+  watermarkPosition: watermarkPositionSchema,
 })
+
+const WATERMARK_POSITION_LABELS: Record<WatermarkPosition, string> = {
+  'top-left': 'Top left',
+  'top-right': 'Top right',
+  'bottom-left': 'Bottom left',
+  'bottom-right': 'Bottom right',
+}
+
+const WATERMARK_POSITION_DOT: Record<WatermarkPosition, string> = {
+  'top-left': 'left-1 top-1',
+  'top-right': 'right-1 top-1',
+  'bottom-left': 'left-1 bottom-1',
+  'bottom-right': 'right-1 bottom-1',
+}
 
 type UploadFormValues = z.infer<typeof uploadFormSchema>
 
@@ -59,6 +75,7 @@ export function UploadForm() {
   const [dragActive, setDragActive] = useState(false);
   const [stage, setStage] = useState<UploadStage>('idle');
   const [compressPct, setCompressPct] = useState(0);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [quota, setQuota] = useState<Awaited<ReturnType<typeof getUploadQuota>>>(null);
   const router = useRouter();
 
@@ -78,7 +95,13 @@ export function UploadForm() {
       gameName: "",
       isSpoiler: false,
       comment: "",
+      watermarkPosition: "bottom-right",
     },
+  })
+
+  const watchWatermarkPosition = useWatch({
+    control: form.control,
+    name: 'watermarkPosition',
   })
 
   function acceptFiles(files: FileList | null) {
@@ -134,6 +157,7 @@ export function UploadForm() {
       if (data.comment) {
         formData.set("comment", data.comment);
       }
+      formData.set("watermarkPosition", data.watermarkPosition);
       formData.set("screenshot", compressedFile, compressedFile.name);
 
       const result = await uploadPlatinum(formData);
@@ -253,7 +277,7 @@ export function UploadForm() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Platinum Date</FormLabel>
-                      <Popover>
+                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -276,11 +300,15 @@ export function UploadForm() {
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              if (date) {
+                                field.onChange(date);
+                                setCalendarOpen(false);
+                              }
+                            }}
                             disabled={(date) =>
                               date > new Date() || date < new Date("2006-11-11") // PS3 launch
                             }
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
@@ -381,34 +409,78 @@ export function UploadForm() {
                 )}
               />
 
-              <div className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="watermark-locked" className="text-base">
-                      Site watermark
-                    </Label>
-                    <span className="field-mark text-primary">{quota?.plan ?? 'Free'}</span>
+              <div className="space-y-4 rounded-lg border p-4">
+                <div className="flex flex-row items-center justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="watermark-locked" className="text-base">
+                        Site watermark
+                      </Label>
+                      <span className="field-mark text-primary">{quota?.plan ?? 'Free'}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {quota && !quota.watermark ? (
+                        <>{quota.plan} uploads go up clean — no watermark on your screenshots.</>
+                      ) : (
+                        <>
+                          Free uploads carry a Platinum Showcase watermark.{' '}
+                          <Link href="/pricing" className="text-primary underline underline-offset-4">
+                            PRO and PLATINUM
+                          </Link>{' '}
+                          (coming soon) skip it.
+                        </>
+                      )}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {quota && !quota.watermark ? (
-                      <>{quota.plan} uploads go up clean — no watermark on your screenshots.</>
-                    ) : (
-                      <>
-                        Free uploads carry a small Platinum Showcase watermark.{' '}
-                        <Link href="/pricing" className="text-primary underline underline-offset-4">
-                          PRO and PLATINUM
-                        </Link>{' '}
-                        (coming soon) skip it.
-                      </>
-                    )}
-                  </p>
+                  <Checkbox
+                    id="watermark-locked"
+                    checked={quota?.watermark ?? true}
+                    disabled
+                    aria-label={`Site watermark (${(quota?.watermark ?? true) ? 'on' : 'off'} for your ${(quota?.plan ?? 'FREE').toLowerCase()} plan)`}
+                  />
                 </div>
-                <Checkbox
-                  id="watermark-locked"
-                  checked={quota?.watermark ?? true}
-                  disabled
-                  aria-label={`Site watermark (${(quota?.watermark ?? true) ? 'on' : 'off'} for your ${(quota?.plan ?? 'FREE').toLowerCase()} plan)`}
-                />
+
+                {quota?.watermark ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Watermark position</p>
+                    <div
+                      role="radiogroup"
+                      aria-label="Watermark position"
+                      className="grid grid-cols-2 gap-2"
+                    >
+                      {WATERMARK_POSITIONS.map((position) => {
+                        const selected = watchWatermarkPosition === position
+                        return (
+                          <button
+                            key={position}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            onClick={() =>
+                              form.setValue('watermarkPosition', position, { shouldValidate: true })
+                            }
+                            className={cn(
+                              'flex items-center gap-3 rounded-md border p-2 text-left text-sm transition-colors',
+                              selected
+                                ? 'border-primary/60 bg-primary/5 text-foreground'
+                                : 'border-input text-muted-foreground hover:bg-muted/50',
+                            )}
+                          >
+                            <span className="relative block h-8 w-12 shrink-0 rounded-sm border border-border bg-muted/40">
+                              <span
+                                className={cn(
+                                  'absolute h-2.5 w-6 rounded-full bg-primary',
+                                  WATERMARK_POSITION_DOT[position],
+                                )}
+                              />
+                            </span>
+                            <span>{WATERMARK_POSITION_LABELS[position]}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {busy && (                <div className="space-y-2">

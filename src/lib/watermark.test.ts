@@ -14,6 +14,13 @@ describe('buildWatermark', () => {
     expect(svg).toContain('@trophy-hunter-1');
   });
 
+  it('carries the brand trophy mark, not the old star', () => {
+    const { svg } = buildWatermark(1920, 1080, 'frodriguez');
+    expect(svg).toContain('#E0008E'); // magenta gem
+    expect(svg).toContain('#DCE6F2'); // trophy silver
+    expect(svg).not.toContain('M12 2.5l2.95'); // retired star path
+  });
+
   it('escapes XML-hostile usernames', () => {
     const { svg } = buildWatermark(1920, 1080, '<b>&"x');
     expect(svg).toContain('&lt;b&gt;&amp;&quot;x');
@@ -54,5 +61,30 @@ describe('buildWatermark', () => {
     const { svg, left } = buildWatermark(2000, 1200, 'frodriguez');
     const { width } = pillSize(svg);
     expect(2000 - left - width).toBeGreaterThanOrEqual(2000 * 0.025);
+  });
+
+  it('defaults to the bottom-right corner', () => {
+    const fallback = buildWatermark(1600, 900, 'a');
+    const explicit = buildWatermark(1600, 900, 'a', 'bottom-right');
+    expect({ top: fallback.top, left: fallback.left }).toEqual({
+      top: explicit.top,
+      left: explicit.left,
+    });
+  });
+
+  it('honours the requested corner', () => {
+    const W = 1920;
+    const H = 1080;
+    const topLeft = buildWatermark(W, H, 'a', 'top-left');
+    const topRight = buildWatermark(W, H, 'a', 'top-right');
+    const bottomLeft = buildWatermark(W, H, 'a', 'bottom-left');
+    const { width, height } = pillSize(topLeft.svg);
+
+    expect(topLeft.top).toBe(topRight.top);
+    expect(topLeft.top).toBeLessThan(bottomLeft.top);
+    expect(topLeft.left).toBe(bottomLeft.left);
+    expect(topLeft.left).toBeLessThan(topRight.left);
+    expect(topRight.left + width).toBeLessThanOrEqual(W);
+    expect(bottomLeft.top + height).toBeLessThanOrEqual(H);
   });
 });

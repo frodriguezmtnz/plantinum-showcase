@@ -25,7 +25,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Server Action bodies default to 1 MB, which a compressed screenshot can
+    // easily exceed. The upload form caps the file at 4 MB client-side, so 6 MB
+    // gives multipart headroom. Note: on Vercel the platform caps request
+    // bodies at ~4.5 MB regardless (see BACKLOG, Fase 2).
+    serverActions: {
+      bodySizeLimit: '6mb',
+    },
+  },
   async headers() {
     return [
       {

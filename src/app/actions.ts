@@ -13,7 +13,7 @@ import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
 import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plans";
-import { platinumMetaInputSchema } from "@/lib/schemas";
+import { platinumMetaInputSchema, watermarkPositionSchema } from "@/lib/schemas";
 import { buildImageHint } from "@/lib/image-hint";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
@@ -40,7 +40,9 @@ export async function getUploadQuota() {
   };
 }
 
-const uploadSchema = platinumMetaInputSchema;
+const uploadSchema = platinumMetaInputSchema.extend({
+  watermarkPosition: watermarkPositionSchema,
+});
 
 export async function uploadPlatinum(formData: FormData) {
   const session = await auth();
@@ -89,6 +91,7 @@ export async function uploadPlatinum(formData: FormData) {
     platinumDate: formData.get("platinumDate"),
     isSpoiler: formData.get("isSpoiler") === "true",
     comment: formData.get("comment") || undefined,
+    watermarkPosition: formData.get("watermarkPosition") || undefined,
   });
 
   if (!parsed.success) {
@@ -137,8 +140,14 @@ export async function uploadPlatinum(formData: FormData) {
       .toBuffer();
 
     const { watermark } = planConfig(account?.plan);
-    processed = await encodePlate(resized, session.user?.name ?? "player", watermark);
-  } catch {
+    processed = await encodePlate(
+      resized,
+      session.user?.name ?? "player",
+      watermark,
+      parsed.data.watermarkPosition,
+    );
+  } catch (error) {
+    console.error("[upload] image processing failed", error);
     return {
       success: false as const,
       error: "The file is not a valid image.",
@@ -161,7 +170,8 @@ export async function uploadPlatinum(formData: FormData) {
 
   try {
     await putImage(key, processed.data);
-  } catch {
+  } catch (error) {
+    console.error("[upload] storage put failed", key, error);
     return {
       success: false as const,
       error: "Could not upload the image. Please try again.",
@@ -202,6 +212,7 @@ export async function uploadPlatinum(formData: FormData) {
         error: "You already have a platinum with that same screenshot.",
       };
     }
+    console.error("[upload] platinum create failed", error);
     return {
       success: false as const,
       error: "Could not save the platinum. Please try again.",

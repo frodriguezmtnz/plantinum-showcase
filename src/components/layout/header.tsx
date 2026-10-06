@@ -50,12 +50,22 @@ const navPill =
 const navActive = 'bg-primary/90 text-primary-foreground shadow-lift ring-1 ring-primary-foreground/60';
 const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
 
-function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+// Spread the rest onto the Link so SheetClose's `onClick` (passed by Radix
+// Slot) actually reaches it — otherwise tapping a nav item navigates but the
+// mobile sheet never closes.
+type NavLinkProps = {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+} & Omit<React.ComponentProps<typeof Link>, 'href' | 'className' | 'children'>;
+
+function NavLink({ href, active, children, ...props }: NavLinkProps) {
   return (
     <Link
       href={href}
       className={cn(navPill, 'justify-start w-full', active ? navActive : navIdle)}
       aria-current={active ? 'page' : undefined}
+      {...props}
     >
       {children}
     </Link>
@@ -124,7 +134,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className="relative h-10 w-10 rounded-full"
+                    className="relative hidden h-10 w-10 rounded-full sm:inline-flex"
                     aria-label={`Account menu for ${user.name ?? 'you'}`}
                   >
                     <Avatar>
@@ -196,7 +206,43 @@ export function Header() {
                         </NavLink>
                       </SheetClose>
                     ))}
-                     {!user && (
+                     {user ? (
+                      <>
+                        <div className="my-2 flex min-w-0 items-center gap-3 border-t pt-4">
+                          <Avatar className="h-12 w-12 shrink-0 border border-primary/40">
+                            <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
+                            <AvatarFallback>
+                              {(user.name ?? '?').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold">{user.name}</p>
+                            {user.email && (
+                              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                            )}
+                          </div>
+                        </div>
+                        <SheetClose asChild>
+                          <NavLink href={`/u/${user.name}`} active={pathname === `/u/${user.name}`}>
+                            <UserIcon className="mr-2 h-4 w-4" />
+                            Profile
+                          </NavLink>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <button
+                            type="button"
+                            onClick={logout}
+                            className={cn(
+                              navPill,
+                              'w-full justify-start text-destructive hover:bg-destructive/10'
+                            )}
+                          >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign out
+                          </button>
+                        </SheetClose>
+                      </>
+                    ) : (
                       <>
                         <SheetClose asChild>
                           <NavLink href="/login" active={pathname === '/login'}>

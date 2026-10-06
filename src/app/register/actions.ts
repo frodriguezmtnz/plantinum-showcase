@@ -1,12 +1,70 @@
 "use server";
 
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { signIn } from "@/auth";
 
 export interface RegisterState {
   error?: string;
+}
+
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
+/** Handles we never hand out (impersonation / brand / infra). */
+const RESERVED_USERNAMES = new Set([
+  "admin",
+  "administrator",
+  "support",
+  "moderator",
+  "staff",
+  "platinum",
+  "showcase",
+  "system",
+  "official",
+  "root",
+]);
+
+export type UsernameReason = "invalid" | "reserved" | "taken" | "rate-limited";
+
+export interface UsernameAvailability {
+  available: boolean;
+  reason?: UsernameReason;
+}
+
+/**
+ * Live availability probe for the register form. Validates shape, blocks
+ * reserved handles and checks the table case-insensitively, throttled per IP
+ * so it can't be used to bulk-enumerate accounts.
+ */
+export async function checkUsernameAvailability(
+  rawUsername: string,
+): Promise<UsernameAvailability> {
+  const username = (rawUsername ?? "").trim();
+
+  if (username.length < 3 || username.length > 20 || !USERNAME_PATTERN.test(username)) {
+    return { available: false, reason: "invalid" };
+  }
+  if (RESERVED_USERNAMES.has(username.toLowerCase())) {
+    return { available: false, reason: "reserved" };
+  }
+
+  const headerList = await headers();
+  const ip =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "local";
+  if (!checkRateLimit(`username-check:${ip}`, 60, 60_000).ok) {
+    return { available: false, reason: "rate-limited" };
+  }
+
+  const taken = await prisma.user.count({
+    where: { username: { equals: username, mode: "insensitive" } },
+  });
+
+  return taken > 0 ? { available: false, reason: "taken" } : { available: true };
 }
 
 export async function registerAction(_state: RegisterState, formData: FormData): Promise<RegisterState> {
@@ -21,8 +79,11 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   if (username.length > 20) {
     return { error: "Username must be 20 characters or fewer." };
   }
-  if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+  if (!USERNAME_PATTERN.test(username)) {
     return { error: "Username can only use letters, numbers, dashes and underscores." };
+  }
+  if (RESERVED_USERNAMES.has(username.toLowerCase())) {
+    return { error: "That username is reserved." };
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "That email address is not valid." };
@@ -36,7 +97,9 @@ export async function registerAction(_state: RegisterState, formData: FormData):
 
   try {
     const existing = await prisma.user.findFirst({
-      where: { OR: [{ email }, { username }] },
+      where: {
+        OR: [{ email }, { username: { equals: username, mode: "insensitive" } }],
+      },
     });
 
     if (existing) {
