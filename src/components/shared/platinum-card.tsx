@@ -11,6 +11,7 @@ import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
+import { EditPlatinumDialog } from '@/components/shared/edit-platinum-dialog';
 import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 
 interface PlatinumCardProps {
@@ -19,10 +20,11 @@ interface PlatinumCardProps {
   isPride?: boolean;
   showComment?: boolean;
   canDelete?: boolean;
+  canEdit?: boolean;
   cover?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, isPride = false, showComment = false, canDelete = false, cover = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, isPride = false, showComment = false, canDelete = false, canEdit = false, cover = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
@@ -127,6 +129,7 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
                   <Heart className={cn("mr-2 transition-all", hasVoted && "fill-destructive scale-110")} />
                   <span className="tabular">{votes}</span>
               </Button>
+              {canEdit && <EditPlatinumDialog platinum={platinum} />}
               {canDelete && <DeletePlatinumButton platinumId={platinum.id} />}
             </div>
         </div>

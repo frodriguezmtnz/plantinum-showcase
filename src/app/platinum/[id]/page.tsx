@@ -2,6 +2,7 @@
 import { getPlatinumById, getUserById } from '@/lib/data';
 import { auth } from '@/auth';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
+import { EditPlatinumDialog } from '@/components/shared/edit-platinum-dialog';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Heart, Trophy, ArrowLeft } from 'lucide-react';
@@ -127,12 +128,19 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                 <SocialShare platinum={platinum} user={user ?? null} />
 
                 {canDelete && (
-                  <DeletePlatinumButton
-                    platinumId={platinum.id}
-                    redirectTo="/"
-                    showLabel
-                    className="mt-4 w-full border border-destructive/40 hover:bg-destructive/10"
-                  />
+                  <>
+                    <EditPlatinumDialog
+                      platinum={platinum}
+                      showLabel
+                      className="mt-4 w-full border border-border hover:bg-muted"
+                    />
+                    <DeletePlatinumButton
+                      platinumId={platinum.id}
+                      redirectTo="/"
+                      showLabel
+                      className="mt-2 w-full border border-destructive/40 hover:bg-destructive/10"
+                    />
+                  </>
                 )}
             </div>
         </div>
