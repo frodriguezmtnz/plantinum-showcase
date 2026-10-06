@@ -50,12 +50,22 @@ const navPill =
 const navActive = 'bg-primary/90 text-primary-foreground shadow-lift ring-1 ring-primary-foreground/60';
 const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
 
-function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+// Spread the rest onto the Link so SheetClose's `onClick` (passed by Radix
+// Slot) actually reaches it — otherwise tapping a nav item navigates but the
+// mobile sheet never closes.
+type NavLinkProps = {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+} & Omit<React.ComponentProps<typeof Link>, 'href' | 'className' | 'children'>;
+
+function NavLink({ href, active, children, ...props }: NavLinkProps) {
   return (
     <Link
       href={href}
       className={cn(navPill, 'justify-start w-full', active ? navActive : navIdle)}
       aria-current={active ? 'page' : undefined}
+      {...props}
     >
       {children}
     </Link>
