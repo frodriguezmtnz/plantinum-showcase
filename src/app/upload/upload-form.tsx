@@ -290,7 +290,6 @@ export function UploadForm() {
                             disabled={(date) =>
                               date > new Date() || date < new Date("2006-11-11") // PS3 launch
                             }
-                            initialFocus
                           />
                         </PopoverContent>
                       </Popover>
