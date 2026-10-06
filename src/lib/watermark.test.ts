@@ -14,6 +14,13 @@ describe('buildWatermark', () => {
     expect(svg).toContain('@trophy-hunter-1');
   });
 
+  it('carries the brand trophy mark, not the old star', () => {
+    const { svg } = buildWatermark(1920, 1080, 'frodriguez');
+    expect(svg).toContain('#E0008E'); // magenta gem
+    expect(svg).toContain('#DCE6F2'); // trophy silver
+    expect(svg).not.toContain('M12 2.5l2.95'); // retired star path
+  });
+
   it('escapes XML-hostile usernames', () => {
     const { svg } = buildWatermark(1920, 1080, '<b>&"x');
     expect(svg).toContain('&lt;b&gt;&amp;&quot;x');
