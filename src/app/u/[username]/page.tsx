@@ -76,7 +76,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
             Pride of the Collection
           </h2>
           <div className="max-w-2xl mx-auto">
-            <PlatinumCard platinum={pridePlatinum} user={user} isPride showComment={isOwner} canDelete={isOwner} />
+            <PlatinumCard platinum={pridePlatinum} user={user} isPride showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
           </div>
         </section>
       )}
@@ -87,7 +87,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
           <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
             {otherPlatinums.map(platinum => (
               <div key={platinum.id} className="mb-6 break-inside-avoid">
-                <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} />
+                <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
               </div>
             ))}
           </div>
