@@ -62,8 +62,9 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 ## Moderación / seguridad
 
 - [x] Comentario del platino: visible **solo para el dueño** en su perfil (provisional, para revisar diseño). Ver `src/app/u/[username]/page.tsx` y `src/components/shared/platinum-card.tsx`.
-- [ ] Flujo de moderación: reportar platino/comentario.
-- [ ] Revisar los comentarios antes de hacerlos públicos (hoy no se muestran a terceros).
+- [x] **Flujo de moderación de platinos (Tanda 2)**: `User.role` (USER/MODERATOR/ADMIN, `scripts/set-role.ts`) + `Platinum.moderationStatus` (PUBLISHED/UNDER_REVIEW/HIDDEN) + tabla `Report` (`@@unique([userId, platinumId])`, re-reportar actualiza). `reportPlatinum` (no dueño, rate limit 10/min) con `ReportPlatinumButton` en el detalle; `moderateReport` (Keep/Hide/Delete) y `moderatePlatinum` (Restore/Hide/Delete) en el panel **`/admin/reports`** (cola OPEN + sección de ocultas); enlace "Moderation" en el menú para roles con permiso. Todas las queries públicas filtran `PUBLISHED` (dueño y moderador ven lo suyo; snapshots congelados intactos) y el voto rechaza placas no publicadas. La autorización relee el rol en DB (sin re-login). Tests de visibilidad/reportes en la suite de integración.
+- [ ] Moderación de **comentarios** (`Report` de comentario y revisión antes de publicarlos; hoy el comentario no se muestra a terceros).
+- [ ] Tanda 3: IA de pre-clasificación con NaN (screening en upload + triage de reportes, veredicto cacheado por hash).
 - [x] Rate limiting en la Server Action de subida (`uploadPlatinum`: 10/hora por usuario). Limitador en memoria por instancia; en Vercel multi-instancia habrá que migrar a un store compartido (Upstash).
 - [x] Validar la imagen por **magic bytes**, no solo `file.type` (`src/lib/image-signature.ts`: JPEG/PNG/WEBP).
 - [ ] `next.config.ts`: quitar `remotePatterns` (unsplash/picsum/placehold — giphy ya no se usa tras el rediseño de /about) cuando todo venga de B2 y revisar la CSP (`connect-src 'self'`).
