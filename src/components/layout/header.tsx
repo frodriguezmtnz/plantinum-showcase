@@ -187,24 +187,6 @@ export function Header() {
                     <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
                     <Logo />
                   </SheetHeader>
-                  {user && (
-                    <div className="border-b p-4">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Avatar className="h-12 w-12 shrink-0 border border-primary/40">
-                          <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
-                          <AvatarFallback>
-                            {(user.name ?? '?').slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">{user.name}</p>
-                          {user.email && (
-                            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                   <nav className="flex flex-col gap-2 p-4">
                     {navLinks.map((link) => (
                       <SheetClose asChild key={link.href}>
@@ -216,6 +198,20 @@ export function Header() {
                     ))}
                      {user ? (
                       <>
+                        <div className="my-2 flex min-w-0 items-center gap-3 border-t pt-4">
+                          <Avatar className="h-12 w-12 shrink-0 border border-primary/40">
+                            <AvatarImage src={user.image ?? undefined} alt={user.name ?? 'User'} />
+                            <AvatarFallback>
+                              {(user.name ?? '?').slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold">{user.name}</p>
+                            {user.email && (
+                              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                            )}
+                          </div>
+                        </div>
                         <SheetClose asChild>
                           <NavLink href={`/u/${user.name}`} active={pathname === `/u/${user.name}`}>
                             <UserIcon className="mr-2 h-4 w-4" />
