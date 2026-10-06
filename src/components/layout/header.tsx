@@ -13,6 +13,7 @@ import {
   Compass,
   LogIn,
   UserPlus,
+  ShieldCheck,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
@@ -159,6 +160,14 @@ export function Header() {
                       <span>Profile</span>
                     </Link>
                   </DropdownMenuItem>
+                  {user.role && user.role !== 'USER' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/reports">
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        <span>Moderation</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -228,6 +237,17 @@ export function Header() {
                             Profile
                           </NavLink>
                         </SheetClose>
+                        {user.role && user.role !== 'USER' && (
+                          <SheetClose asChild>
+                            <NavLink
+                              href="/admin/reports"
+                              active={pathname === '/admin/reports'}
+                            >
+                              <ShieldCheck className="mr-2 h-4 w-4" />
+                              Moderation
+                            </NavLink>
+                          </SheetClose>
+                        )}
                         <SheetClose asChild>
                           <button
                             type="button"

@@ -442,10 +442,12 @@ export async function moderateReport(reportId: string, decision: ModerationDecis
   return { success: true as const };
 }
 
-/** Direct visibility flip from the moderation board (restore / take down). */
-export async function setPlatinumModeration(
+export type PlatinumModerationOp = "PUBLISHED" | "HIDDEN" | "DELETE";
+
+/** Direct moderation from the board (restore / take down / delete). */
+export async function moderatePlatinum(
   platinumId: string,
-  status: "PUBLISHED" | "HIDDEN",
+  op: PlatinumModerationOp,
 ) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -461,13 +463,24 @@ export async function setPlatinumModeration(
 
   const platinum = await prisma.platinum.findUnique({
     where: { id: platinumId },
-    select: { user: { select: { username: true } } },
+    select: {
+      id: true,
+      imageUrl: true,
+      hash: true,
+      user: { select: { username: true } },
+    },
   });
   if (!platinum) {
     return { success: false as const, error: "This platinum does not exist." };
   }
 
-  if (status === "HIDDEN") {
+  if (op === "DELETE") {
+    await removePlatinumRecord(platinum, platinum.user.username);
+    revalidatePath("/admin/reports");
+    return { success: true as const };
+  }
+
+  if (op === "HIDDEN") {
     await prisma.$transaction([
       prisma.platinum.update({ where: { id: platinumId }, data: { moderationStatus: "HIDDEN" } }),
       prisma.report.updateMany({

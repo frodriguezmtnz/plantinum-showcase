@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentPeriod } from "@/lib/period";
+import type { ReportReason } from "@/generated/prisma/enums";
 
 export type ModerationStatus = 'PUBLISHED' | 'UNDER_REVIEW' | 'HIDDEN';
 
@@ -367,6 +368,84 @@ export async function getMonthlyRaceStats(): Promise<{ plates: number; votes: nu
     }),
   ]);
   return { plates, votes: agg._sum.monthlyVotes ?? 0 };
+}
+
+export interface ModerationReportItem {
+  id: string;
+  reason: ReportReason;
+  message: string | null;
+  createdAt: string;
+  platinumId: string;
+  gameName: string;
+  imageUrl: string;
+  isSpoiler: boolean;
+  ownerUsername: string;
+  reporterUsername: string;
+}
+
+/** Open reports for the moderation board, newest first. */
+export async function getOpenReports(limit = 50): Promise<ModerationReportItem[]> {
+  const reports = await prisma.report.findMany({
+    where: { status: 'OPEN' },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      platinum: {
+        select: {
+          id: true,
+          gameName: true,
+          imageUrl: true,
+          isSpoiler: true,
+          user: { select: { username: true } },
+        },
+      },
+      user: { select: { username: true } },
+    },
+  });
+
+  return reports.map((report) => ({
+    id: report.id,
+    reason: report.reason,
+    message: report.message,
+    createdAt: report.createdAt.toISOString(),
+    platinumId: report.platinum.id,
+    gameName: report.platinum.gameName,
+    imageUrl: report.platinum.imageUrl,
+    isSpoiler: report.platinum.isSpoiler,
+    ownerUsername: report.platinum.user.username ?? 'Unknown',
+    reporterUsername: report.user.username ?? 'Unknown',
+  }));
+}
+
+export interface HiddenPlatinumItem {
+  id: string;
+  gameName: string;
+  imageUrl: string;
+  isSpoiler: boolean;
+  ownerUsername: string;
+  reportCount: number;
+}
+
+/** Plates currently taken down, newest first. */
+export async function getHiddenPlatinums(limit = 50): Promise<HiddenPlatinumItem[]> {
+  const plates = await prisma.platinum.findMany({
+    where: { moderationStatus: 'HIDDEN' },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    include: {
+      user: { select: { username: true } },
+      _count: { select: { reports: true } },
+    },
+  });
+
+  return plates.map((plate) => ({
+    id: plate.id,
+    gameName: plate.gameName,
+    imageUrl: plate.imageUrl,
+    isSpoiler: plate.isSpoiler,
+    ownerUsername: plate.user.username ?? 'Unknown',
+    reportCount: plate._count.reports,
+  }));
 }
 
 export async function getMonthlyRanking(
