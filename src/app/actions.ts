@@ -146,7 +146,8 @@ export async function uploadPlatinum(formData: FormData) {
       watermark,
       parsed.data.watermarkPosition,
     );
-  } catch {
+  } catch (error) {
+    console.error("[upload] image processing failed", error);
     return {
       success: false as const,
       error: "The file is not a valid image.",
@@ -169,7 +170,8 @@ export async function uploadPlatinum(formData: FormData) {
 
   try {
     await putImage(key, processed.data);
-  } catch {
+  } catch (error) {
+    console.error("[upload] storage put failed", key, error);
     return {
       success: false as const,
       error: "Could not upload the image. Please try again.",
@@ -210,6 +212,7 @@ export async function uploadPlatinum(formData: FormData) {
         error: "You already have a platinum with that same screenshot.",
       };
     }
+    console.error("[upload] platinum create failed", error);
     return {
       success: false as const,
       error: "Could not save the platinum. Please try again.",
