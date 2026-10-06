@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentPeriod } from "@/lib/period";
 
+export type ModerationStatus = 'PUBLISHED' | 'UNDER_REVIEW' | 'HIDDEN';
+
+/** Only these plates show up in public lists; owners see their own otherwise. */
+const PUBLISHED_ONLY = { moderationStatus: 'PUBLISHED' as const };
+
 export interface Platinum {
   id: string;
   hash: string;
@@ -17,6 +22,7 @@ export interface Platinum {
   height: number;
   comment?: string | null;
   hasVoted?: boolean;
+  moderationStatus: ModerationStatus;
 }
 
 export interface User {
@@ -42,6 +48,7 @@ interface PlatinumRecord {
   width: number;
   height: number;
   comment?: string | null;
+  moderationStatus: string;
 }
 
 interface UserRecord {
@@ -66,6 +73,7 @@ const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   height: p.height,
   comment: p.comment,
   hasVoted,
+  moderationStatus: p.moderationStatus as ModerationStatus,
 });
 
 const toUserView = (u: UserRecord, pridePlatinumId?: string): User => ({
@@ -98,7 +106,7 @@ async function attachVoteStatus(
 
 async function getPridePlatinumId(userId: string): Promise<string | undefined> {
   const pride = await prisma.platinum.findFirst({
-    where: { userId },
+    where: { userId, ...PUBLISHED_ONLY },
     orderBy: [{ votes: 'desc' }, { monthlyVotes: 'desc' }],
     select: { id: true },
   });
@@ -134,7 +142,7 @@ export async function getUserByUsername(username: string): Promise<User | undefi
 }
 
 export async function getPlatinums(): Promise<Platinum[]> {
-  const platinums = await prisma.platinum.findMany();
+  const platinums = await prisma.platinum.findMany({ where: { ...PUBLISHED_ONLY } });
   return platinums.map((p) => toPlatinumView(p));
 }
 
@@ -170,6 +178,7 @@ export async function getPlatinumsPage(options: {
   const search = q.trim();
 
   const where = {
+    ...PUBLISHED_ONLY,
     ...(platform && platform !== 'all' ? { platform } : {}),
     ...(search
       ? { gameName: { contains: search, mode: 'insensitive' as const } }
@@ -207,9 +216,17 @@ export async function getPlatinumsPage(options: {
 export async function getPlatinumById(
   id: string,
   currentUserId?: string,
+  options: { includeUnpublished?: boolean } = {},
 ): Promise<Platinum | undefined> {
   const platinum = await prisma.platinum.findUnique({ where: { id } });
   if (!platinum) return undefined;
+
+  // A plate that is not PUBLISHED is only reachable by its owner (or a
+  // moderator, who passes includeUnpublished) — never by a public URL.
+  if (platinum.moderationStatus !== 'PUBLISHED' && !options.includeUnpublished) {
+    if (platinum.userId !== currentUserId) return undefined;
+  }
+
   const [view] = await attachVoteStatus([platinum], currentUserId);
   return view;
 }
@@ -218,7 +235,11 @@ export async function getPlatinumsByUserId(
   userId: string,
   currentUserId?: string,
 ): Promise<Platinum[]> {
-  const platinums = await prisma.platinum.findMany({ where: { userId } });
+  // The owner sees their whole shelf (with a status chip); everyone else only
+  // the published ones.
+  const where =
+    userId === currentUserId ? { userId } : { userId, ...PUBLISHED_ONLY };
+  const platinums = await prisma.platinum.findMany({ where });
   return attachVoteStatus(platinums, currentUserId);
 }
 
@@ -239,6 +260,7 @@ export async function getHallOfFame(
 ): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
     where: {
+      ...PUBLISHED_ONLY,
       monthlyVotesMonth: getCurrentPeriod(),
       monthlyVotes: { gt: 0 },
     },
@@ -254,6 +276,7 @@ export async function getTopPlatinums(
 ): Promise<Platinum[]> {
   const hallOfFame = await prisma.platinum.findFirst({
     where: {
+      ...PUBLISHED_ONLY,
       monthlyVotesMonth: getCurrentPeriod(),
       monthlyVotes: { gt: 0 },
     },
@@ -263,6 +286,7 @@ export async function getTopPlatinums(
 
   const platinums = await prisma.platinum.findMany({
     where: {
+      ...PUBLISHED_ONLY,
       monthlyVotesMonth: getCurrentPeriod(),
       monthlyVotes: { gt: 0 },
       ...(hallOfFame ? { id: { not: hallOfFame.id } } : {}),
@@ -278,6 +302,7 @@ export async function getLatestPlatinums(
   currentUserId?: string,
 ): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
+    where: { ...PUBLISHED_ONLY },
     orderBy: { platinumDate: 'desc' },
     take: limit,
   });
@@ -296,6 +321,7 @@ export async function getMostVotedPlatinums(
 ): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
     where: {
+      ...PUBLISHED_ONLY,
       isSpoiler: false,
       votes: { gt: 0 },
       ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
@@ -313,10 +339,10 @@ export async function getCommunityStats(): Promise<{
   games: number;
 }> {
   const [platinums, agg, hunters, games] = await Promise.all([
-    prisma.platinum.count(),
-    prisma.platinum.aggregate({ _sum: { votes: true } }),
-    prisma.user.count({ where: { platinums: { some: {} } } }),
-    prisma.platinum.groupBy({ by: ['gameName'] }),
+    prisma.platinum.count({ where: { ...PUBLISHED_ONLY } }),
+    prisma.platinum.aggregate({ where: { ...PUBLISHED_ONLY }, _sum: { votes: true } }),
+    prisma.user.count({ where: { platinums: { some: { ...PUBLISHED_ONLY } } } }),
+    prisma.platinum.groupBy({ by: ['gameName'], where: { ...PUBLISHED_ONLY } }),
   ]);
 
   return {
@@ -329,10 +355,14 @@ export async function getCommunityStats(): Promise<{
 
 export async function getMonthlyRaceStats(): Promise<{ plates: number; votes: number }> {  const [plates, agg] = await Promise.all([
     prisma.platinum.count({
-      where: { monthlyVotesMonth: getCurrentPeriod(), monthlyVotes: { gt: 0 } },
+      where: {
+        ...PUBLISHED_ONLY,
+        monthlyVotesMonth: getCurrentPeriod(),
+        monthlyVotes: { gt: 0 },
+      },
     }),
     prisma.platinum.aggregate({
-      where: { monthlyVotesMonth: getCurrentPeriod() },
+      where: { ...PUBLISHED_ONLY, monthlyVotesMonth: getCurrentPeriod() },
       _sum: { monthlyVotes: true },
     }),
   ]);
@@ -345,6 +375,7 @@ export async function getMonthlyRanking(
 ): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({
     where: {
+      ...PUBLISHED_ONLY,
       monthlyVotesMonth: getCurrentPeriod(),
       monthlyVotes: { gt: 0 },
     },

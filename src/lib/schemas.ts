@@ -1,8 +1,23 @@
 import * as z from "zod";
+import { ReportReason } from "@/generated/prisma/enums";
 import {
   DEFAULT_WATERMARK_POSITION,
   WATERMARK_POSITIONS,
 } from "@/lib/watermark-position";
+
+/** Reasons a user can pick when flagging a plate. */
+export const reportSchema = z.object({
+  reason: z.nativeEnum(ReportReason, {
+    errorMap: () => ({ message: "Pick a reason for the report." }),
+  }),
+  message: z
+    .string()
+    .trim()
+    .max(500, { message: "Message is too long." })
+    .optional(),
+});
+
+export type ReportValues = z.infer<typeof reportSchema>;
 
 export const PLATINUM_PLATFORMS = ["PS3", "PS4", "PS5"] as const;
 

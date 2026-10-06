@@ -67,7 +67,10 @@ async function buildPeriodRanking(period: string): Promise<RankingRow[]> {
   });
 
   const platinums = await prisma.platinum.findMany({
-    where: { id: { in: ordered.map((row) => row.platinumId) } },
+    where: {
+      moderationStatus: 'PUBLISHED',
+      id: { in: ordered.map((row) => row.platinumId) },
+    },
     include: { user: true },
   });
   const byId = new Map(platinums.map((platinum) => [platinum.id, platinum]));
