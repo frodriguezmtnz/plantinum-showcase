@@ -61,12 +61,16 @@ function Calendar({
           "h-9 text-[0.8rem] font-normal text-muted-foreground align-middle",
         week: "",
         day: "p-0 text-center align-middle text-sm",
+        // The pill is painted on the button (not the cell) so its own text
+        // color always wins over the ghost variant's `text-secondary-foreground`
+        // — otherwise the number vanished on the selected cell (white on white).
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "aspect-square w-full p-0 font-normal aria-selected:opacity-100"
+          "aspect-square w-full p-0 font-normal",
+          "data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground",
+          "data-[selected=true]:hover:bg-primary data-[selected=true]:hover:text-primary-foreground"
         ),
-        selected:
-          "rounded-full bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        selected: "rounded-full",
         today: "rounded-full bg-accent text-accent-foreground",
         outside: "text-muted-foreground opacity-50",
         disabled: "text-muted-foreground opacity-50",
@@ -74,6 +78,19 @@ function Calendar({
         ...classNames,
       }}
       components={{
+        // v9 puts the selection/today flags on the <td>; copy them onto the
+        // button so the Tailwind `data-*` variants above can do their job.
+        DayButton: ({ day, modifiers, className, ...props }) => (
+          <button
+            type="button"
+            data-day={day.isoDate}
+            data-selected={modifiers.selected || undefined}
+            data-today={modifiers.today || undefined}
+            data-outside={modifiers.outside || undefined}
+            className={className}
+            {...props}
+          />
+        ),
         Chevron: ({ orientation, className, ...props }) => {
           const Icon =
             orientation === "up"

@@ -59,6 +59,7 @@ export function UploadForm() {
   const [dragActive, setDragActive] = useState(false);
   const [stage, setStage] = useState<UploadStage>('idle');
   const [compressPct, setCompressPct] = useState(0);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [quota, setQuota] = useState<Awaited<ReturnType<typeof getUploadQuota>>>(null);
   const router = useRouter();
 
@@ -253,7 +254,7 @@ export function UploadForm() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Platinum Date</FormLabel>
-                      <Popover>
+                      <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -276,7 +277,12 @@ export function UploadForm() {
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              if (date) {
+                                field.onChange(date);
+                                setCalendarOpen(false);
+                              }
+                            }}
                             disabled={(date) =>
                               date > new Date() || date < new Date("2006-11-11") // PS3 launch
                             }

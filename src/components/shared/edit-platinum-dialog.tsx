@@ -75,6 +75,7 @@ export function EditPlatinumDialog({
   const router = useRouter();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<PlatinumMetaValues>({
@@ -192,7 +193,7 @@ export function EditPlatinumDialog({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Platinum Date</FormLabel>
-                  <Popover>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -217,11 +218,15 @@ export function EditPlatinumDialog({
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          if (date) {
+                            field.onChange(date);
+                            setCalendarOpen(false);
+                          }
+                        }}
                         disabled={(date) =>
                           date > new Date() || date < new Date('2006-11-11')
                         }
-                        initialFocus
                       />
                     </PopoverContent>
                   </Popover>
