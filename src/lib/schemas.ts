@@ -1,6 +1,15 @@
 import * as z from "zod";
+import {
+  DEFAULT_WATERMARK_POSITION,
+  WATERMARK_POSITIONS,
+} from "@/lib/watermark-position";
 
 export const PLATINUM_PLATFORMS = ["PS3", "PS4", "PS5"] as const;
+
+/** Corner the baked-in watermark sits in (upload-only, never persisted). */
+export const watermarkPositionSchema = z
+  .enum(WATERMARK_POSITIONS)
+  .default(DEFAULT_WATERMARK_POSITION);
 
 /**
  * Metadata that can be set when a platinum is uploaded or edited. The image

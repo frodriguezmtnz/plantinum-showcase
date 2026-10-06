@@ -1,4 +1,14 @@
 import sharp from "sharp";
+import {
+  DEFAULT_WATERMARK_POSITION,
+  type WatermarkPosition,
+} from "@/lib/watermark-position";
+
+export {
+  WATERMARK_POSITIONS,
+  DEFAULT_WATERMARK_POSITION,
+  type WatermarkPosition,
+} from "@/lib/watermark-position";
 
 /**
  * Baked-in site watermark. Free accounts always get it; the Pro/Supporter
@@ -36,10 +46,11 @@ export function buildWatermark(
   imageWidth: number,
   imageHeight: number,
   username: string,
+  position: WatermarkPosition = DEFAULT_WATERMARK_POSITION,
 ): WatermarkPlacement {
   const f = Math.min(1.5, Math.max(0.6, imageWidth / 1600));
   const pad = 11 * f;
-  const markSize = 18 * f;
+  const markSize = 22 * f;
   const titleSize = 13 * f;
   const subSize = 11 * f;
   const gap = 9 * f;
@@ -74,8 +85,13 @@ export function buildWatermark(
 </svg>`;
 
   const inset = Math.max(pad * 2, imageWidth * 0.025);
-  const left = Math.max(0, Math.round(imageWidth - inset - width));
-  const top = Math.max(0, Math.round(imageHeight - inset - height));
+  const leftEdge = Math.max(0, Math.round(inset));
+  const rightEdge = Math.max(0, Math.round(imageWidth - inset - width));
+  const topEdge = Math.max(0, Math.round(inset));
+  const bottomEdge = Math.max(0, Math.round(imageHeight - inset - height));
+
+  const left = position.endsWith("left") ? leftEdge : rightEdge;
+  const top = position.startsWith("top") ? topEdge : bottomEdge;
 
   return { svg, top, left };
 }
@@ -84,6 +100,7 @@ export async function encodePlate(
   resizedBuffer: Buffer,
   username: string,
   watermark: boolean,
+  position: WatermarkPosition = DEFAULT_WATERMARK_POSITION,
 ): Promise<{ data: Buffer; width: number; height: number }> {
   const meta = await sharp(resizedBuffer).metadata();
   const width = meta.width ?? 0;
@@ -91,7 +108,7 @@ export async function encodePlate(
 
   let img = sharp(resizedBuffer);
   if (watermark) {
-    const { svg, top, left } = buildWatermark(width, height, username);
+    const { svg, top, left } = buildWatermark(width, height, username, position);
     img = img.composite([{ input: Buffer.from(svg), top, left }]);
   }
 
