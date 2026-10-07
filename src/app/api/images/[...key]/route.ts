@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import { getImage, isStorageConfigured } from "@/lib/b2";
+import { isModerator } from "@/lib/roles";
+import { canServeStoredImage } from "@/lib/image-access";
 
 export const runtime = "nodejs";
 
@@ -20,12 +24,34 @@ export async function GET(
     return new NextResponse("Storage not configured", { status: 503 });
   }
 
+  const hash = key.slice("platinums/".length, -".avif".length);
+  const plates = await prisma.platinum.findMany({
+    where: { hash },
+    select: { userId: true, moderationStatus: true },
+  });
+
+  const session = await auth();
+  const viewerId = session?.user?.id;
+  const isPublic = plates.some(
+    (plate) => plate.moderationStatus === "PUBLISHED",
+  );
+  const viewerIsModerator =
+    viewerId && !isPublic ? await isModerator(viewerId) : false;
+
+  if (
+    !canServeStoredImage(plates, {
+      id: viewerId,
+      isModerator: viewerIsModerator,
+    })
+  ) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
   const image = await getImage(key);
   if (!image) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const hash = key.slice("platinums/".length, -".avif".length);
   const etag = `"${hash}"`;
 
   if (request.headers.get("if-none-match") === etag) {
@@ -34,10 +60,15 @@ export async function GET(
 
   const headers: Record<string, string> = {
     "Content-Type": image.contentType,
-    "Cache-Control": "public, max-age=31536000, immutable",
+    "Cache-Control": isPublic
+      ? "public, max-age=31536000, immutable"
+      : "private, no-store",
     "Content-Disposition": "inline",
     ETag: etag,
   };
+  if (!isPublic) {
+    headers["Vary"] = "Cookie";
+  }
   if (image.contentLength > 0) {
     headers["Content-Length"] = String(image.contentLength);
   }

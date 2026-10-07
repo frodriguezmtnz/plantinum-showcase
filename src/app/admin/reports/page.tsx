@@ -5,19 +5,53 @@ import { formatDistanceToNow } from 'date-fns';
 import { Flag, ShieldCheck } from 'lucide-react';
 import { auth } from '@/auth';
 import { isModerator } from '@/lib/roles';
-import { getHiddenPlatinums, getOpenReports } from '@/lib/data';
+import { getHiddenPlatinums, getOpenReports, MODERATION_PAGE_SIZE } from '@/lib/data';
 import { REPORT_REASON_LABELS } from '@/lib/report-labels';
+import { ReportReason } from '@/generated/prisma/enums';
 import { isStoredImage } from '@/lib/utils';
 import {
   HiddenPlateActions,
   ReportRowActions,
 } from '@/components/shared/moderation-actions';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 
 export const metadata = {
   title: 'Moderation | Platinum Showcase',
 };
+
+const REASONS = Object.values(ReportReason);
+
+type ReportFilter = ReportReason | 'all';
+
+type AdminReportsSearchParams = {
+  rpage?: string;
+  hpage?: string;
+  reason?: string;
+};
+
+type Props = {
+  searchParams: Promise<AdminReportsSearchParams>;
+};
+
+function parsePage(value?: string): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : 1;
+}
+
+function buildHref(params: {
+  reason?: ReportFilter;
+  rpage?: number;
+  hpage?: number;
+}): string {
+  const search = new URLSearchParams();
+  if (params.reason && params.reason !== 'all') search.set('reason', params.reason);
+  if (params.rpage && params.rpage > 1) search.set('rpage', String(params.rpage));
+  if (params.hpage && params.hpage > 1) search.set('hpage', String(params.hpage));
+  const query = search.toString();
+  return `/admin/reports${query ? `?${query}` : ''}`;
+}
 
 function PlateThumb({
   imageUrl,
@@ -45,7 +79,66 @@ function PlateThumb({
   );
 }
 
-export default async function AdminReportsPage() {
+function FilterPill({
+  active,
+  href,
+  children,
+}: {
+  active: boolean;
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button asChild size="sm" variant={active ? 'default' : 'outline'}>
+      <Link href={href}>{children}</Link>
+    </Button>
+  );
+}
+
+function Pagination({
+  label,
+  total,
+  page,
+  hasMore,
+  hrefForPage,
+}: {
+  label: string;
+  total: number;
+  page: number;
+  hasMore: boolean;
+  hrefForPage: (page: number) => string;
+}) {
+  if (total === 0) return null;
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+      <span className="tabular">
+        {total} {label} · page {page}
+      </span>
+      <div className="flex items-center gap-2">
+        {page > 1 ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={hrefForPage(page - 1)}>Newer</Link>
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" disabled>
+            Newer
+          </Button>
+        )}
+        {hasMore ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={hrefForPage(page + 1)}>Older</Link>
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" disabled>
+            Older
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default async function AdminReportsPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/admin/reports');
@@ -54,9 +147,20 @@ export default async function AdminReportsPage() {
     notFound();
   }
 
+  const params = await searchParams;
+  const reason: ReportFilter =
+    params.reason && (REASONS as string[]).includes(params.reason)
+      ? (params.reason as ReportReason)
+      : 'all';
+  const reportsPage = parsePage(params.rpage);
+  const hiddenPage = parsePage(params.hpage);
+
   const [reports, hidden] = await Promise.all([
-    getOpenReports(),
-    getHiddenPlatinums(),
+    getOpenReports({
+      reason,
+      offset: (reportsPage - 1) * MODERATION_PAGE_SIZE,
+    }),
+    getHiddenPlatinums({ offset: (hiddenPage - 1) * MODERATION_PAGE_SIZE }),
   ]);
 
   return (
@@ -66,23 +170,48 @@ export default async function AdminReportsPage() {
         <div>
           <h1 className="text-3xl font-bold font-headline">Moderation</h1>
           <p className="text-sm text-muted-foreground">
-            {reports.length} open {reports.length === 1 ? 'report' : 'reports'} ·{' '}
-            {hidden.length} hidden
+            {reports.total} open {reports.total === 1 ? 'report' : 'reports'} ·{' '}
+            {hidden.total} hidden
           </p>
         </div>
       </div>
 
       <section className="mb-12">
         <h2 className="mb-4 text-xl font-bold font-headline">Open reports</h2>
-        {reports.length === 0 ? (
+
+        {reports.total > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <FilterPill
+              active={reason === 'all'}
+              href={buildHref({ rpage: 1, hpage: hiddenPage })}
+            >
+              All
+            </FilterPill>
+            {REASONS.map((item) => (
+              <FilterPill
+                key={item}
+                active={reason === item}
+                href={buildHref({ reason: item, rpage: 1, hpage: hiddenPage })}
+              >
+                {REPORT_REASON_LABELS[item]}
+              </FilterPill>
+            ))}
+          </div>
+        )}
+
+        {reports.items.length === 0 ? (
           <EmptyState
             icon={Flag}
-            title="Nothing to review"
-            description="No open reports right now. Nice."
+            title={reason === 'all' ? 'Nothing to review' : 'No reports with that reason'}
+            description={
+              reason === 'all'
+                ? 'No open reports right now. Nice.'
+                : 'Try another reason or clear the filter.'
+            }
           />
         ) : (
           <ul className="space-y-3">
-            {reports.map((report) => (
+            {reports.items.map((report) => (
               <li
                 key={report.id}
                 className="panel-solid flex flex-col gap-4 rounded-xl p-4 sm:flex-row"
@@ -119,11 +248,19 @@ export default async function AdminReportsPage() {
             ))}
           </ul>
         )}
+
+        <Pagination
+          label={reports.total === 1 ? 'open report' : 'open reports'}
+          total={reports.total}
+          page={reportsPage}
+          hasMore={reports.hasMore}
+          hrefForPage={(page) => buildHref({ reason, rpage: page, hpage: hiddenPage })}
+        />
       </section>
 
       <section>
         <h2 className="mb-4 text-xl font-bold font-headline">Hidden plates</h2>
-        {hidden.length === 0 ? (
+        {hidden.items.length === 0 ? (
           <EmptyState
             icon={ShieldCheck}
             title="Nothing hidden"
@@ -131,7 +268,7 @@ export default async function AdminReportsPage() {
           />
         ) : (
           <ul className="space-y-3">
-            {hidden.map((plate) => (
+            {hidden.items.map((plate) => (
               <li
                 key={plate.id}
                 className="panel-solid flex flex-col gap-4 rounded-xl p-4 sm:flex-row"
@@ -163,6 +300,14 @@ export default async function AdminReportsPage() {
             ))}
           </ul>
         )}
+
+        <Pagination
+          label={hidden.total === 1 ? 'hidden plate' : 'hidden plates'}
+          total={hidden.total}
+          page={hiddenPage}
+          hasMore={hidden.hasMore}
+          hrefForPage={(page) => buildHref({ reason, hpage: page, rpage: reportsPage })}
+        />
       </section>
     </div>
   );

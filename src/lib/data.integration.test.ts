@@ -279,15 +279,47 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
       }),
     ).rejects.toMatchObject({ code: 'P2002' });
 
-    const open = await data.getOpenReports();
+    const open = (await data.getOpenReports()).items;
     const mine = open.find((row) => row.platinumId === p.f);
     expect(mine?.reason).toBe('SEXUAL');
     expect(mine?.ownerUsername).toBe(`it_alice_${stamp}`);
     expect(mine?.reporterUsername).toBe(`it_bob_${stamp}`);
+
+    await prisma.report.createMany({
+      data: [
+        { platinumId: p.a, userId: u.carol, reason: 'SPAM' },
+        { platinumId: p.b, userId: u.carol, reason: 'SPAM' },
+      ],
+    });
+
+    const spam = await data.getOpenReports({ reason: 'SPAM' });
+    expect(spam.total).toBe(2);
+    expect(spam.items.every((row) => row.reason === 'SPAM')).toBe(true);
+
+    const firstPage = await data.getOpenReports({ limit: 2 });
+    expect(firstPage.items).toHaveLength(2);
+    expect(firstPage.total).toBeGreaterThanOrEqual(3);
+    expect(firstPage.hasMore).toBe(true);
+  });
+
+  it('treats only an OPEN report as blocking a new one', async () => {
+    await prisma.report.create({
+      data: { platinumId: p.e, userId: u.bob, reason: 'SPAM' },
+    });
+
+    expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(true);
+    expect(await data.getOpenReportForUser(p.e)).toBe(false);
+
+    await prisma.report.update({
+      where: { userId_platinumId: { userId: u.bob, platinumId: p.e } },
+      data: { status: 'DISMISSED' },
+    });
+
+    expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(false);
   });
 
   it('lists hidden plates with owner and report count', async () => {
-    const hidden = await data.getHiddenPlatinums();
+    const hidden = (await data.getHiddenPlatinums()).items;
     const row = hidden.find((plate) => plate.id === p.f);
     expect(row?.ownerUsername).toBe(`it_alice_${stamp}`);
     expect(row?.reportCount).toBeGreaterThanOrEqual(1);

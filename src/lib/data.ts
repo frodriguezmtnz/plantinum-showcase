@@ -383,27 +383,50 @@ export interface ModerationReportItem {
   reporterUsername: string;
 }
 
-/** Open reports for the moderation board, newest first. */
-export async function getOpenReports(limit = 50): Promise<ModerationReportItem[]> {
-  const reports = await prisma.report.findMany({
-    where: { status: 'OPEN' },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-    include: {
-      platinum: {
-        select: {
-          id: true,
-          gameName: true,
-          imageUrl: true,
-          isSpoiler: true,
-          user: { select: { username: true } },
-        },
-      },
-      user: { select: { username: true } },
-    },
-  });
+export const MODERATION_PAGE_SIZE = 20;
 
-  return reports.map((report) => ({
+export interface ModerationReportPage {
+  items: ModerationReportItem[];
+  total: number;
+  hasMore: boolean;
+}
+
+/** Open reports for the moderation board, newest first, paginated/filterable. */
+export async function getOpenReports(options: {
+  reason?: ReportReason | 'all';
+  offset?: number;
+  limit?: number;
+} = {}): Promise<ModerationReportPage> {
+  const { reason = 'all', offset = 0, limit = MODERATION_PAGE_SIZE } = options;
+  const where = {
+    status: 'OPEN' as const,
+    ...(reason !== 'all' ? { reason } : {}),
+  };
+
+  const [reports, total] = await Promise.all([
+    prisma.report.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: offset,
+      take: limit + 1,
+      include: {
+        platinum: {
+          select: {
+            id: true,
+            gameName: true,
+            imageUrl: true,
+            isSpoiler: true,
+            user: { select: { username: true } },
+          },
+        },
+        user: { select: { username: true } },
+      },
+    }),
+    prisma.report.count({ where }),
+  ]);
+
+  const hasMore = reports.length > limit;
+  const items = reports.slice(0, limit).map((report) => ({
     id: report.id,
     reason: report.reason,
     message: report.message,
@@ -415,6 +438,21 @@ export async function getOpenReports(limit = 50): Promise<ModerationReportItem[]
     ownerUsername: report.platinum.user.username ?? 'Unknown',
     reporterUsername: report.user.username ?? 'Unknown',
   }));
+
+  return { items, total, hasMore };
+}
+
+/** Whether the viewer already has an open report on this plate. */
+export async function getOpenReportForUser(
+  platinumId: string,
+  userId?: string,
+): Promise<boolean> {
+  if (!userId) return false;
+  const report = await prisma.report.findUnique({
+    where: { userId_platinumId: { userId, platinumId } },
+    select: { status: true },
+  });
+  return report?.status === 'OPEN';
 }
 
 export interface HiddenPlatinumItem {
@@ -426,19 +464,36 @@ export interface HiddenPlatinumItem {
   reportCount: number;
 }
 
-/** Plates currently taken down, newest first. */
-export async function getHiddenPlatinums(limit = 50): Promise<HiddenPlatinumItem[]> {
-  const plates = await prisma.platinum.findMany({
-    where: { moderationStatus: 'HIDDEN' },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-    include: {
-      user: { select: { username: true } },
-      _count: { select: { reports: true } },
-    },
-  });
+export interface HiddenPlatinumPage {
+  items: HiddenPlatinumItem[];
+  total: number;
+  hasMore: boolean;
+}
 
-  return plates.map((plate) => ({
+/** Plates currently taken down, newest first, paginated. */
+export async function getHiddenPlatinums(options: {
+  offset?: number;
+  limit?: number;
+} = {}): Promise<HiddenPlatinumPage> {
+  const { offset = 0, limit = MODERATION_PAGE_SIZE } = options;
+  const where = { moderationStatus: 'HIDDEN' as const };
+
+  const [plates, total] = await Promise.all([
+    prisma.platinum.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: offset,
+      take: limit + 1,
+      include: {
+        user: { select: { username: true } },
+        _count: { select: { reports: true } },
+      },
+    }),
+    prisma.platinum.count({ where }),
+  ]);
+
+  const hasMore = plates.length > limit;
+  const items = plates.slice(0, limit).map((plate) => ({
     id: plate.id,
     gameName: plate.gameName,
     imageUrl: plate.imageUrl,
@@ -446,6 +501,8 @@ export async function getHiddenPlatinums(limit = 50): Promise<HiddenPlatinumItem
     ownerUsername: plate.user.username ?? 'Unknown',
     reportCount: plate._count.reports,
   }));
+
+  return { items, total, hasMore };
 }
 
 export async function getMonthlyRanking(
