@@ -261,7 +261,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
   });
 
   it('hides unpublished plates from other profiles but not the owner shelf', async () => {
-    const owner = await data.getPlatinumsByUserId(u.alice);
+    const owner = await data.getPlatinumsByUserId(u.alice, u.alice);
     expect(owner.map((x) => x.id)).toContain(p.f);
 
     const visitor = await data.getPlatinumsByUserId(u.alice, u.bob);
