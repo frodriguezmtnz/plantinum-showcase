@@ -1,5 +1,5 @@
 
-import { getPlatinumById, getUserById } from '@/lib/data';
+import { getOpenReportForUser, getPlatinumById, getUserById } from '@/lib/data';
 import { auth } from '@/auth';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { EditPlatinumDialog } from '@/components/shared/edit-platinum-dialog';
@@ -87,6 +87,9 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
 
   const canDelete = currentUserId === platinum.userId;
   const canReport = currentUserId !== platinum.userId;
+  const hasOpenReport = canReport
+    ? await getOpenReportForUser(platinum.id, currentUserId)
+    : false;
   const underReview = platinum.moderationStatus !== 'PUBLISHED';
 
   return (
@@ -154,6 +157,7 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
                     <ReportPlatinumButton
                       platinumId={platinum.id}
                       gameName={platinum.gameName}
+                      hasOpenReport={hasOpenReport}
                     />
                   </div>
                 )}

@@ -38,18 +38,22 @@ const REASONS = Object.values(ReportReason);
 interface ReportPlatinumButtonProps {
   platinumId: string;
   gameName: string;
+  hasOpenReport?: boolean;
   className?: string;
 }
 
 export function ReportPlatinumButton({
   platinumId,
   gameName,
+  hasOpenReport = false,
   className,
 }: ReportPlatinumButtonProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const isReported = hasOpenReport || reportSent;
 
   const form = useForm<ReportValues>({
     resolver: zodResolver(reportSchema),
@@ -64,6 +68,25 @@ export function ReportPlatinumButton({
           Sign in to report
         </Link>
       </Button>
+    );
+  }
+
+  if (isReported) {
+    return (
+      <span
+        title="You already reported this platinum. A moderator is on it."
+        className="inline-flex"
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          disabled
+          className={cn('text-muted-foreground', className)}
+        >
+          <Flag className="h-4 w-4" />
+          Reported
+        </Button>
+      </span>
     );
   }
 
@@ -83,6 +106,7 @@ export function ReportPlatinumButton({
         return;
       }
 
+      setReportSent(true);
       setOpen(false);
       form.reset({ message: '' });
       toast({

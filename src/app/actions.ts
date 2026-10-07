@@ -535,21 +535,50 @@ export async function reportPlatinum(
     return { success: false as const, error: "You can't report your own platinum." };
   }
 
-  // One report per user per plate: re-reporting refreshes the existing row.
-  await prisma.report.upsert({
+  // One open report per user per plate. While a report is still OPEN the user
+  // cannot file another; a dismissed or actioned report can be reopened later.
+  const existing = await prisma.report.findUnique({
     where: { userId_platinumId: { userId, platinumId } },
-    create: {
-      userId,
-      platinumId,
-      reason: parsed.data.reason,
-      message: parsed.data.message ?? null,
-    },
-    update: {
-      reason: parsed.data.reason,
-      message: parsed.data.message ?? null,
-      status: "OPEN",
-    },
+    select: { status: true },
   });
+  if (existing?.status === "OPEN") {
+    return {
+      success: false as const,
+      error: "You already reported this platinum. A moderator is on it.",
+    };
+  }
+
+  const reportData = {
+    reason: parsed.data.reason,
+    message: parsed.data.message ?? null,
+    status: "OPEN" as const,
+  };
+
+  if (existing) {
+    await prisma.report.update({
+      where: { userId_platinumId: { userId, platinumId } },
+      data: reportData,
+    });
+  } else {
+    try {
+      await prisma.report.create({
+        data: { userId, platinumId, ...reportData },
+      });
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "P2002"
+      ) {
+        return {
+          success: false as const,
+          error: "You already reported this platinum.",
+        };
+      }
+      throw error;
+    }
+  }
 
   // TODO(Tanda 3): run the AI triage for this plate's image hash.
   return { success: true as const };

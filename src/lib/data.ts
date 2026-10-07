@@ -417,6 +417,19 @@ export async function getOpenReports(limit = 50): Promise<ModerationReportItem[]
   }));
 }
 
+/** Whether the viewer already has an open report on this plate. */
+export async function getOpenReportForUser(
+  platinumId: string,
+  userId?: string,
+): Promise<boolean> {
+  if (!userId) return false;
+  const report = await prisma.report.findUnique({
+    where: { userId_platinumId: { userId, platinumId } },
+    select: { status: true },
+  });
+  return report?.status === 'OPEN';
+}
+
 export interface HiddenPlatinumItem {
   id: string;
   gameName: string;
