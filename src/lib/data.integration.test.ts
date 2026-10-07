@@ -286,6 +286,22 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(mine?.reporterUsername).toBe(`it_bob_${stamp}`);
   });
 
+  it('treats only an OPEN report as blocking a new one', async () => {
+    await prisma.report.create({
+      data: { platinumId: p.e, userId: u.bob, reason: 'SPAM' },
+    });
+
+    expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(true);
+    expect(await data.getOpenReportForUser(p.e)).toBe(false);
+
+    await prisma.report.update({
+      where: { userId_platinumId: { userId: u.bob, platinumId: p.e } },
+      data: { status: 'DISMISSED' },
+    });
+
+    expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(false);
+  });
+
   it('lists hidden plates with owner and report count', async () => {
     const hidden = await data.getHiddenPlatinums();
     const row = hidden.find((plate) => plate.id === p.f);
