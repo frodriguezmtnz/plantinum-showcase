@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@/generated/prisma/enums";
 import bcrypt from "bcrypt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -42,6 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.username,
           email: user.email,
           image: user.image,
+          role: user.role,
         };
       },
     }),
@@ -51,6 +53,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.username = user.name;
+        // Cached for UI hints only — authorization always re-reads the role
+        // from the database so a promotion takes effect without re-login.
+        token.role = user.role;
       }
       return token;
     },
@@ -60,6 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.image = token.picture as string | undefined;
         session.user.name =
           (token.username as string | undefined) ?? session.user.name;
+        session.user.role = (token.role as Role | undefined) ?? "USER";
       }
       return session;
     },

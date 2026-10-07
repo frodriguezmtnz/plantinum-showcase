@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
     "snapshots": "tsx scripts/backfill-snapshots.ts",
+    "set-role": "tsx scripts/set-role.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

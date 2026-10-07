@@ -13,8 +13,9 @@ import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
 import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plans";
-import { platinumMetaInputSchema, watermarkPositionSchema } from "@/lib/schemas";
+import { platinumMetaInputSchema, reportSchema, watermarkPositionSchema } from "@/lib/schemas";
 import { buildImageHint } from "@/lib/image-hint";
+import { isModerator } from "@/lib/roles";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -305,43 +306,21 @@ function imageKeyFromUrl(imageUrl: string): string | null {
   return STORED_KEY_PATTERN.test(key) ? key : null;
 }
 
-export async function deletePlatinum(id: string) {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) {
-    return { success: false as const, error: "You need to sign in." };
-  }
-
-  const platinum = await prisma.platinum.findUnique({
-    where: { id },
-    select: { userId: true, imageUrl: true, hash: true },
-  });
-
-  if (!platinum) {
-    return { success: false as const, error: "This platinum does not exist." };
-  }
-  if (platinum.userId !== userId) {
-    return {
-      success: false as const,
-      error: "You can't delete a platinum that isn't yours.",
-    };
-  }
-
+/** Shared removal: cuts the frozen link, drops the row and cleans up B2. */
+async function removePlatinumRecord(
+  platinum: { id: string; imageUrl: string; hash: string },
+  ownerUsername: string | null | undefined,
+) {
   const key = imageKeyFromUrl(platinum.imageUrl);
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { username: true },
-  });
 
   // The frozen history keeps its display data; only the now-dead link is cut
   // so archived rows never point at a 404.
   await prisma.monthlyResult.updateMany({
-    where: { platinumId: id },
+    where: { platinumId: platinum.id },
     data: { platinumId: null },
   });
 
-  await prisma.platinum.delete({ where: { id } });
+  await prisma.platinum.delete({ where: { id: platinum.id } });
 
   if (key) {
     const stillReferenced = await prisma.platinum.count({
@@ -359,10 +338,282 @@ export async function deletePlatinum(id: string) {
   revalidatePath("/");
   revalidatePath("/explore");
   revalidatePath("/hall-of-fame");
-  if (user?.username) {
-    revalidatePath(`/u/${user.username}`);
+  revalidatePath(`/platinum/${platinum.id}`);
+  if (ownerUsername) {
+    revalidatePath(`/u/${ownerUsername}`);
+  }
+}
+
+export async function deletePlatinum(id: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in." };
   }
 
+  const platinum = await prisma.platinum.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      userId: true,
+      imageUrl: true,
+      hash: true,
+      user: { select: { username: true } },
+    },
+  });
+
+  if (!platinum) {
+    return { success: false as const, error: "This platinum does not exist." };
+  }
+  if (platinum.userId !== userId) {
+    return {
+      success: false as const,
+      error: "You can't delete a platinum that isn't yours.",
+    };
+  }
+
+  await removePlatinumRecord(platinum, platinum.user.username);
+
+  return { success: true as const };
+}
+
+export type ModerationDecision = "dismiss" | "hide" | "delete";
+
+/**
+ * A moderator's decision on an open report. Authorization always re-reads the
+ * role from the database, so it applies the moment it is granted.
+ */
+export async function moderateReport(reportId: string, decision: ModerationDecision) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in." };
+  }
+  if (!(await isModerator(userId))) {
+    return { success: false as const, error: "You don't have permission to moderate." };
+  }
+  if (!checkRateLimit(`moderate:${userId}`, 60, 60_000).ok) {
+    return { success: false as const, error: "Slow down a moment and try again." };
+  }
+
+  const report = await prisma.report.findUnique({
+    where: { id: reportId },
+    select: {
+      id: true,
+      platinumId: true,
+      platinum: {
+        select: {
+          id: true,
+          imageUrl: true,
+          hash: true,
+          user: { select: { username: true } },
+        },
+      },
+    },
+  });
+  if (!report) {
+    return { success: false as const, error: "This report does not exist." };
+  }
+
+  if (decision === "dismiss") {
+    await prisma.report.update({ where: { id: reportId }, data: { status: "DISMISSED" } });
+    revalidatePath("/admin/reports");
+    return { success: true as const };
+  }
+
+  if (decision === "hide") {
+    await prisma.$transaction([
+      prisma.platinum.update({
+        where: { id: report.platinumId },
+        data: { moderationStatus: "HIDDEN" },
+      }),
+      prisma.report.updateMany({
+        where: { platinumId: report.platinumId },
+        data: { status: "ACTIONED" },
+      }),
+    ]);
+    revalidateVotePaths(report.platinumId, report.platinum.user.username);
+    revalidatePath("/admin/reports");
+    return { success: true as const };
+  }
+
+  await removePlatinumRecord(report.platinum, report.platinum.user.username);
+  revalidatePath("/admin/reports");
+  return { success: true as const };
+}
+
+export type PlatinumModerationOp = "PUBLISHED" | "HIDDEN" | "DELETE";
+
+/** Direct moderation from the board (restore / take down / delete). */
+export async function moderatePlatinum(
+  platinumId: string,
+  op: PlatinumModerationOp,
+) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in." };
+  }
+  if (!(await isModerator(userId))) {
+    return { success: false as const, error: "You don't have permission to moderate." };
+  }
+  if (!checkRateLimit(`moderate:${userId}`, 60, 60_000).ok) {
+    return { success: false as const, error: "Slow down a moment and try again." };
+  }
+
+  const platinum = await prisma.platinum.findUnique({
+    where: { id: platinumId },
+    select: {
+      id: true,
+      imageUrl: true,
+      hash: true,
+      user: { select: { username: true } },
+    },
+  });
+  if (!platinum) {
+    return { success: false as const, error: "This platinum does not exist." };
+  }
+
+  if (op === "DELETE") {
+    await removePlatinumRecord(platinum, platinum.user.username);
+    revalidatePath("/admin/reports");
+    return { success: true as const };
+  }
+
+  if (op === "HIDDEN") {
+    await prisma.$transaction([
+      prisma.platinum.update({ where: { id: platinumId }, data: { moderationStatus: "HIDDEN" } }),
+      prisma.report.updateMany({
+        where: { platinumId, status: "OPEN" },
+        data: { status: "ACTIONED" },
+      }),
+    ]);
+  } else {
+    await prisma.platinum.update({
+      where: { id: platinumId },
+      data: { moderationStatus: "PUBLISHED" },
+    });
+  }
+
+  revalidateVotePaths(platinumId, platinum.user.username);
+  revalidatePath("/admin/reports");
+  return { success: true as const };
+}
+
+export async function reportPlatinum(
+  platinumId: string,
+  input: { reason: string; message?: string },
+) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in to report a platinum." };
+  }
+  if (!checkRateLimit(`report:${userId}`, 10, 60_000).ok) {
+    return {
+      success: false as const,
+      error: "That is a lot of reports at once. Please wait a moment and try again.",
+    };
+  }
+
+  const parsed = reportSchema.safeParse({
+    reason: input.reason,
+    message: input.message || undefined,
+  });
+  if (!parsed.success) {
+    return { success: false as const, error: "Pick a reason for the report." };
+  }
+
+  const platinum = await prisma.platinum.findUnique({
+    where: { id: platinumId },
+    select: { userId: true },
+  });
+  if (!platinum) {
+    return { success: false as const, error: "This platinum does not exist." };
+  }
+  if (platinum.userId === userId) {
+    return { success: false as const, error: "You can't report your own platinum." };
+  }
+
+  // One open report per user per plate. While a report is still OPEN the user
+  // cannot file another; a dismissed or actioned report can be reopened later.
+  const existing = await prisma.report.findUnique({
+    where: { userId_platinumId: { userId, platinumId } },
+    select: { status: true },
+  });
+  if (existing?.status === "OPEN") {
+    return {
+      success: false as const,
+      error: "You already reported this platinum. A moderator is on it.",
+    };
+  }
+
+  const reportData = {
+    reason: parsed.data.reason,
+    message: parsed.data.message ?? null,
+    status: "OPEN" as const,
+  };
+
+  if (existing) {
+    await prisma.report.update({
+      where: { userId_platinumId: { userId, platinumId } },
+      data: reportData,
+    });
+  } else {
+    try {
+      await prisma.report.create({
+        data: { userId, platinumId, ...reportData },
+      });
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "P2002"
+      ) {
+        return {
+          success: false as const,
+          error: "You already reported this platinum.",
+        };
+      }
+      throw error;
+    }
+  }
+
+  // TODO(Tanda 3): run the AI triage for this plate's image hash.
+  return { success: true as const };
+}
+
+export async function withdrawReport(platinumId: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in to withdraw a report." };
+  }
+  if (!checkRateLimit(`report:${userId}`, 10, 60_000).ok) {
+    return {
+      success: false as const,
+      error: "That is a lot of reports at once. Please wait a moment and try again.",
+    };
+  }
+
+  const report = await prisma.report.findUnique({
+    where: { userId_platinumId: { userId, platinumId } },
+    select: { id: true, status: true },
+  });
+  if (!report) {
+    return { success: false as const, error: "You have no report on this platinum." };
+  }
+  if (report.status !== "OPEN") {
+    return {
+      success: false as const,
+      error: "Only reports waiting for review can be withdrawn.",
+    };
+  }
+
+  await prisma.report.delete({ where: { id: report.id } });
+  revalidatePath(`/platinum/${platinumId}`);
+  revalidatePath("/admin/reports");
   return { success: true as const };
 }
 
@@ -405,12 +656,19 @@ export async function toggleVoteForPlatinum(
     where: { id: platinumId },
     select: {
       userId: true,
+      moderationStatus: true,
       user: { select: { username: true } },
     },
   });
 
   if (!platinum) {
     return { success: false, error: "This platinum does not exist." };
+  }
+  if (platinum.moderationStatus !== "PUBLISHED") {
+    return {
+      success: false,
+      error: "This platinum is under review and can't be voted on.",
+    };
   }
   if (platinum.userId === userId) {
     return {

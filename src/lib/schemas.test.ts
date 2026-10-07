@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { platinumMetaInputSchema, platinumMetaSchema } from '@/lib/schemas';
+import {
+  platinumMetaInputSchema,
+  platinumMetaSchema,
+  reportSchema,
+} from '@/lib/schemas';
 
 const base = {
   gameName: 'Elden Ring',
@@ -60,6 +64,25 @@ describe('platinumMetaSchema', () => {
     expect(
       platinumMetaSchema.safeParse({ ...base, comment: 'x'.repeat(501), isSpoiler: false })
         .success,
+    ).toBe(false);
+  });
+});
+
+describe('reportSchema', () => {
+  it('accepts a known reason with an optional message', () => {
+    expect(reportSchema.safeParse({ reason: 'SPAM' }).success).toBe(true);
+    expect(reportSchema.safeParse({ reason: 'OFF_CONTEXT', message: 'not a trophy' }).success).toBe(
+      true,
+    );
+  });
+
+  it('rejects an unknown reason', () => {
+    expect(reportSchema.safeParse({ reason: 'NOPE' }).success).toBe(false);
+  });
+
+  it('rejects a message longer than 500 characters', () => {
+    expect(
+      reportSchema.safeParse({ reason: 'SPAM', message: 'x'.repeat(501) }).success,
     ).toBe(false);
   });
 });

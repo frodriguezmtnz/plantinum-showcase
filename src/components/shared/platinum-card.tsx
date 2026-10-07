@@ -76,6 +76,14 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
               unoptimized={isStoredImage(platinum.imageUrl)}
             />
           </Link>
+          {platinum.moderationStatus !== 'PUBLISHED' && (
+            <Badge
+              variant="outline"
+              className="absolute left-2 top-2 z-10 border-destructive/50 bg-background/80 text-destructive backdrop-blur"
+            >
+              {platinum.moderationStatus === 'HIDDEN' ? 'Hidden' : 'Under review'}
+            </Badge>
+          )}
           {!showSpoiler && (
             <div className="spoiler-frost-strong absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
               <p className="text-lg font-bold flex items-center gap-2 text-foreground">

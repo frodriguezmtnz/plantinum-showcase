@@ -13,6 +13,34 @@ enum Plan {
   PLATINUM
 }
 
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+// PUBLISHED is the happy path; UNDER_REVIEW keeps a plate off the public lists
+// while a moderator decides; HIDDEN means it was taken down.
+enum ModerationStatus {
+  PUBLISHED
+  UNDER_REVIEW
+  HIDDEN
+}
+
+enum ReportReason {
+  SEXUAL
+  VIOLENT
+  OFF_CONTEXT
+  SPAM
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -22,12 +50,14 @@ model User {
   image         String?
   passwordHash  String?
   plan          Plan      @default(FREE)
+  role          Role      @default(USER)
   createdAt     DateTime  @default(now())
 
   accounts  Account[]
   sessions  Session[]
   platinums Platinum[]
   votes     Vote[]    @relation("UserVotes")
+  reports   Report[]
 }
 
 model Vote {
@@ -95,13 +125,35 @@ model Platinum {
   width             Int
   height            Int
   watermarked       Boolean    @default(true)
+  moderationStatus  ModerationStatus @default(PUBLISHED)
   createdAt         DateTime   @default(now())
 
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  voteRecords Vote[] @relation("PlatinumVotes")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voteRecords Vote[]   @relation("PlatinumVotes")
+  reports     Report[]
 
   @@unique([userId, hash])
   @@index([monthlyVotesMonth, monthlyVotes])
+  @@index([moderationStatus])
+}
+
+// One report per user per plate: re-reporting updates the existing row.
+model Report {
+  id         String       @id @default(cuid())
+  platinumId String
+  userId     String
+  reason     ReportReason
+  message    String?
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  platinum Platinum @relation(fields: [platinumId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platinumId])
+  @@index([status])
+  @@index([platinumId])
 }
 
 // Frozen final ranking of a closed calendar month. Denormalised on purpose:

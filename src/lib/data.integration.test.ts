@@ -26,6 +26,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     c: `it-${stamp}-plate-c`,
     d: `it-${stamp}-plate-d`,
     e: `it-${stamp}-plate-e`,
+    f: `it-${stamp}-plate-f`, // hidden (moderation)
   };
   const period = getCurrentPeriod();
   // A far-past, test-only period: never collides with real history and is
@@ -79,6 +80,10 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
         platinum(p.c, u.carol, 'Ghost of Yotei Integration', 'PS5', 120, 99, '2020-01', '2026-03-01'),
         platinum(p.d, u.alice, 'Astro Bot Integration', 'PS5', 0, 0, null, '2026-04-01'),
         platinum(p.e, u.alice, 'Hollow Knight Integration', 'PC', 0, 0, null, '2020-01-01', new Date().toISOString()),
+        {
+          ...platinum(p.f, u.alice, 'Hidden Integration', 'PS5', 9, 9, period, '2026-05-01'),
+          moderationStatus: 'HIDDEN',
+        },
       ],
     });
     await prisma.vote.createMany({
@@ -95,6 +100,7 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
   });
 
   afterAll(async () => {
+    await prisma.report.deleteMany({ where: { platinumId: { in: Object.values(p) } } });
     await prisma.vote.deleteMany({ where: { platinumId: { in: Object.values(p) } } });
     // Snapshots have no FK, so the frozen rows for the test period are cleared
     // explicitly — this runs only against the dedicated test database.
@@ -233,5 +239,89 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
 
     const filled = await data.getMostVotedPlatinums(8, [p.c]);
     expect(filled.map((x) => x.id)).toEqual([p.a, p.b]);
+  });
+
+  it('keeps non-published plates out of every public list', async () => {
+    const page = await data.getPlatinumsPage({ limit: 50 });
+    expect(page.items.map((x) => x.platinum.id)).not.toContain(p.f);
+
+    const latest = await data.getLatestPlatinums(50);
+    expect(latest.map((x) => x.id)).not.toContain(p.f);
+
+    const top = await data.getMostVotedPlatinums(50);
+    expect(top.map((x) => x.id)).not.toContain(p.f);
+  });
+
+  it('shows an unpublished plate only to its owner or a moderator', async () => {
+    expect(await data.getPlatinumById(p.f, u.bob)).toBeUndefined();
+    expect((await data.getPlatinumById(p.f, u.alice))?.id).toBe(p.f);
+    expect(
+      (await data.getPlatinumById(p.f, u.bob, { includeUnpublished: true }))?.id,
+    ).toBe(p.f);
+  });
+
+  it('hides unpublished plates from other profiles but not the owner shelf', async () => {
+    const owner = await data.getPlatinumsByUserId(u.alice, u.alice);
+    expect(owner.map((x) => x.id)).toContain(p.f);
+
+    const visitor = await data.getPlatinumsByUserId(u.alice, u.bob);
+    expect(visitor.map((x) => x.id)).not.toContain(p.f);
+  });
+
+  it('enforces one report per user per plate and lists open reports', async () => {
+    await prisma.report.create({
+      data: { platinumId: p.f, userId: u.bob, reason: 'SEXUAL', message: 'nope' },
+    });
+
+    await expect(
+      prisma.report.create({
+        data: { platinumId: p.f, userId: u.bob, reason: 'SPAM' },
+      }),
+    ).rejects.toMatchObject({ code: 'P2002' });
+
+    const open = (await data.getOpenReports()).items;
+    const mine = open.find((row) => row.platinumId === p.f);
+    expect(mine?.reason).toBe('SEXUAL');
+    expect(mine?.ownerUsername).toBe(`it_alice_${stamp}`);
+    expect(mine?.reporterUsername).toBe(`it_bob_${stamp}`);
+
+    await prisma.report.createMany({
+      data: [
+        { platinumId: p.a, userId: u.carol, reason: 'SPAM' },
+        { platinumId: p.b, userId: u.carol, reason: 'SPAM' },
+      ],
+    });
+
+    const spam = await data.getOpenReports({ reason: 'SPAM' });
+    expect(spam.total).toBe(2);
+    expect(spam.items.every((row) => row.reason === 'SPAM')).toBe(true);
+
+    const firstPage = await data.getOpenReports({ limit: 2 });
+    expect(firstPage.items).toHaveLength(2);
+    expect(firstPage.total).toBeGreaterThanOrEqual(3);
+    expect(firstPage.hasMore).toBe(true);
+  });
+
+  it('treats only an OPEN report as blocking a new one', async () => {
+    await prisma.report.create({
+      data: { platinumId: p.e, userId: u.bob, reason: 'SPAM' },
+    });
+
+    expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(true);
+    expect(await data.getOpenReportForUser(p.e)).toBe(false);
+
+    await prisma.report.update({
+      where: { userId_platinumId: { userId: u.bob, platinumId: p.e } },
+      data: { status: 'DISMISSED' },
+    });
+
+    expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(false);
+  });
+
+  it('lists hidden plates with owner and report count', async () => {
+    const hidden = (await data.getHiddenPlatinums()).items;
+    const row = hidden.find((plate) => plate.id === p.f);
+    expect(row?.ownerUsername).toBe(`it_alice_${stamp}`);
+    expect(row?.reportCount).toBeGreaterThanOrEqual(1);
   });
 });
