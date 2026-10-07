@@ -4,8 +4,8 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Flag, Loader2 } from 'lucide-react';
-import { reportPlatinum } from '@/app/actions';
+import { Flag, Loader2, Undo2 } from 'lucide-react';
+import { reportPlatinum, withdrawReport } from '@/app/actions';
 import { reportSchema, type ReportValues } from '@/lib/schemas';
 import { ReportReason } from '@/generated/prisma/enums';
 import { REPORT_REASON_LABELS } from '@/lib/report-labels';
@@ -51,9 +51,9 @@ export function ReportPlatinumButton({
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [reportSent, setReportSent] = useState(false);
+  const [isReported, setReported] = useState(hasOpenReport);
   const [isPending, startTransition] = useTransition();
-  const isReported = hasOpenReport || reportSent;
+  const [isWithdrawing, startWithdraw] = useTransition();
 
   const form = useForm<ReportValues>({
     resolver: zodResolver(reportSchema),
@@ -71,22 +71,53 @@ export function ReportPlatinumButton({
     );
   }
 
+  function onWithdraw() {
+    startWithdraw(async () => {
+      const result = await withdrawReport(platinumId);
+      if (!result.success) {
+        toast({
+          title: 'Withdraw failed',
+          description: result.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setReported(false);
+      toast({
+        title: 'Report withdrawn',
+        description: 'You can report this platinum again if something changes.',
+      });
+    });
+  }
+
   if (isReported) {
     return (
-      <span
-        title="You already reported this platinum. A moderator is on it."
-        className="inline-flex"
-      >
+      <div className={cn('flex flex-wrap items-center gap-2', className)}>
+        <span
+          title="You already reported this platinum. A moderator is on it."
+          className="inline-flex"
+        >
+          <Button type="button" variant="ghost" disabled className="text-muted-foreground">
+            <Flag className="h-4 w-4" />
+            Reported
+          </Button>
+        </span>
         <Button
           type="button"
+          size="sm"
           variant="ghost"
-          disabled
-          className={cn('text-muted-foreground', className)}
+          disabled={isWithdrawing}
+          onClick={onWithdraw}
+          className="text-muted-foreground hover:text-foreground"
         >
-          <Flag className="h-4 w-4" />
-          Reported
+          {isWithdrawing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Undo2 className="h-4 w-4" />
+          )}
+          Withdraw
         </Button>
-      </span>
+      </div>
     );
   }
 
@@ -106,7 +137,7 @@ export function ReportPlatinumButton({
         return;
       }
 
-      setReportSent(true);
+      setReported(true);
       setOpen(false);
       form.reset({ message: '' });
       toast({
