@@ -7,6 +7,7 @@ import {
 } from '@/lib/verdicts';
 import {
   AI_TRIAGE_PROVIDER,
+  parseFakeVerdict,
   parseTriageResponse,
   type TriageVerdict,
 } from '@/lib/ai-verdict';
@@ -58,7 +59,10 @@ export function getAiTriageConfig(): AiTriageConfig | null {
 }
 
 export function isAiTriageConfigured(): boolean {
-  return getAiTriageConfig() !== null;
+  return (
+    getAiTriageConfig() !== null ||
+    parseFakeVerdict(process.env.NAN_FAKE_VERDICT) !== null
+  );
 }
 
 /** Vision APIs vary on AVIF/WebP support, so normalize to a JPEG preview. */
@@ -162,6 +166,12 @@ export async function triageImageHash(options: {
   if (!options.refresh) {
     const cached = await getCachedVerdict(options.hash);
     if (cached) return cached;
+  }
+
+  const fake = parseFakeVerdict(process.env.NAN_FAKE_VERDICT);
+  if (fake) {
+    await saveImageVerdict({ hash: options.hash, ...fake });
+    return getCachedVerdict(options.hash);
   }
 
   if (!isAiTriageConfigured()) return null;

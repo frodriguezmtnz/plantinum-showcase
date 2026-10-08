@@ -122,3 +122,22 @@ export function moderationStatusForVerdict(
   if (verdict.label === 'UNSAFE' && autoHideUnsafe) return 'HIDDEN';
   return 'UNDER_REVIEW';
 }
+
+/**
+ * Local testing helper: `NAN_FAKE_VERDICT=SAFE|REVIEW|UNSAFE` makes the whole
+ * screening flow runnable without a real vision API.
+ */
+export function parseFakeVerdict(value: string | undefined): TriageVerdict | null {
+  const raw = value?.trim().toUpperCase();
+  if (raw === 'SAFE' || raw === 'REVIEW' || raw === 'UNSAFE') {
+    return {
+      label: raw,
+      category: null,
+      confidence: 1,
+      summary: `Fake verdict for local testing (NAN_FAKE_VERDICT=${raw}).`,
+      provider: 'fake',
+      model: 'fake',
+    };
+  }
+  return null;
+}
