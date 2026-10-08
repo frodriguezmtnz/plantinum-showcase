@@ -137,6 +137,89 @@ interface HiddenPlateActionsProps {
   gameName: string;
 }
 
+export function UnderReviewPlateActions({ platinumId, gameName }: HiddenPlateActionsProps) {
+  const { isPending, run } = useModerationAction();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={isPending}
+        className="text-emerald-500 hover:text-emerald-400"
+        onClick={() =>
+          run(() => moderatePlatinum(platinumId, 'PUBLISHED'), {
+            successTitle: 'Plate published',
+            successDescription: `${gameName} is public again.`,
+          })
+        }
+      >
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+        Publish
+      </Button>
+
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={isPending}
+        className="text-muted-foreground hover:text-foreground"
+        onClick={() =>
+          run(() => moderatePlatinum(platinumId, 'HIDDEN'), {
+            successTitle: 'Plate hidden',
+            successDescription: `${gameName} is off the public lists.`,
+          })
+        }
+      >
+        <EyeOff className="h-4 w-4" />
+        Hide
+      </Button>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogTrigger asChild>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={isPending}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this platinum?</AlertDialogTitle>
+            <AlertDialogDescription>
+              “{gameName}” will be removed permanently, along with its votes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                run(() => moderatePlatinum(platinumId, 'DELETE' satisfies PlatinumModerationOp), {
+                  successTitle: 'Platinum deleted',
+                  successDescription: `${gameName} has been removed.`,
+                });
+                setConfirmOpen(false);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
 export function HiddenPlateActions({ platinumId, gameName }: HiddenPlateActionsProps) {
   const { isPending, run } = useModerationAction();
   const [confirmOpen, setConfirmOpen] = useState(false);
