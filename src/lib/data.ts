@@ -376,6 +376,7 @@ export interface ModerationReportItem {
   message: string | null;
   createdAt: string;
   platinumId: string;
+  hash: string;
   gameName: string;
   imageUrl: string;
   isSpoiler: boolean;
@@ -413,6 +414,7 @@ export async function getOpenReports(options: {
         platinum: {
           select: {
             id: true,
+            hash: true,
             gameName: true,
             imageUrl: true,
             isSpoiler: true,
@@ -432,6 +434,7 @@ export async function getOpenReports(options: {
     message: report.message,
     createdAt: report.createdAt.toISOString(),
     platinumId: report.platinum.id,
+    hash: report.platinum.hash,
     gameName: report.platinum.gameName,
     imageUrl: report.platinum.imageUrl,
     isSpoiler: report.platinum.isSpoiler,
@@ -457,6 +460,7 @@ export async function getOpenReportForUser(
 
 export interface HiddenPlatinumItem {
   id: string;
+  hash: string;
   gameName: string;
   imageUrl: string;
   isSpoiler: boolean;
@@ -495,6 +499,7 @@ export async function getHiddenPlatinums(options: {
   const hasMore = plates.length > limit;
   const items = plates.slice(0, limit).map((plate) => ({
     id: plate.id,
+    hash: plate.hash,
     gameName: plate.gameName,
     imageUrl: plate.imageUrl,
     isSpoiler: plate.isSpoiler,
