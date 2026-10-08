@@ -2,6 +2,7 @@
 
 import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -16,6 +17,8 @@ import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plan
 import { platinumMetaInputSchema, reportSchema, watermarkPositionSchema } from "@/lib/schemas";
 import { buildImageHint } from "@/lib/image-hint";
 import { isModerator } from "@/lib/roles";
+import { getAiTriageConfig, isAiTriageConfigured, triageImageHash } from "@/lib/ai-triage";
+import { moderationStatusForVerdict } from "@/lib/ai-verdict";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -44,6 +47,45 @@ export async function getUploadQuota() {
 const uploadSchema = platinumMetaInputSchema.extend({
   watermarkPosition: watermarkPositionSchema,
 });
+
+/**
+ * Best-effort AI screening after an upload. Only escalates a PUBLISHED plate to
+ * UNDER_REVIEW/HIDDEN, never downgrades a moderator's decision.
+ */
+async function screenPlatinumUpload(
+  platinumId: string,
+  hash: string,
+  gameName: string,
+  data: Buffer,
+) {
+  try {
+    const verdict = await triageImageHash({
+      hash,
+      data,
+      mimeType: "image/avif",
+      gameName,
+    });
+    if (!verdict) return;
+
+    const status = moderationStatusForVerdict(
+      verdict,
+      getAiTriageConfig()?.autoHideUnsafe ?? false,
+    );
+    if (status === "PUBLISHED") return;
+
+    const updated = await prisma.platinum.updateMany({
+      where: { id: platinumId, moderationStatus: "PUBLISHED" },
+      data: { moderationStatus: status },
+    });
+    if (updated.count > 0) {
+      revalidatePath("/");
+      revalidatePath("/explore");
+      revalidatePath("/hall-of-fame");
+    }
+  } catch (error) {
+    console.warn("[upload] ai screening failed", error);
+  }
+}
 
 export async function uploadPlatinum(formData: FormData) {
   const session = await auth();
@@ -204,6 +246,12 @@ export async function uploadPlatinum(formData: FormData) {
     revalidatePath("/");
     revalidatePath("/explore");
     revalidatePath("/hall-of-fame");
+
+    if (isAiTriageConfigured()) {
+      after(() =>
+        screenPlatinumUpload(platinum.id, hash, platinum.gameName, processed.data),
+      );
+    }
 
     return { success: true as const, platinumId: platinum.id };
   } catch (error) {
@@ -526,7 +574,7 @@ export async function reportPlatinum(
 
   const platinum = await prisma.platinum.findUnique({
     where: { id: platinumId },
-    select: { userId: true },
+    select: { userId: true, hash: true, gameName: true },
   });
   if (!platinum) {
     return { success: false as const, error: "This platinum does not exist." };
@@ -580,7 +628,21 @@ export async function reportPlatinum(
     }
   }
 
-  // TODO(Tanda 3): run the AI triage for this plate's image hash.
+  // Triage of the reported plate: reuse the upload verdict if it is cached,
+  // otherwise classify once and attach the signal to the moderation queue.
+  if (isAiTriageConfigured()) {
+    after(async () => {
+      try {
+        await triageImageHash({
+          hash: platinum.hash,
+          gameName: platinum.gameName,
+        });
+      } catch (error) {
+        console.warn("[report] ai triage failed", error);
+      }
+    });
+  }
+
   return { success: true as const };
 }
 
