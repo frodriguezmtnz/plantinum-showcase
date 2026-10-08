@@ -8,6 +8,7 @@ import { isModerator } from '@/lib/roles';
 import { getHiddenPlatinums, getOpenReports, MODERATION_PAGE_SIZE } from '@/lib/data';
 import { REPORT_REASON_LABELS } from '@/lib/report-labels';
 import { ReportReason } from '@/generated/prisma/enums';
+import { getCachedVerdicts, type ImageVerdictView } from '@/lib/verdicts';
 import { isStoredImage } from '@/lib/utils';
 import {
   HiddenPlateActions,
@@ -76,6 +77,34 @@ function PlateThumb({
       className="h-16 w-24 shrink-0 rounded-md object-cover"
       unoptimized={isStoredImage(imageUrl)}
     />
+  );
+}
+
+function AiVerdictBadge({ verdict }: { verdict?: ImageVerdictView }) {
+  if (!verdict) return null;
+  const styles =
+    verdict.label === 'SAFE'
+      ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400'
+      : verdict.label === 'UNSAFE'
+        ? 'border-destructive/50 text-destructive'
+        : 'border-amber-500/50 text-amber-600 dark:text-amber-400';
+  const label =
+    verdict.label === 'SAFE'
+      ? 'AI: looks fine'
+      : verdict.label === 'UNSAFE'
+        ? 'AI: unsafe'
+        : 'AI: review';
+  const title = [
+    verdict.category,
+    verdict.confidence != null ? `${Math.round(verdict.confidence * 100)}%` : null,
+    verdict.summary,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <Badge variant="outline" className={styles} title={title || undefined}>
+      {label}
+    </Badge>
   );
 }
 
@@ -163,6 +192,11 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     getHiddenPlatinums({ offset: (hiddenPage - 1) * MODERATION_PAGE_SIZE }),
   ]);
 
+  const verdicts = await getCachedVerdicts([
+    ...reports.items.map((report) => report.hash),
+    ...hidden.items.map((plate) => plate.hash),
+  ]);
+
   return (
     <div className="container max-w-4xl py-8 md:py-12">
       <div className="mb-8 flex items-center gap-3">
@@ -230,6 +264,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                     <Badge variant="outline" className="border-destructive/50 text-destructive">
                       {REPORT_REASON_LABELS[report.reason]}
                     </Badge>
+                    <AiVerdictBadge verdict={verdicts[report.hash]} />
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     by {report.ownerUsername} · reported by {report.reporterUsername} ·{' '}
@@ -287,6 +322,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                     <Badge variant="outline" className="border-destructive/50 text-destructive">
                       Hidden
                     </Badge>
+                    <AiVerdictBadge verdict={verdicts[plate.hash]} />
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     by {plate.ownerUsername} · {plate.reportCount}{' '}
