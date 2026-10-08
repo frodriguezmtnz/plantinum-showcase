@@ -41,6 +41,14 @@ enum ReportStatus {
   DISMISSED
 }
 
+// Screening verdict for a content-addressed screenshot. SAFE keeps the plate
+// published, REVIEW asks a moderator to look, UNSAFE is the strongest signal.
+enum AiVerdictLabel {
+  SAFE
+  REVIEW
+  UNSAFE
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -179,4 +187,21 @@ model MonthlyResult {
 
   @@unique([period, rank])
   @@index([period, votes])
+}
+
+// Cached AI screening of a screenshot, keyed by its content hash so the same
+// image is only classified once. Standalone (no FK) on purpose: the verdict is
+// about the bytes, not about one specific plate.
+model ImageVerdict {
+  id         String         @id @default(cuid())
+  hash       String         @unique
+  label      AiVerdictLabel
+  category   String?
+  confidence Float?
+  summary    String?
+  provider   String
+  model      String
+  raw        Json?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }
