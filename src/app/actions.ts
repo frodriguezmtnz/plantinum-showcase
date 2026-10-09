@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { getPlatinumsPage, PLATINUMS_PAGE_SIZE, countUploadsInCurrentPeriod } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
 import { ensureSnapshots } from "@/lib/history";
-import { deleteImage, isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
+import { isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 import { encodePlate } from "@/lib/watermark";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
@@ -19,6 +19,17 @@ import { buildImageHint } from "@/lib/image-hint";
 import { isModerator } from "@/lib/roles";
 import { getAiTriageConfig, isAiTriageConfigured, triageImageHash } from "@/lib/ai-triage";
 import { moderationStatusForVerdict } from "@/lib/ai-verdict";
+import { sendModerationNotice } from "@/lib/telegram";
+import {
+  applyPlatinumModeration,
+  applyReportDecision,
+  removePlatinumRecord,
+  revalidateVotePaths,
+  type ModerationDecision,
+  type PlatinumModerationOp,
+} from "@/lib/moderation-core";
+
+export type { ModerationDecision, PlatinumModerationOp } from "@/lib/moderation-core";
 
 const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -59,7 +70,7 @@ async function screenPlatinumUpload(
   data: Buffer,
 ) {
   try {
-    const verdict = await triageImageHash({
+    const { verdict, isNew } = await triageImageHash({
       hash,
       data,
       mimeType: "image/avif",
@@ -77,10 +88,28 @@ async function screenPlatinumUpload(
       where: { id: platinumId, moderationStatus: "PUBLISHED" },
       data: { moderationStatus: status },
     });
-    if (updated.count > 0) {
-      revalidatePath("/");
-      revalidatePath("/explore");
-      revalidatePath("/hall-of-fame");
+    if (updated.count === 0) return;
+
+    revalidatePath("/");
+    revalidatePath("/explore");
+    revalidatePath("/hall-of-fame");
+
+    if (isNew) {
+      const owner = await prisma.platinum.findUnique({
+        where: { id: platinumId },
+        select: { user: { select: { username: true } } },
+      });
+      await sendModerationNotice({
+        source: "upload",
+        platinumId,
+        gameName,
+        ownerUsername: owner?.user.username ?? null,
+        label: verdict.label,
+        category: verdict.category,
+        confidence: verdict.confidence,
+        summary: verdict.summary,
+        moderationStatus: status,
+      });
     }
   } catch (error) {
     console.warn("[upload] ai screening failed", error);
@@ -345,53 +374,6 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
   return { success: true as const };
 }
 
-const IMAGE_URL_PREFIX = "/api/images/";
-const STORED_KEY_PATTERN = /^platinums\/[a-f0-9]{64}\.avif$/;
-
-function imageKeyFromUrl(imageUrl: string): string | null {
-  if (!imageUrl.startsWith(IMAGE_URL_PREFIX)) return null;
-  const key = imageUrl.slice(IMAGE_URL_PREFIX.length);
-  return STORED_KEY_PATTERN.test(key) ? key : null;
-}
-
-/** Shared removal: cuts the frozen link, drops the row and cleans up B2. */
-async function removePlatinumRecord(
-  platinum: { id: string; imageUrl: string; hash: string },
-  ownerUsername: string | null | undefined,
-) {
-  const key = imageKeyFromUrl(platinum.imageUrl);
-
-  // The frozen history keeps its display data; only the now-dead link is cut
-  // so archived rows never point at a 404.
-  await prisma.monthlyResult.updateMany({
-    where: { platinumId: platinum.id },
-    data: { platinumId: null },
-  });
-
-  await prisma.platinum.delete({ where: { id: platinum.id } });
-
-  if (key) {
-    const stillReferenced = await prisma.platinum.count({
-      where: { hash: platinum.hash },
-    });
-    if (stillReferenced === 0) {
-      try {
-        await deleteImage(key);
-      } catch {
-        // Best effort: the DB row is already gone.
-      }
-    }
-  }
-
-  revalidatePath("/");
-  revalidatePath("/explore");
-  revalidatePath("/hall-of-fame");
-  revalidatePath(`/platinum/${platinum.id}`);
-  if (ownerUsername) {
-    revalidatePath(`/u/${ownerUsername}`);
-  }
-}
-
 export async function deletePlatinum(id: string) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -425,8 +407,6 @@ export async function deletePlatinum(id: string) {
   return { success: true as const };
 }
 
-export type ModerationDecision = "dismiss" | "hide" | "delete";
-
 /**
  * A moderator's decision on an open report. Authorization always re-reads the
  * role from the database, so it applies the moment it is granted.
@@ -443,54 +423,8 @@ export async function moderateReport(reportId: string, decision: ModerationDecis
   if (!checkRateLimit(`moderate:${userId}`, 60, 60_000).ok) {
     return { success: false as const, error: "Slow down a moment and try again." };
   }
-
-  const report = await prisma.report.findUnique({
-    where: { id: reportId },
-    select: {
-      id: true,
-      platinumId: true,
-      platinum: {
-        select: {
-          id: true,
-          imageUrl: true,
-          hash: true,
-          user: { select: { username: true } },
-        },
-      },
-    },
-  });
-  if (!report) {
-    return { success: false as const, error: "This report does not exist." };
-  }
-
-  if (decision === "dismiss") {
-    await prisma.report.update({ where: { id: reportId }, data: { status: "DISMISSED" } });
-    revalidatePath("/admin/reports");
-    return { success: true as const };
-  }
-
-  if (decision === "hide") {
-    await prisma.$transaction([
-      prisma.platinum.update({
-        where: { id: report.platinumId },
-        data: { moderationStatus: "HIDDEN" },
-      }),
-      prisma.report.updateMany({
-        where: { platinumId: report.platinumId },
-        data: { status: "ACTIONED" },
-      }),
-    ]);
-    revalidateVotePaths(report.platinumId, report.platinum.user.username);
-    revalidatePath("/admin/reports");
-    return { success: true as const };
-  }
-
-  await removePlatinumRecord(report.platinum, report.platinum.user.username);
-  revalidatePath("/admin/reports");
-  return { success: true as const };
+  return applyReportDecision(reportId, decision);
 }
-
-export type PlatinumModerationOp = "PUBLISHED" | "HIDDEN" | "DELETE";
 
 /** Direct moderation from the board (restore / take down / delete). */
 export async function moderatePlatinum(
@@ -508,44 +442,7 @@ export async function moderatePlatinum(
   if (!checkRateLimit(`moderate:${userId}`, 60, 60_000).ok) {
     return { success: false as const, error: "Slow down a moment and try again." };
   }
-
-  const platinum = await prisma.platinum.findUnique({
-    where: { id: platinumId },
-    select: {
-      id: true,
-      imageUrl: true,
-      hash: true,
-      user: { select: { username: true } },
-    },
-  });
-  if (!platinum) {
-    return { success: false as const, error: "This platinum does not exist." };
-  }
-
-  if (op === "DELETE") {
-    await removePlatinumRecord(platinum, platinum.user.username);
-    revalidatePath("/admin/reports");
-    return { success: true as const };
-  }
-
-  if (op === "HIDDEN") {
-    await prisma.$transaction([
-      prisma.platinum.update({ where: { id: platinumId }, data: { moderationStatus: "HIDDEN" } }),
-      prisma.report.updateMany({
-        where: { platinumId, status: "OPEN" },
-        data: { status: "ACTIONED" },
-      }),
-    ]);
-  } else {
-    await prisma.platinum.update({
-      where: { id: platinumId },
-      data: { moderationStatus: "PUBLISHED" },
-    });
-  }
-
-  revalidateVotePaths(platinumId, platinum.user.username);
-  revalidatePath("/admin/reports");
-  return { success: true as const };
+  return applyPlatinumModeration(platinumId, op);
 }
 
 export async function reportPlatinum(
@@ -574,7 +471,13 @@ export async function reportPlatinum(
 
   const platinum = await prisma.platinum.findUnique({
     where: { id: platinumId },
-    select: { userId: true, hash: true, gameName: true },
+    select: {
+      userId: true,
+      hash: true,
+      gameName: true,
+      moderationStatus: true,
+      user: { select: { username: true } },
+    },
   });
   if (!platinum) {
     return { success: false as const, error: "This platinum does not exist." };
@@ -602,16 +505,19 @@ export async function reportPlatinum(
     status: "OPEN" as const,
   };
 
+  let reportId: string;
   if (existing) {
-    await prisma.report.update({
+    const updated = await prisma.report.update({
       where: { userId_platinumId: { userId, platinumId } },
       data: reportData,
     });
+    reportId = updated.id;
   } else {
     try {
-      await prisma.report.create({
+      const created = await prisma.report.create({
         data: { userId, platinumId, ...reportData },
       });
+      reportId = created.id;
     } catch (error) {
       if (
         typeof error === "object" &&
@@ -629,13 +535,31 @@ export async function reportPlatinum(
   }
 
   // Triage of the reported plate: reuse the upload verdict if it is cached,
-  // otherwise classify once and attach the signal to the moderation queue.
+  // otherwise classify once and alert the moderator chat.
   if (isAiTriageConfigured()) {
     after(async () => {
       try {
-        await triageImageHash({
+        const { verdict, isNew } = await triageImageHash({
           hash: platinum.hash,
           gameName: platinum.gameName,
+        });
+        if (!isNew || !verdict || verdict.label === "SAFE") return;
+
+        await sendModerationNotice({
+          source: "report",
+          platinumId,
+          gameName: platinum.gameName,
+          ownerUsername: platinum.user.username,
+          label: verdict.label,
+          category: verdict.category,
+          confidence: verdict.confidence,
+          summary: verdict.summary,
+          moderationStatus:
+            platinum.moderationStatus === "HIDDEN" ? "HIDDEN" : "UNDER_REVIEW",
+          reportId,
+          reportReason: parsed.data.reason,
+          reportMessage: parsed.data.message ?? null,
+          reporterUsername: session.user.name ?? null,
         });
       } catch (error) {
         console.warn("[report] ai triage failed", error);
@@ -843,15 +767,5 @@ export async function toggleVoteForPlatinum(
       success: false,
       error: "Could not record the vote. Please try again.",
     };
-  }
-}
-
-function revalidateVotePaths(platinumId: string, ownerUsername?: string | null) {
-  revalidatePath("/");
-  revalidatePath("/explore");
-  revalidatePath("/hall-of-fame");
-  revalidatePath(`/platinum/${platinumId}`);
-  if (ownerUsername) {
-    revalidatePath(`/u/${ownerUsername}`);
   }
 }
