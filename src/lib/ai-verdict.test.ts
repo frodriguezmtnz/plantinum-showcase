@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   moderationStatusForVerdict,
+  parseFakeVerdict,
   parseTriageContent,
   parseTriageResponse,
   type TriageVerdict,
@@ -90,5 +91,22 @@ describe('moderationStatusForVerdict', () => {
   it('only auto-hides unsafe plates when the operator opts in', () => {
     expect(moderationStatusForVerdict(verdict('UNSAFE'), true)).toBe('HIDDEN');
     expect(moderationStatusForVerdict(verdict('REVIEW'), true)).toBe('UNDER_REVIEW');
+  });
+});
+
+describe('parseFakeVerdict', () => {
+  it('builds a deterministic verdict for local testing', () => {
+    expect(parseFakeVerdict('review')).toMatchObject({
+      label: 'REVIEW',
+      provider: 'fake',
+      model: 'fake',
+    });
+    expect(parseFakeVerdict('UNSAFE')?.label).toBe('UNSAFE');
+  });
+
+  it('returns null when the value is missing or unknown', () => {
+    expect(parseFakeVerdict(undefined)).toBeNull();
+    expect(parseFakeVerdict('')).toBeNull();
+    expect(parseFakeVerdict('MAYBE')).toBeNull();
   });
 });

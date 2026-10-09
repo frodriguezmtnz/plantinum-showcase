@@ -458,7 +458,7 @@ export async function getOpenReportForUser(
   return report?.status === 'OPEN';
 }
 
-export interface HiddenPlatinumItem {
+export interface ModerationPlateItem {
   id: string;
   hash: string;
   gameName: string;
@@ -468,19 +468,22 @@ export interface HiddenPlatinumItem {
   reportCount: number;
 }
 
-export interface HiddenPlatinumPage {
-  items: HiddenPlatinumItem[];
+export interface ModerationPlatePage {
+  items: ModerationPlateItem[];
   total: number;
   hasMore: boolean;
 }
 
-/** Plates currently taken down, newest first, paginated. */
-export async function getHiddenPlatinums(options: {
-  offset?: number;
-  limit?: number;
-} = {}): Promise<HiddenPlatinumPage> {
+export type HiddenPlatinumItem = ModerationPlateItem;
+export type HiddenPlatinumPage = ModerationPlatePage;
+export type UnderReviewPlatinumItem = ModerationPlateItem;
+
+async function getPlatinumsByModerationStatus(
+  status: ModerationStatus,
+  options: { offset?: number; limit?: number } = {},
+): Promise<ModerationPlatePage> {
   const { offset = 0, limit = MODERATION_PAGE_SIZE } = options;
-  const where = { moderationStatus: 'HIDDEN' as const };
+  const where = { moderationStatus: status };
 
   const [plates, total] = await Promise.all([
     prisma.platinum.findMany({
@@ -508,6 +511,20 @@ export async function getHiddenPlatinums(options: {
   }));
 
   return { items, total, hasMore };
+}
+
+/** Plates currently taken down, newest first, paginated. */
+export function getHiddenPlatinums(
+  options: { offset?: number; limit?: number } = {},
+): Promise<ModerationPlatePage> {
+  return getPlatinumsByModerationStatus('HIDDEN', options);
+}
+
+/** Plates flagged by AI screening that still need a moderator decision. */
+export function getUnderReviewPlatinums(
+  options: { offset?: number; limit?: number } = {},
+): Promise<ModerationPlatePage> {
+  return getPlatinumsByModerationStatus('UNDER_REVIEW', options);
 }
 
 export async function getMonthlyRanking(

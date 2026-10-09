@@ -1,11 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
-import { Flag, ShieldCheck } from 'lucide-react';
-import { auth } from '@/auth';
-import { isModerator } from '@/lib/roles';
-import { getHiddenPlatinums, getOpenReports, MODERATION_PAGE_SIZE } from '@/lib/data';
+import { Flag, SearchCheck, ShieldCheck } from 'lucide-react';
+import {
+  getHiddenPlatinums,
+  getOpenReports,
+  getUnderReviewPlatinums,
+  MODERATION_PAGE_SIZE,
+} from '@/lib/data';
 import { REPORT_REASON_LABELS } from '@/lib/report-labels';
 import { ReportReason } from '@/generated/prisma/enums';
 import { getCachedVerdicts, type ImageVerdictView } from '@/lib/verdicts';
@@ -13,6 +15,7 @@ import { isStoredImage } from '@/lib/utils';
 import {
   HiddenPlateActions,
   ReportRowActions,
+  UnderReviewPlateActions,
 } from '@/components/shared/moderation-actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,6 +31,7 @@ type ReportFilter = ReportReason | 'all';
 
 type AdminReportsSearchParams = {
   rpage?: string;
+  upage?: string;
   hpage?: string;
   reason?: string;
 };
@@ -44,11 +48,13 @@ function parsePage(value?: string): number {
 function buildHref(params: {
   reason?: ReportFilter;
   rpage?: number;
+  upage?: number;
   hpage?: number;
 }): string {
   const search = new URLSearchParams();
   if (params.reason && params.reason !== 'all') search.set('reason', params.reason);
   if (params.rpage && params.rpage > 1) search.set('rpage', String(params.rpage));
+  if (params.upage && params.upage > 1) search.set('upage', String(params.upage));
   if (params.hpage && params.hpage > 1) search.set('hpage', String(params.hpage));
   const query = search.toString();
   return `/admin/reports${query ? `?${query}` : ''}`;
@@ -168,32 +174,29 @@ function Pagination({
 }
 
 export default async function AdminReportsPage({ searchParams }: Props) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    redirect('/login?callbackUrl=/admin/reports');
-  }
-  if (!(await isModerator(session.user.id))) {
-    notFound();
-  }
-
   const params = await searchParams;
   const reason: ReportFilter =
     params.reason && (REASONS as string[]).includes(params.reason)
       ? (params.reason as ReportReason)
       : 'all';
   const reportsPage = parsePage(params.rpage);
+  const underReviewPage = parsePage(params.upage);
   const hiddenPage = parsePage(params.hpage);
 
-  const [reports, hidden] = await Promise.all([
+  const [reports, underReview, hidden] = await Promise.all([
     getOpenReports({
       reason,
       offset: (reportsPage - 1) * MODERATION_PAGE_SIZE,
+    }),
+    getUnderReviewPlatinums({
+      offset: (underReviewPage - 1) * MODERATION_PAGE_SIZE,
     }),
     getHiddenPlatinums({ offset: (hiddenPage - 1) * MODERATION_PAGE_SIZE }),
   ]);
 
   const verdicts = await getCachedVerdicts([
     ...reports.items.map((report) => report.hash),
+    ...underReview.items.map((plate) => plate.hash),
     ...hidden.items.map((plate) => plate.hash),
   ]);
 
@@ -205,7 +208,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           <h1 className="text-3xl font-bold font-headline">Moderation</h1>
           <p className="text-sm text-muted-foreground">
             {reports.total} open {reports.total === 1 ? 'report' : 'reports'} ·{' '}
-            {hidden.total} hidden
+            {underReview.total} in review · {hidden.total} hidden
           </p>
         </div>
       </div>
@@ -217,7 +220,11 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           <div className="mb-4 flex flex-wrap gap-2">
             <FilterPill
               active={reason === 'all'}
-              href={buildHref({ rpage: 1, hpage: hiddenPage })}
+              href={buildHref({
+                rpage: 1,
+                upage: underReviewPage,
+                hpage: hiddenPage,
+              })}
             >
               All
             </FilterPill>
@@ -225,7 +232,12 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               <FilterPill
                 key={item}
                 active={reason === item}
-                href={buildHref({ reason: item, rpage: 1, hpage: hiddenPage })}
+                href={buildHref({
+                  reason: item,
+                  rpage: 1,
+                  upage: underReviewPage,
+                  hpage: hiddenPage,
+                })}
               >
                 {REPORT_REASON_LABELS[item]}
               </FilterPill>
@@ -289,7 +301,67 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           total={reports.total}
           page={reportsPage}
           hasMore={reports.hasMore}
-          hrefForPage={(page) => buildHref({ reason, rpage: page, hpage: hiddenPage })}
+          hrefForPage={(page) =>
+            buildHref({ reason, rpage: page, upage: underReviewPage, hpage: hiddenPage })
+          }
+        />
+      </section>
+
+      <section className="mb-12">
+        <h2 className="mb-4 text-xl font-bold font-headline">Under review</h2>
+        {underReview.items.length === 0 ? (
+          <EmptyState
+            icon={SearchCheck}
+            title="Nothing flagged"
+            description="No plates are waiting on an AI or upload review."
+          />
+        ) : (
+          <ul className="space-y-3">
+            {underReview.items.map((plate) => (
+              <li
+                key={plate.id}
+                className="panel-solid flex flex-col gap-4 rounded-xl p-4 sm:flex-row"
+              >
+                <Link href={`/platinum/${plate.id}`} className="shrink-0">
+                  <PlateThumb imageUrl={plate.imageUrl} isSpoiler={plate.isSpoiler} />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/platinum/${plate.id}`}
+                      className="truncate font-semibold hover:underline"
+                    >
+                      {plate.gameName}
+                    </Link>
+                    <Badge
+                      variant="outline"
+                      className="border-amber-500/50 text-amber-600 dark:text-amber-400"
+                    >
+                      Under review
+                    </Badge>
+                    <AiVerdictBadge verdict={verdicts[plate.hash]} />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    by {plate.ownerUsername} · {plate.reportCount}{' '}
+                    {plate.reportCount === 1 ? 'report' : 'reports'}
+                  </p>
+                  <div className="mt-3">
+                    <UnderReviewPlateActions platinumId={plate.id} gameName={plate.gameName} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Pagination
+          label={underReview.total === 1 ? 'plate in review' : 'plates in review'}
+          total={underReview.total}
+          page={underReviewPage}
+          hasMore={underReview.hasMore}
+          hrefForPage={(page) =>
+            buildHref({ reason, upage: page, rpage: reportsPage, hpage: hiddenPage })
+          }
         />
       </section>
 
@@ -342,7 +414,9 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           total={hidden.total}
           page={hiddenPage}
           hasMore={hidden.hasMore}
-          hrefForPage={(page) => buildHref({ reason, hpage: page, rpage: reportsPage })}
+          hrefForPage={(page) =>
+            buildHref({ reason, hpage: page, rpage: reportsPage, upage: underReviewPage })
+          }
         />
       </section>
     </div>
