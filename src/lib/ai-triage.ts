@@ -152,6 +152,12 @@ async function loadImageFromStorage(
   return { data: buffer, mimeType: image.contentType };
 }
 
+export interface TriageResult {
+  verdict: ImageVerdictView | null;
+  /** True when this call classified and cached a brand new verdict. */
+  isNew: boolean;
+}
+
 /**
  * Returns the cached verdict for a hash, or classifies it once and caches the
  * result. Best-effort: returns null when the AI is not configured or fails.
@@ -162,25 +168,25 @@ export async function triageImageHash(options: {
   mimeType?: string;
   gameName?: string;
   refresh?: boolean;
-}): Promise<ImageVerdictView | null> {
+}): Promise<TriageResult> {
   if (!options.refresh) {
     const cached = await getCachedVerdict(options.hash);
-    if (cached) return cached;
+    if (cached) return { verdict: cached, isNew: false };
   }
 
   const fake = parseFakeVerdict(process.env.NAN_FAKE_VERDICT);
   if (fake) {
     await saveImageVerdict({ hash: options.hash, ...fake });
-    return getCachedVerdict(options.hash);
+    return { verdict: await getCachedVerdict(options.hash), isNew: true };
   }
 
-  if (!isAiTriageConfigured()) return null;
+  if (!isAiTriageConfigured()) return { verdict: null, isNew: false };
 
   let data = options.data;
   let mimeType = options.mimeType ?? 'image/avif';
   if (!data) {
     const loaded = await loadImageFromStorage(options.hash);
-    if (!loaded) return null;
+    if (!loaded) return { verdict: null, isNew: false };
     data = loaded.data;
     mimeType = loaded.mimeType;
   }
@@ -190,7 +196,7 @@ export async function triageImageHash(options: {
     mimeType,
     gameName: options.gameName,
   });
-  if (!verdict) return null;
+  if (!verdict) return { verdict: null, isNew: false };
 
   await saveImageVerdict({
     hash: options.hash,
@@ -202,5 +208,5 @@ export async function triageImageHash(options: {
     model: verdict.model,
   });
 
-  return getCachedVerdict(options.hash);
+  return { verdict: await getCachedVerdict(options.hash), isNew: true };
 }
