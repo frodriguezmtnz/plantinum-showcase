@@ -64,6 +64,23 @@ export function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
+/**
+ * Telegram rejects inline button URLs that aren't publicly reachable (e.g.
+ * `http://localhost`), which would fail the whole sendMessage. In local dev we
+ * therefore skip the link row and keep only the moderation action buttons.
+ */
+function isPublicUrl(value: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(value);
+    if (protocol !== 'http:' && protocol !== 'https:') return false;
+    return !['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'].includes(
+      hostname,
+    );
+  } catch {
+    return false;
+  }
+}
+
 const VERDICT_TITLE: Record<AiVerdictLabel, string> = {
   SAFE: 'SAFE',
   REVIEW: 'REVIEW',
@@ -122,7 +139,7 @@ export function buildModerationNotice(notice: ModerationNotice): {
   lines.push(`🕐 <code>${new Date().toISOString()}</code>`);
 
   const keyboard: InlineKeyboardButton[][] = [];
-  if (siteUrl) {
+  if (siteUrl && isPublicUrl(siteUrl)) {
     const links: InlineKeyboardButton[] = [
       { text: '🔍 Ver placa', url: `${siteUrl}/platinum/${notice.platinumId}` },
       { text: '📋 Panel', url: `${siteUrl}/admin/reports` },
