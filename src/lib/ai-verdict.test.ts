@@ -4,6 +4,8 @@ import {
   parseFakeVerdict,
   parseTriageContent,
   parseTriageResponse,
+  readFinishReason,
+  reviewFallback,
   type TriageVerdict,
 } from '@/lib/ai-verdict';
 
@@ -91,6 +93,32 @@ describe('moderationStatusForVerdict', () => {
   it('only auto-hides unsafe plates when the operator opts in', () => {
     expect(moderationStatusForVerdict(verdict('UNSAFE'), true)).toBe('HIDDEN');
     expect(moderationStatusForVerdict(verdict('REVIEW'), true)).toBe('UNDER_REVIEW');
+  });
+});
+
+describe('readFinishReason', () => {
+  it('reads the finish reason from an OpenAI-compatible payload', () => {
+    expect(readFinishReason({ choices: [{ finish_reason: 'content_filter' }] })).toBe('content_filter');
+    expect(readFinishReason({ choices: [{ finish_reason: 'stop' }] })).toBe('stop');
+  });
+
+  it('returns null when there is no usable choice', () => {
+    expect(readFinishReason(null)).toBeNull();
+    expect(readFinishReason({})).toBeNull();
+    expect(readFinishReason({ choices: [] })).toBeNull();
+    expect(readFinishReason({ choices: [{ finish_reason: 42 }] })).toBeNull();
+  });
+});
+
+describe('reviewFallback', () => {
+  it('builds a fail-closed REVIEW verdict', () => {
+    expect(reviewFallback('refused', 'mimo')).toMatchObject({
+      label: 'REVIEW',
+      category: 'other',
+      summary: 'refused',
+      provider: 'nan',
+      model: 'mimo',
+    });
   });
 });
 

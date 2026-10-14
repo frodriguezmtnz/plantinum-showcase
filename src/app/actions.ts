@@ -60,8 +60,10 @@ const uploadSchema = platinumMetaInputSchema.extend({
 });
 
 /**
- * Best-effort AI screening after an upload. Only escalates a PUBLISHED plate to
- * UNDER_REVIEW/HIDDEN, never downgrades a moderator's decision.
+ * Post-upload AI screening. The plate is created as UNDER_REVIEW, so it is never
+ * public until cleared: only an explicit SAFE verdict publishes it, while
+ * REVIEW, UNSAFE or any classifier failure (refusal, timeout, unparseable) keeps
+ * it under review and alerts the moderator. Never downgrades a moderator.
  */
 async function screenPlatinumUpload(
   platinumId: string,
@@ -76,16 +78,23 @@ async function screenPlatinumUpload(
       mimeType: "image/avif",
       gameName,
     });
-    if (!verdict) return;
+
+    if (!verdict) {
+      // Fail closed: without a verdict the plate stays UNDER_REVIEW.
+      console.warn(
+        "[ai-triage] no verdict for upload; leaving plate under review",
+        platinumId,
+      );
+      return;
+    }
 
     const status = moderationStatusForVerdict(
       verdict,
       getAiTriageConfig()?.autoHideUnsafe ?? false,
     );
-    if (status === "PUBLISHED") return;
 
     const updated = await prisma.platinum.updateMany({
-      where: { id: platinumId, moderationStatus: "PUBLISHED" },
+      where: { id: platinumId, moderationStatus: "UNDER_REVIEW" },
       data: { moderationStatus: status },
     });
     if (updated.count === 0) return;
@@ -93,6 +102,8 @@ async function screenPlatinumUpload(
     revalidatePath("/");
     revalidatePath("/explore");
     revalidatePath("/hall-of-fame");
+
+    if (status === "PUBLISHED") return;
 
     if (isNew) {
       const owner = await prisma.platinum.findUnique({
@@ -251,6 +262,7 @@ export async function uploadPlatinum(formData: FormData) {
   }
 
   const imageHint = buildImageHint(parsed.data.gameName);
+  const screeningEnabled = isAiTriageConfigured();
 
   try {
     const platinum = await prisma.platinum.create({
@@ -269,6 +281,9 @@ export async function uploadPlatinum(formData: FormData) {
         width: processed.width,
         height: processed.height,
         watermarked: planConfig(account?.plan).watermark,
+        // Moderation-first: not public until the AI clears it (or a moderator
+        // approves). With the AI off, fall back to publishing directly.
+        moderationStatus: screeningEnabled ? "UNDER_REVIEW" : "PUBLISHED",
       },
     });
 
@@ -276,7 +291,7 @@ export async function uploadPlatinum(formData: FormData) {
     revalidatePath("/explore");
     revalidatePath("/hall-of-fame");
 
-    if (isAiTriageConfigured()) {
+    if (screeningEnabled) {
       after(() =>
         screenPlatinumUpload(platinum.id, hash, platinum.gameName, processed.data),
       );

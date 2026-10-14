@@ -5,6 +5,20 @@ import { deleteImage } from '@/lib/b2';
 const IMAGE_URL_PREFIX = '/api/images/';
 const STORED_KEY_PATTERN = /^platinums\/[a-f0-9]{64}\.avif$/;
 
+/**
+ * `revalidatePath` throws outside a Next request context (e.g. the Telegram
+ * long-polling loop). Purging the cache is best-effort there: the DB write has
+ * already happened and the dynamic pages re-render on the next request, so we
+ * log and carry on instead of failing the whole moderation action.
+ */
+function safeRevalidate(path: string): void {
+  try {
+    revalidatePath(path);
+  } catch (error) {
+    console.warn(`[moderation] revalidatePath("${path}") skipped`, error);
+  }
+}
+
 function imageKeyFromUrl(imageUrl: string): string | null {
   if (!imageUrl.startsWith(IMAGE_URL_PREFIX)) return null;
   const key = imageUrl.slice(IMAGE_URL_PREFIX.length);
@@ -19,12 +33,12 @@ export function revalidateVotePaths(
   platinumId: string,
   ownerUsername?: string | null,
 ) {
-  revalidatePath('/');
-  revalidatePath('/explore');
-  revalidatePath('/hall-of-fame');
-  revalidatePath(`/platinum/${platinumId}`);
+  safeRevalidate('/');
+  safeRevalidate('/explore');
+  safeRevalidate('/hall-of-fame');
+  safeRevalidate(`/platinum/${platinumId}`);
   if (ownerUsername) {
-    revalidatePath(`/u/${ownerUsername}`);
+    safeRevalidate(`/u/${ownerUsername}`);
   }
 }
 
@@ -57,12 +71,12 @@ export async function removePlatinumRecord(
     }
   }
 
-  revalidatePath('/');
-  revalidatePath('/explore');
-  revalidatePath('/hall-of-fame');
-  revalidatePath(`/platinum/${platinum.id}`);
+  safeRevalidate('/');
+  safeRevalidate('/explore');
+  safeRevalidate('/hall-of-fame');
+  safeRevalidate(`/platinum/${platinum.id}`);
   if (ownerUsername) {
-    revalidatePath(`/u/${ownerUsername}`);
+    safeRevalidate(`/u/${ownerUsername}`);
   }
 }
 
@@ -100,7 +114,7 @@ export async function applyReportDecision(
       where: { id: reportId },
       data: { status: 'DISMISSED' },
     });
-    revalidatePath('/admin/reports');
+    safeRevalidate('/admin/reports');
     return { success: true };
   }
 
@@ -116,12 +130,12 @@ export async function applyReportDecision(
       }),
     ]);
     revalidateVotePaths(report.platinumId, report.platinum.user.username);
-    revalidatePath('/admin/reports');
+    safeRevalidate('/admin/reports');
     return { success: true };
   }
 
   await removePlatinumRecord(report.platinum, report.platinum.user.username);
-  revalidatePath('/admin/reports');
+  safeRevalidate('/admin/reports');
   return { success: true };
 }
 
@@ -147,7 +161,7 @@ export async function applyPlatinumModeration(
 
   if (op === 'DELETE') {
     await removePlatinumRecord(platinum, platinum.user.username);
-    revalidatePath('/admin/reports');
+    safeRevalidate('/admin/reports');
     return { success: true };
   }
 
@@ -170,6 +184,6 @@ export async function applyPlatinumModeration(
   }
 
   revalidateVotePaths(platinumId, platinum.user.username);
-  revalidatePath('/admin/reports');
+  safeRevalidate('/admin/reports');
   return { success: true };
 }
