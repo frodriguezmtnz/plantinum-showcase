@@ -82,6 +82,30 @@ describe('buildModerationNotice', () => {
     );
   });
 
+  it('omits link buttons for a local site url (Telegram rejects them)', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'http://localhost:9002';
+
+    const { keyboard } = buildModerationNotice({
+      source: 'upload',
+      platinumId: 'p1',
+      gameName: 'Elden Ring',
+      ownerUsername: 'alice',
+      label: 'REVIEW',
+      category: null,
+      confidence: null,
+      summary: null,
+      moderationStatus: 'UNDER_REVIEW',
+    });
+
+    const buttons = keyboard.inline_keyboard.flat();
+    expect(buttons.some((button) => 'url' in button)).toBe(false);
+    expect(buttons).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ callback_data: 'MOD:p1:publish' }),
+      ]),
+    );
+  });
+
   it('builds a report alert with report details and report buttons', () => {
     const { text, keyboard } = buildModerationNotice({
       source: 'report',
