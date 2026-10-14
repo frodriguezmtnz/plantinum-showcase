@@ -125,15 +125,31 @@ export async function classifyImage(input: {
       signal: controller.signal,
     });
 
+    const raw = await response.text();
     if (!response.ok) {
       console.warn(
         `[ai-triage] ${AI_TRIAGE_PROVIDER} responded ${response.status}`,
+        raw.slice(0, 300),
       );
       return null;
     }
 
-    const payload = await response.json();
-    return parseTriageResponse(payload, config.model);
+    let payload: unknown;
+    try {
+      payload = JSON.parse(raw);
+    } catch {
+      console.warn('[ai-triage] response was not JSON', raw.slice(0, 300));
+      return null;
+    }
+
+    const verdict = parseTriageResponse(payload, config.model);
+    if (!verdict) {
+      console.warn(
+        '[ai-triage] could not parse a verdict from the response',
+        raw.slice(0, 300),
+      );
+    }
+    return verdict;
   } catch (error) {
     console.warn('[ai-triage] classification failed', error);
     return null;
