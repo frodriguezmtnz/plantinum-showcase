@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { answerCallbackQuery, getTelegramConfig, parseCallbackData } from '@/lib/telegram';
-import { applyPlatinumModeration, applyReportDecision } from '@/lib/moderation-core';
+import { getTelegramConfig } from '@/lib/telegram';
+import { processTelegramUpdate, type TelegramUpdate } from '@/lib/telegram-actions';
 
 export const runtime = 'nodejs';
-
-interface TelegramUpdate {
-  callback_query?: {
-    id: string;
-    data?: string;
-    message?: { chat?: { id?: number | string } };
-  };
-}
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
@@ -34,33 +26,9 @@ export async function POST(request: NextRequest) {
   }
 
   const update = (await request.json().catch(() => null)) as TelegramUpdate | null;
-  const callback = update?.callback_query;
-  if (!callback) {
-    return NextResponse.json({ ok: true });
+  if (update) {
+    await processTelegramUpdate(config, update);
   }
-
-  const chatId = String(callback.message?.chat?.id ?? '');
-  if (chatId !== config.chatId) {
-    await answerCallbackQuery(config, callback.id, 'Not allowed');
-    return NextResponse.json({ ok: true });
-  }
-
-  const parsed = parseCallbackData(callback.data);
-  if (!parsed) {
-    await answerCallbackQuery(config, callback.id, 'Unsupported action');
-    return NextResponse.json({ ok: true });
-  }
-
-  const result =
-    parsed.kind === 'platinum'
-      ? await applyPlatinumModeration(parsed.id, parsed.op)
-      : await applyReportDecision(parsed.id, parsed.decision);
-
-  await answerCallbackQuery(
-    config,
-    callback.id,
-    result.success ? 'Done ✅' : result.error,
-  );
 
   return NextResponse.json({ ok: true });
 }
