@@ -280,6 +280,10 @@ export async function uploadPlatinum(formData: FormData) {
       after(() =>
         screenPlatinumUpload(platinum.id, hash, platinum.gameName, processed.data),
       );
+    } else if (process.env.NODE_ENV !== "production") {
+      console.info(
+        "[ai-triage] upload screening skipped: NAN_API_KEY is not set (restart dev after editing .env).",
+      );
     }
 
     return { success: true as const, platinumId: platinum.id };
@@ -565,6 +569,8 @@ export async function reportPlatinum(
         console.warn("[report] ai triage failed", error);
       }
     });
+  } else if (process.env.NODE_ENV !== "production") {
+    console.info("[ai-triage] report triage skipped: NAN_API_KEY is not set.");
   }
 
   return { success: true as const };
