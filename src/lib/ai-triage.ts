@@ -9,6 +9,8 @@ import {
   AI_TRIAGE_PROVIDER,
   parseFakeVerdict,
   parseTriageResponse,
+  readFinishReason,
+  reviewFallback,
   type TriageVerdict,
 } from '@/lib/ai-verdict';
 
@@ -131,7 +133,10 @@ export async function classifyImage(input: {
         `[ai-triage] ${AI_TRIAGE_PROVIDER} responded ${response.status}`,
         raw.slice(0, 300),
       );
-      return null;
+      return reviewFallback(
+        `Classifier responded ${response.status}; needs a human review.`,
+        config.model,
+      );
     }
 
     let payload: unknown;
@@ -139,7 +144,19 @@ export async function classifyImage(input: {
       payload = JSON.parse(raw);
     } catch {
       console.warn('[ai-triage] response was not JSON', raw.slice(0, 300));
-      return null;
+      return reviewFallback(
+        'Classifier returned an unreadable response; needs a human review.',
+        config.model,
+      );
+    }
+
+    const finish = readFinishReason(payload);
+    if (finish === 'content_filter' || finish === 'refusal') {
+      console.warn(`[ai-triage] classifier refused the image (${finish})`);
+      return reviewFallback(
+        'The classifier refused to analyse this image; needs a human review.',
+        config.model,
+      );
     }
 
     const verdict = parseTriageResponse(payload, config.model);
@@ -148,11 +165,18 @@ export async function classifyImage(input: {
         '[ai-triage] could not parse a verdict from the response',
         raw.slice(0, 300),
       );
+      return reviewFallback(
+        'The classifier did not return a usable verdict; needs a human review.',
+        config.model,
+      );
     }
     return verdict;
   } catch (error) {
     console.warn('[ai-triage] classification failed', error);
-    return null;
+    return reviewFallback(
+      'Classifier call failed; needs a human review.',
+      config.model,
+    );
   } finally {
     clearTimeout(timeout);
   }

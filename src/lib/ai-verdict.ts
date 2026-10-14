@@ -110,6 +110,32 @@ export function parseTriageResponse(
   return content ? parseTriageContent(content, model) : null;
 }
 
+/** Reads `choices[0].finish_reason` from an OpenAI-compatible payload. */
+export function readFinishReason(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const choices = (payload as { choices?: unknown }).choices;
+  if (!Array.isArray(choices) || choices.length === 0) return null;
+  const finish = (choices[0] as { finish_reason?: unknown } | undefined)
+    ?.finish_reason;
+  return typeof finish === 'string' ? finish : null;
+}
+
+/**
+ * Fail-closed verdict. When the classifier refuses to look at the image (its
+ * own content filter), errors out, or returns something unparseable, we send
+ * the plate to a human instead of publishing it.
+ */
+export function reviewFallback(summary: string, model: string): TriageVerdict {
+  return {
+    label: 'REVIEW',
+    category: 'other',
+    confidence: null,
+    summary,
+    provider: AI_TRIAGE_PROVIDER,
+    model,
+  };
+}
+
 /**
  * Maps a verdict to the plate's initial moderation state. UNSAFE only hides
  * automatically when the operator opts in; otherwise a moderator decides.
