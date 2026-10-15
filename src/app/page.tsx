@@ -200,14 +200,14 @@ export default async function Home() {
         </h2>
         {latestPlatinums.length > 0 ? (
           <>
-            <div className="mt-8 columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {latestPlatinums.map((platinum) => (
-                <div key={platinum.id} className="mb-6 break-inside-avoid">
-                  <PlatinumCard
-                    platinum={platinum}
-                    user={getUserById(platinum.userId)}
-                  />
-                </div>
+                <PlatinumCard
+                  key={platinum.id}
+                  platinum={platinum}
+                  user={getUserById(platinum.userId)}
+                  cover
+                />
               ))}
             </div>
             <div className="mt-10 flex justify-center">
