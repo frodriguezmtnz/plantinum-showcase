@@ -41,6 +41,8 @@ export interface ModerationNotice {
   confidence: number | null;
   summary: string | null;
   moderationStatus: 'UNDER_REVIEW' | 'HIDDEN';
+  /** True when no AI verdict exists (screening off) and a human must decide. */
+  manual?: boolean;
   reportId?: string;
   reportReason?: ReportReason | null;
   reportMessage?: string | null;
@@ -98,8 +100,9 @@ export function buildModerationNotice(notice: ModerationNotice): {
   keyboard: InlineKeyboardMarkup;
 } {
   const siteUrl = getTelegramConfig()?.siteUrl ?? '';
-  const heading =
-    notice.source === 'upload'
+  const heading = notice.manual
+    ? '📝 <b>Revisión manual requerida</b>'
+    : notice.source === 'upload'
       ? '🚨 <b>Platino marcado por la IA</b>'
       : '🚩 <b>Platino reportado y marcado por la IA</b>';
 
@@ -108,12 +111,16 @@ export function buildModerationNotice(notice: ModerationNotice): {
   if (notice.ownerUsername) {
     lines.push(`👤 Autor: <b>@${escapeHtml(notice.ownerUsername)}</b>`);
   }
-  lines.push(
-    `${VERDICT_EMOJI[notice.label]} Veredicto: <b>${VERDICT_TITLE[notice.label]}</b>` +
-      (notice.category ? ` · ${escapeHtml(notice.category)}` : ''),
-  );
-  if (notice.confidence != null) {
-    lines.push(`📊 Confianza: <b>${Math.round(notice.confidence * 100)}%</b>`);
+  if (notice.manual) {
+    lines.push('🔍 Veredicto: <b>pendiente</b> (IA no configurada)');
+  } else {
+    lines.push(
+      `${VERDICT_EMOJI[notice.label]} Veredicto: <b>${VERDICT_TITLE[notice.label]}</b>` +
+        (notice.category ? ` · ${escapeHtml(notice.category)}` : ''),
+    );
+    if (notice.confidence != null) {
+      lines.push(`📊 Confianza: <b>${Math.round(notice.confidence * 100)}%</b>`);
+    }
   }
   if (notice.summary) {
     lines.push(`📝 <i>${escapeHtml(notice.summary)}</i>`);
