@@ -127,6 +127,34 @@ async function screenPlatinumUpload(
   }
 }
 
+/**
+ * Fail-closed fallback for when no AI screener is configured: the plate was
+ * created as UNDER_REVIEW but there is no verdict, so we ask a moderator to
+ * decide by hand instead of leaving it silently stuck in the queue.
+ */
+async function notifyManualReview(platinumId: string, gameName: string) {
+  try {
+    const owner = await prisma.platinum.findUnique({
+      where: { id: platinumId },
+      select: { user: { select: { username: true } } },
+    });
+    await sendModerationNotice({
+      source: "upload",
+      platinumId,
+      gameName,
+      ownerUsername: owner?.user.username ?? null,
+      label: "REVIEW",
+      category: null,
+      confidence: null,
+      summary: "AI screening is not configured; manual review required.",
+      moderationStatus: "UNDER_REVIEW",
+      manual: true,
+    });
+  } catch (error) {
+    console.warn("[upload] manual review notice failed", error);
+  }
+}
+
 export async function uploadPlatinum(formData: FormData) {
   const session = await auth();
   const userId = session?.user?.id;
@@ -281,9 +309,10 @@ export async function uploadPlatinum(formData: FormData) {
         width: processed.width,
         height: processed.height,
         watermarked: planConfig(account?.plan).watermark,
-        // Moderation-first: not public until the AI clears it (or a moderator
-        // approves). With the AI off, fall back to publishing directly.
-        moderationStatus: screeningEnabled ? "UNDER_REVIEW" : "PUBLISHED",
+        // Fail-closed: a plate is never public at creation. Only an explicit
+        // SAFE verdict publishes it (screening below); otherwise, including when
+        // the AI is not configured at all, a human decides.
+        moderationStatus: "UNDER_REVIEW",
       },
     });
 
@@ -295,10 +324,13 @@ export async function uploadPlatinum(formData: FormData) {
       after(() =>
         screenPlatinumUpload(platinum.id, hash, platinum.gameName, processed.data),
       );
-    } else if (process.env.NODE_ENV !== "production") {
-      console.info(
-        "[ai-triage] upload screening skipped: NAN_API_KEY is not set (restart dev after editing .env).",
-      );
+    } else {
+      after(() => notifyManualReview(platinum.id, platinum.gameName));
+      if (process.env.NODE_ENV !== "production") {
+        console.info(
+          "[ai-triage] upload screening skipped: NAN_API_KEY is not set (restart dev after editing .env). Manual review required.",
+        );
+      }
     }
 
     return { success: true as const, platinumId: platinum.id };

@@ -106,6 +106,32 @@ describe('buildModerationNotice', () => {
     );
   });
 
+  it('builds a manual-review notice when the AI is unconfigured', () => {
+    const { text, keyboard } = buildModerationNotice({
+      source: 'upload',
+      platinumId: 'p1',
+      gameName: 'Elden Ring',
+      ownerUsername: 'alice',
+      label: 'REVIEW',
+      category: null,
+      confidence: null,
+      summary: 'AI screening is not configured; manual review required.',
+      moderationStatus: 'UNDER_REVIEW',
+      manual: true,
+    });
+
+    expect(text).toContain('Revisión manual requerida');
+    expect(text).toContain('IA no configurada');
+    expect(text).not.toContain('marcado por la IA');
+
+    const buttons = keyboard.inline_keyboard.flat();
+    expect(buttons).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ callback_data: 'MOD:p1:publish' }),
+      ]),
+    );
+  });
+
   it('builds a report alert with report details and report buttons', () => {
     const { text, keyboard } = buildModerationNotice({
       source: 'report',
