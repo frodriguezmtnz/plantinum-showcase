@@ -20,7 +20,12 @@ import { isModerator } from "@/lib/roles";
 import { getAiTriageConfig, isAiTriageConfigured, triageImageHash } from "@/lib/ai-triage";
 import { moderationStatusForVerdict } from "@/lib/ai-verdict";
 import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
-import { countUnreadNotifications, markNotificationsRead } from "@/lib/notifications";
+import {
+  countUnreadNotifications,
+  markNotificationsRead,
+  notifyModerators,
+} from "@/lib/notifications";
+import { REPORT_REASON_LABELS } from "@/lib/report-labels";
 import { sendModerationNotice } from "@/lib/telegram";
 import {
   applyPlatinumModeration,
@@ -127,6 +132,23 @@ async function screenPlatinumUpload(
 
     if (status === "PUBLISHED") return;
 
+    // The moderator queue also gets an in-app notice, mirroring the chat ping.
+    await notifyModerators({
+      kind: "PLATE_FLAGGED",
+      title: `“${gameName}” flagged by the AI`,
+      body: [
+        verdict.label,
+        verdict.category,
+        verdict.confidence != null
+          ? `${Math.round(verdict.confidence * 100)}%`
+          : null,
+        verdict.summary,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      platinumId,
+    });
+
     if (isNew) {
       await sendModerationNotice({
         source: "upload",
@@ -167,6 +189,12 @@ async function notifyManualReview(platinumId: string, gameName: string) {
       summary: "AI screening is not configured; manual review required.",
       moderationStatus: "UNDER_REVIEW",
       manual: true,
+    });
+    await notifyModerators({
+      kind: "PLATE_FLAGGED",
+      title: `“${gameName}” needs a manual review`,
+      body: "AI screening is not configured, so a human has to decide.",
+      platinumId,
     });
   } catch (error) {
     console.warn("[upload] manual review notice failed", error);
@@ -369,6 +397,12 @@ export async function uploadPlatinum(formData: FormData) {
         confidence: null,
         summary: `Re-upload of a flagged screenshot. ${reason}`,
         moderationStatus: "HIDDEN",
+      });
+      await notifyModerators({
+        kind: "PLATE_FLAGGED",
+        title: `“${platinum.gameName}” re-uploaded a flagged screenshot`,
+        body: "Content-addressed match against the disallowed list; taken down on arrival.",
+        platinumId: platinum.id,
       });
       return {
         success: true as const,
@@ -648,6 +682,19 @@ export async function reportPlatinum(
 
   // Triage of the reported plate: reuse the upload verdict if it is cached,
   // otherwise classify once and alert the moderator chat.
+  await notifyModerators({
+    kind: "REPORT_RECEIVED",
+    title: `New report on “${platinum.gameName}”`,
+    body: [
+      REPORT_REASON_LABELS[parsed.data.reason],
+      parsed.data.message ?? null,
+      session.user.name ? `— @${session.user.name}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    platinumId,
+  });
+
   if (isAiTriageConfigured()) {
     after(async () => {
       try {
@@ -812,6 +859,13 @@ export async function appealPlatinum(platinumId: string, message: string) {
     reportReason: "APPEAL",
     reportMessage: trimmed,
     reporterUsername: platinum.user.username,
+  });
+
+  await notifyModerators({
+    kind: "APPEAL_RECEIVED",
+    title: `“${platinum.gameName}” — appeal from @${platinum.user.username}`,
+    body: trimmed,
+    platinumId,
   });
 
   revalidatePath(`/platinum/${platinumId}`);
