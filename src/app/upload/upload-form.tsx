@@ -246,7 +246,7 @@ export function UploadForm() {
                 <p className="text-sm text-muted-foreground">
                   {submitted.blocked
                     ? 'This image is on the disallowed list, so it was taken down on arrival and never appears in the gallery.'
-                    : 'A screener checks every upload before it goes public. Nothing else for you to do — you will get a notice here.'}
+                    : 'Every upload starts here while the screener checks it — it does not mean your screenshot was rejected. Most plates clear in seconds and join the gallery on their own; nothing else for you to do, and you will get a notice here either way.'}
                 </p>
               </div>
             </div>
