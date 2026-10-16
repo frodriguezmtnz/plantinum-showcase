@@ -113,8 +113,8 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
           className={cn(
             'mb-6 flex flex-wrap items-center gap-3 rounded-xl border p-4',
             platinum.moderationStatus === 'HIDDEN'
-              ? 'border-destructive/40 bg-destructive/5'
-              : 'border-amber-500/40 bg-amber-500/5',
+              ? 'border-destructive/60 bg-destructive/10 dark:bg-destructive/15'
+              : 'border-amber-500/60 bg-amber-500/15 dark:bg-amber-500/10',
           )}
         >
           <div className="min-w-0 flex-1">

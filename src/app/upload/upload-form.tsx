@@ -579,7 +579,7 @@ export function UploadForm() {
                 control={form.control}
                 name="agreedToRules"
                 render={({ field }) => (
-                  <FormItem className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                  <FormItem className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
                     <div className="flex items-start gap-2">
                       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
                       <p className="text-sm text-muted-foreground">
