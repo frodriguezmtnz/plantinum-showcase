@@ -270,8 +270,9 @@ export default async function AdminReportsPage({ searchParams }: Props) {
       <section className="mb-12">
         <h2 className="mb-4 text-xl font-bold font-headline">Open reports</h2>
 
-        {reports.total > 0 && (
-          <div className="mb-4 flex flex-wrap gap-2">
+        {/* Always visible, even when the active reason has no matches: hiding
+            them would leave a moderator stuck on an empty filter. */}
+        <div className="mb-4 flex flex-wrap gap-2">
             <FilterPill
               active={reason === 'all'}
               href={buildHref({
@@ -300,8 +301,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                 {REPORT_REASON_LABELS[item]}
               </FilterPill>
             ))}
-          </div>
-        )}
+        </div>
 
         {reports.items.length === 0 ? (
           <EmptyState
