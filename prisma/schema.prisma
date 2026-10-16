@@ -43,11 +43,15 @@ enum ReportStatus {
 }
 
 // Owner-facing messages raised by the moderation flow (a plate that stops
-// being public, or a manual review that needs their attention).
+// being public, or a manual review that needs their attention), plus the
+// moderator-facing queue items (appeals, flags and user reports).
 enum NotificationKind {
   PLATE_HIDDEN
   PLATE_UNDER_REVIEW
   APPEAL_RESOLVED
+  APPEAL_RECEIVED
+  PLATE_FLAGGED
+  REPORT_RECEIVED
 }
 
 // Screening verdict for a content-addressed screenshot. SAFE keeps the plate

@@ -36,6 +36,34 @@ export async function notifyUser(input: NotifyInput): Promise<void> {
   }
 }
 
+/**
+ * Fans a queue notice out to every moderator and admin, so the in-app bell
+ * mirrors what the Telegram chat already reports. Best-effort on purpose.
+ */
+export async function notifyModerators(
+  input: Omit<NotifyInput, 'userId'>,
+): Promise<void> {
+  try {
+    const moderators = await prisma.user.findMany({
+      where: { role: { in: ['MODERATOR', 'ADMIN'] } },
+      select: { id: true },
+    });
+    if (moderators.length === 0) return;
+
+    await prisma.notification.createMany({
+      data: moderators.map((moderator) => ({
+        userId: moderator.id,
+        kind: input.kind,
+        title: input.title,
+        body: input.body ?? null,
+        platinumId: input.platinumId ?? null,
+      })),
+    });
+  } catch (error) {
+    console.warn('[notifications] could not store moderator notices', error);
+  }
+}
+
 export async function listNotifications(
   userId: string,
   limit = 30,
