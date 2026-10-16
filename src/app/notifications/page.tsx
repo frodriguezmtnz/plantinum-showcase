@@ -1,9 +1,18 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
-import { Bell, ShieldAlert, SearchCheck, CheckCircle2 } from 'lucide-react';
+import {
+  Bell,
+  ShieldAlert,
+  SearchCheck,
+  CheckCircle2,
+  Gavel,
+  Flag,
+  ShieldCheck,
+} from 'lucide-react';
 import { auth } from '@/auth';
 import { listNotifications } from '@/lib/notifications';
+import { isModerator } from '@/lib/roles';
 import { markAllNotificationsRead } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
@@ -18,14 +27,27 @@ const KIND_ICON: Record<NotificationKind, typeof Bell> = {
   PLATE_HIDDEN: ShieldAlert,
   PLATE_UNDER_REVIEW: SearchCheck,
   APPEAL_RESOLVED: CheckCircle2,
+  APPEAL_RECEIVED: Gavel,
+  PLATE_FLAGGED: ShieldAlert,
+  REPORT_RECEIVED: Flag,
 };
+
+/** Kinds that belong to the moderator queue rather than to a plate's owner. */
+const QUEUE_KINDS: NotificationKind[] = [
+  'APPEAL_RECEIVED',
+  'PLATE_FLAGGED',
+  'REPORT_RECEIVED',
+];
 
 export default async function NotificationsPage() {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) redirect('/login');
 
-  const notifications = await listNotifications(userId);
+  const [notifications, canModerate] = await Promise.all([
+    listNotifications(userId),
+    isModerator(userId),
+  ]);
 
   return (
     <div className="container max-w-2xl py-8 md:py-12">
@@ -47,12 +69,17 @@ export default async function NotificationsPage() {
         <EmptyState
           icon={Bell}
           title="Nothing here yet"
-          description="We will let you know when a moderator acts on one of your platinums."
+          description={
+            canModerate
+              ? 'Reports, appeals and AI flags will show up here as they arrive.'
+              : 'We will let you know when a moderator acts on one of your platinums.'
+          }
         />
       ) : (
         <ul className="space-y-3">
           {notifications.map((item) => {
             const Icon = KIND_ICON[item.kind];
+            const isQueueItem = QUEUE_KINDS.includes(item.kind);
             return (
               <li
                 key={item.id}
@@ -78,6 +105,14 @@ export default async function NotificationsPage() {
                   </p>
                   {item.platinumId && (
                     <div className="mt-3 flex flex-wrap gap-2">
+                      {isQueueItem && canModerate ? (
+                        <Button asChild size="sm" variant="outline">
+                          <Link href="/admin/reports">
+                            <ShieldCheck className="mr-2 h-4 w-4" />
+                            Open moderation queue
+                          </Link>
+                        </Button>
+                      ) : null}
                       <Button asChild size="sm" variant="outline">
                         <Link href={`/platinum/${item.platinumId}`}>View platinum</Link>
                       </Button>
