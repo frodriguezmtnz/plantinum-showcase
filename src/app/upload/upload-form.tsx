@@ -102,6 +102,9 @@ export function UploadForm() {
 
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
+    // Validate as the user fills the form so the submit button can stay
+    // disabled until every field, screenshot and rule checkbox is in.
+    mode: 'onChange',
     defaultValues: {
       gameName: "",
       isSpoiler: false,
@@ -111,6 +114,8 @@ export function UploadForm() {
     },
   })
 
+  const { isValid } = form.formState
+
   const watchWatermarkPosition = useWatch({
     control: form.control,
     name: 'watermarkPosition',
@@ -119,8 +124,7 @@ export function UploadForm() {
   function acceptFiles(files: FileList | null) {
     const file = files?.[0];
     if (!file) return;
-    form.setValue('screenshot', files);
-    form.clearErrors('screenshot');
+    form.setValue('screenshot', files, { shouldValidate: true });
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result as string);
@@ -610,10 +614,22 @@ export function UploadForm() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" size="lg" disabled={form.formState.isSubmitting || quotaBlocked}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={form.formState.isSubmitting || quotaBlocked || !isValid}
+              >
                 <UploadCloud className="mr-2" />
                 {submitLabel}
               </Button>
+
+              {!isValid && !quotaBlocked && (
+                <p className="text-center text-sm text-muted-foreground">
+                  Fill in every field, add a screenshot and accept the content rules to
+                  enable uploading.
+                </p>
+              )}
             </form>
           </Form>
         </CardContent>
