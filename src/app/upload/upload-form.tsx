@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, UploadCloud, ImagePlus } from "lucide-react"
+import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -30,9 +30,9 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
 import imageCompression from "browser-image-compression"
 import { uploadPlatinum, getUploadQuota } from "@/app/actions"
+import { pixelateImage } from "@/lib/pixelate-client"
 import { platinumMetaSchema, watermarkPositionSchema } from "@/lib/schemas"
 import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-position"
 
@@ -49,6 +49,9 @@ const uploadFormSchema = platinumMetaSchema.extend({
       return type !== undefined && ["image/jpeg", "image/png", "image/webp"].includes(type);
     }, '.jpg, .png and .webp files are accepted.'),
   watermarkPosition: watermarkPositionSchema,
+  agreedToRules: z
+    .boolean()
+    .refine((value) => value, 'You must accept the content rules to upload.'),
 })
 
 const WATERMARK_POSITION_LABELS: Record<WatermarkPosition, string> = {
@@ -69,15 +72,23 @@ type UploadFormValues = z.infer<typeof uploadFormSchema>
 
 type UploadStage = 'idle' | 'compressing' | 'uploading'
 
+interface SubmittedPlate {
+  id: string;
+  gameName: string;
+  /** True when the screenshot was caught by the flag list and never went public. */
+  blocked: boolean;
+}
+
 export function UploadForm() {
   const { toast } = useToast()
   const [preview, setPreview] = useState<string | null>(null);
+  const [pixelPreview, setPixelPreview] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState<SubmittedPlate | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [stage, setStage] = useState<UploadStage>('idle');
   const [compressPct, setCompressPct] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [quota, setQuota] = useState<Awaited<ReturnType<typeof getUploadQuota>>>(null);
-  const router = useRouter();
 
   useEffect(() => {
     let alive = true;
@@ -96,6 +107,7 @@ export function UploadForm() {
       isSpoiler: false,
       comment: "",
       watermarkPosition: "bottom-right",
+      agreedToRules: false,
     },
   })
 
@@ -171,13 +183,23 @@ export function UploadForm() {
         return;
       }
 
-      toast({
-        title: "Upload Successful!",
-        description: `Your platinum for ${data.gameName} has been submitted.`,
-      });
+      const blocked = result.moderationStatus === 'HIDDEN';
+      // Show the owner exactly what the gallery sees while the plate is not
+      // public: the mosaic, not the screenshot.
+      const mosaic = preview ? await pixelateImage(preview) : null;
+
+      setPixelPreview(mosaic);
+      setSubmitted({ id: result.platinumId, gameName: data.gameName, blocked });
       form.reset();
       setPreview(null);
-      router.push(`/platinum/${result.platinumId}`);
+
+      toast({
+        title: blocked ? "Screenshot not accepted" : "Sent for review",
+        description: blocked
+          ? "That screenshot is on the disallowed list and was not published."
+          : `Your platinum for ${data.gameName} is being checked by the screener.`,
+        variant: blocked ? "destructive" : undefined,
+      });
     } catch {
       toast({
         title: "Upload Failed",
@@ -201,6 +223,72 @@ export function UploadForm() {
     stage === 'compressing' ? `Compressing\u2026 ${compressPct}%` :
     stage === 'uploading' ? 'Hanging it on the wall\u2026' :
     form.formState.isSubmitting ? 'Uploading\u2026' : 'Upload Platinum';
+
+  if (submitted) {
+    return (
+      <div className="container max-w-2xl py-8 md:py-12">
+        <Card>
+          <CardContent className="space-y-5 p-6">
+            <div className="flex items-center gap-3">
+              {submitted.blocked ? (
+                <AlertTriangle className="h-7 w-7 shrink-0 text-destructive" aria-hidden />
+              ) : (
+                <CheckCircle2 className="h-7 w-7 shrink-0 text-live" aria-hidden />
+              )}
+              <div>
+                <h2 className="text-xl font-bold font-headline">
+                  {submitted.blocked ? 'Screenshot not accepted' : 'Sent for review'}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {submitted.blocked
+                    ? 'This image is on the disallowed list, so it was taken down on arrival and never appears in the gallery.'
+                    : 'A screener checks every upload before it goes public. Nothing else for you to do — you will get a notice here.'}
+                </p>
+              </div>
+            </div>
+
+            {pixelPreview && (
+              <figure className="space-y-2">
+                <div className="relative overflow-hidden rounded-lg border border-border">
+                  <Image
+                    src={pixelPreview}
+                    alt={`Pixelated preview of ${submitted.gameName}`}
+                    width={640}
+                    height={360}
+                    className="h-auto w-full"
+                    unoptimized
+                  />
+                  <div className="absolute inset-x-0 top-0 bg-destructive py-1 text-center text-[0.7rem] font-bold uppercase tracking-[0.22em] text-destructive-foreground">
+                    {submitted.blocked ? 'Hidden' : 'Under review'}
+                  </div>
+                </div>
+                <figcaption className="text-xs text-muted-foreground">
+                  This is what everyone else sees while the plate is not public. Moderators see
+                  the full screenshot.
+                </figcaption>
+              </figure>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button asChild>
+                <Link href={`/platinum/${submitted.id}`}>View your platinum</Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setSubmitted(null);
+                  setPixelPreview(null);
+                }}
+              >
+                Upload another
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-2xl py-8 md:py-12">
@@ -482,6 +570,35 @@ export function UploadForm() {
                   </div>
                 ) : null}
               </div>
+
+              <FormField
+                control={form.control}
+                name="agreedToRules"
+                render={({ field }) => (
+                  <FormItem className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                    <div className="flex items-start gap-2">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
+                      <p className="text-sm text-muted-foreground">
+                        Screenshots go through an automatic screener and a human review queue.
+                        No sexual content, no graphic violence, no hate or advertising — only
+                        real in-game platinum screenshots.
+                      </p>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <Checkbox
+                        id="content-rules"
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        disabled={busy}
+                      />
+                      <Label htmlFor="content-rules" className="text-sm font-normal">
+                        This is my own screenshot and it follows the content rules.
+                      </Label>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {busy && (                <div className="space-y-2">
                   <Progress value={stage === 'compressing' ? compressPct : 100} className="h-2" />

@@ -9,11 +9,13 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Heart, Trophy, ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { PlatinumDetailCard } from './platinum-detail-card';
 import type { User } from '@/lib/data';
+import { displayImageUrl } from '@/lib/image-display';
+import { AppealPlatinumButton } from '@/components/shared/appeal-platinum-button';
+import { cn } from '@/lib/utils';
 import { SocialShare } from './SocialShare';
 
 type Props = {
@@ -39,12 +41,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`;
   const description = `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`;
 
+  const isPublic = platinum.moderationStatus === 'PUBLISHED';
+
   // Spoiler plates stay out of link previews so sharing never leaks a reveal.
+  // Plates under moderation only advertise the pixelated variant, never the raw
+  // screenshot, and stay out of search engines until a moderator clears them.
   const images = platinum.isSpoiler
     ? []
     : [
         {
-          url: platinum.imageUrl,
+          url: displayImageUrl(platinum.imageUrl, platinum.moderationStatus),
           width: platinum.width,
           height: platinum.height,
           alt: `Platinum screenshot for ${platinum.gameName}`,
@@ -54,6 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    ...(isPublic ? {} : { robots: { index: false, follow: false } }),
     openGraph: {
       type: 'article',
       title,
@@ -90,7 +97,6 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
   const hasOpenReport = canReport
     ? await getOpenReportForUser(platinum.id, currentUserId)
     : false;
-  const underReview = platinum.moderationStatus !== 'PUBLISHED';
 
   return (
     <div className="container py-8 md:py-12">
@@ -101,6 +107,34 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
         <ArrowLeft className="h-4 w-4" aria-hidden />
         Back to Explore
       </Link>
+
+      {canDelete && platinum.moderationStatus !== 'PUBLISHED' && (
+        <div
+          className={cn(
+            'mb-6 flex flex-wrap items-center gap-3 rounded-xl border p-4',
+            platinum.moderationStatus === 'HIDDEN'
+              ? 'border-destructive/40 bg-destructive/5'
+              : 'border-amber-500/40 bg-amber-500/5',
+          )}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">
+              {platinum.moderationStatus === 'HIDDEN'
+                ? 'This platinum is hidden'
+                : 'This platinum is under review'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {platinum.moderationStatus === 'HIDDEN'
+                ? 'A moderator took it down, so only you and the moderators can open it. If you think this is a mistake, appeal and a human will take another look.'
+                : 'Only you and the moderators can see it, and everyone else gets a pixelated version. It joins the gallery as soon as it clears screening.'}
+            </p>
+          </div>
+          {platinum.moderationStatus === 'HIDDEN' && (
+            <AppealPlatinumButton platinumId={platinum.id} gameName={platinum.gameName} />
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
         <div className="md:col-span-3 min-w-0">
             <PlatinumDetailCard platinum={platinum} user={user ?? null} />
@@ -109,14 +143,6 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
             <div className="panel-solid p-6 rounded-2xl overflow-hidden">
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                   <h2 className="text-2xl font-bold font-headline break-words">{platinum.gameName}</h2>
-                  {underReview && (
-                    <Badge
-                      variant="outline"
-                      className="border-destructive/50 text-destructive"
-                    >
-                      {platinum.moderationStatus === 'HIDDEN' ? 'Hidden' : 'Under review'}
-                    </Badge>
-                  )}
                 </div>
                 {user && (
                   <div className="mb-6 flex min-w-0 items-center gap-4">

@@ -14,8 +14,10 @@ import {
   LogIn,
   UserPlus,
   ShieldCheck,
+  Bell,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
+import { NotificationBell } from '@/components/shared/notification-bell';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
@@ -130,6 +132,7 @@ export function Header() {
                 <span className="hidden sm:inline">Upload</span>
               </Button>
             </Link>
+            {user && <NotificationBell className="hidden sm:inline-flex" />}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -158,6 +161,12 @@ export function Header() {
                     <Link href={`/u/${user.name}`}>
                       <UserIcon className="mr-2 h-4 w-4" />
                       <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/notifications">
+                      <Bell className="mr-2 h-4 w-4" />
+                      <span>Notifications</span>
                     </Link>
                   </DropdownMenuItem>
                   {user.role && user.role !== 'USER' && (
@@ -235,6 +244,12 @@ export function Header() {
                           <NavLink href={`/u/${user.name}`} active={pathname === `/u/${user.name}`}>
                             <UserIcon className="mr-2 h-4 w-4" />
                             Profile
+                          </NavLink>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <NavLink href="/notifications" active={pathname === '/notifications'}>
+                            <Bell className="mr-2 h-4 w-4" />
+                            Notifications
                           </NavLink>
                         </SheetClose>
                         {user.role && user.role !== 'USER' && (

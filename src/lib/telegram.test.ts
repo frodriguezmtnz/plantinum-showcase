@@ -162,6 +162,36 @@ describe('buildModerationNotice', () => {
       ]),
     );
   });
+
+  it('builds an appeal alert with restore buttons for the plate', () => {
+    const { text, keyboard } = buildModerationNotice({
+      source: 'appeal',
+      platinumId: 'p3',
+      gameName: 'Bloodborne',
+      ownerUsername: 'dave',
+      label: 'REVIEW',
+      category: 'appeal',
+      confidence: null,
+      summary: 'Owner appeal: it was just the HUD',
+      moderationStatus: 'HIDDEN',
+      reportId: 'r3',
+      reportReason: 'APPEAL',
+      reportMessage: 'it was just the HUD',
+      reporterUsername: 'dave',
+    });
+
+    expect(text).toContain('Apelación del autor');
+    expect(text).toContain('Author appeal');
+    expect(text).toContain('it was just the HUD');
+
+    const buttons = keyboard.inline_keyboard.flat();
+    expect(buttons).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ callback_data: 'MOD:p3:publish' }),
+        expect.objectContaining({ callback_data: 'MOD:p3:hide' }),
+      ]),
+    );
+  });
 });
 
 describe('parseCallbackData', () => {

@@ -7,6 +7,8 @@ import type { Platinum, User } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Eye, Expand } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
+import { displayImageUrl, isPlateUnderModeration } from '@/lib/image-display';
+import { ModerationRibbon } from '@/components/shared/moderation-ribbon';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface PlatinumDetailCardProps {
@@ -18,6 +20,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
+  const underModeration = isPlateUnderModeration(platinum.moderationStatus);
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -44,7 +47,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             )}
           >
             <Image
-              src={platinum.imageUrl}
+              src={displayImageUrl(platinum.imageUrl, platinum.moderationStatus)}
               alt={`Platinum screenshot for ${platinum.gameName}`}
               width={platinum.width}
               height={platinum.height}
@@ -61,6 +64,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             )}
           </button>
         </DialogTrigger>
+        {underModeration && <ModerationRibbon status={platinum.moderationStatus} />}
         {!showSpoiler && (
           <div className="spoiler-frost-strong absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
             <p className="text-lg font-bold flex items-center gap-2 text-foreground">
@@ -78,7 +82,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
         {user && <DialogDescription className="sr-only">Uploaded by {user.username}</DialogDescription>}
         <div className="relative aspect-[16/9]">
            <Image
-              src={platinum.imageUrl}
+              src={displayImageUrl(platinum.imageUrl, platinum.moderationStatus)}
               alt={`Platinum screenshot for ${platinum.gameName}`}
               fill
               className="object-contain"
