@@ -51,7 +51,7 @@ const navLinks = [
 const navPill =
   'flex h-10 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors duration-200';
 const navActive = 'bg-primary/90 text-primary-foreground shadow-lift ring-1 ring-primary-foreground/60';
-const navIdle = 'text-secondary-foreground/80 hover:bg-white/50';
+const navIdle = 'text-secondary-foreground/80 hover:bg-accent hover:text-accent-foreground';
 
 // Spread the rest onto the Link so SheetClose's `onClick` (passed by Radix
 // Slot) actually reaches it — otherwise tapping a nav item navigates but the
