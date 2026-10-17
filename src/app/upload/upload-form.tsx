@@ -300,28 +300,38 @@ export function UploadForm() {
           <CardTitle className="text-2xl">Upload a Platinum</CardTitle>
           <CardDescription>Showcase your latest achievement to the community.</CardDescription>
           {quota ? (
-            <p className="pt-2 text-sm text-muted-foreground" aria-live="polite">
-              <span className="field-mark mr-2">{quota.plan}</span>
-              {quota.remaining === null ? (
-                <>Unlimited uploads this month.</>
-              ) : quotaBlocked ? (
-                <>
-                  You&apos;ve used all {quota.limit} uploads for this month. The allowance resets next month,
-                  or raise it with a higher tier — see{' '}
-                  <Link href="/pricing" className="text-primary underline underline-offset-4">
-                    Pricing
-                  </Link>
-                  .
-                </>
-              ) : (
-                <>
-                  <span className="tabular font-semibold text-live">
-                    {quota.remaining} of {quota.limit}
-                  </span>{' '}
-                  uploads left this month.
-                </>
-              )}
-            </p>
+            quotaBlocked ? (
+              <div
+                className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm"
+                aria-live="polite"
+              >
+                <Rocket className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span className="field-mark">{quota.plan}</span>
+                <span className="font-semibold text-foreground">
+                  You&apos;ve used all {quota.limit} uploads this month.
+                </span>
+                <Link
+                  href="/pricing"
+                  className="font-semibold text-primary underline underline-offset-4 hover:text-primary/80"
+                >
+                  Upgrade for more uploads
+                </Link>
+              </div>
+            ) : (
+              <p className="pt-2 text-sm text-muted-foreground" aria-live="polite">
+                <span className="field-mark mr-2">{quota.plan}</span>
+                {quota.remaining === null ? (
+                  <>Unlimited uploads this month.</>
+                ) : (
+                  <>
+                    <span className="tabular font-semibold text-live">
+                      {quota.remaining} of {quota.limit}
+                    </span>{' '}
+                    uploads left this month.
+                  </>
+                )}
+              </p>
+            )
           ) : null}
         </CardHeader>
         <CardContent>
