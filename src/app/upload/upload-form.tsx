@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2, Rocket } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -223,7 +223,6 @@ export function UploadForm() {
   const quotaBlocked = quota !== null && quota.remaining === 0;
 
   const submitLabel =
-    quotaBlocked ? 'Monthly limit reached' :
     stage === 'compressing' ? `Compressing\u2026 ${compressPct}%` :
     stage === 'uploading' ? 'Hanging it on the wall\u2026' :
     form.formState.isSubmitting ? 'Uploading\u2026' : 'Upload Platinum';
@@ -614,15 +613,32 @@ export function UploadForm() {
                 </div>
               )}
 
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={form.formState.isSubmitting || quotaBlocked || !isValid}
-              >
-                <UploadCloud className="mr-2" />
-                {submitLabel}
-              </Button>
+              {quotaBlocked ? (
+                // A dead disabled button gives the visitor nowhere to go, so
+                // swap it for the upgrade path instead.
+                <div className="space-y-2">
+                  <Button asChild className="w-full" size="lg">
+                    <Link href="/pricing">
+                      <Rocket className="mr-2 h-4 w-4" />
+                      Upgrade for more uploads
+                    </Link>
+                  </Button>
+                  <p className="text-center text-sm text-muted-foreground">
+                    You&apos;ve used all {quota?.limit} uploads this month. Upgrade to keep
+                    showcasing now, or come back when the allowance resets next month.
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full"
+                  size="lg"
+                  disabled={form.formState.isSubmitting || !isValid}
+                >
+                  <UploadCloud className="mr-2" />
+                  {submitLabel}
+                </Button>
+              )}
 
               {!isValid && !quotaBlocked && (
                 <p className="text-center text-sm text-muted-foreground">
