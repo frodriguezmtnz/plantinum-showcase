@@ -36,13 +36,18 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-3",
         month_caption: "flex min-h-10 items-center justify-center px-1",
-        caption_label: "text-sm font-medium",
         dropdowns: "flex items-center justify-center gap-1",
-        dropdown_root: "relative",
-        dropdown:
-          "h-9 max-sm:h-11 cursor-pointer rounded-md bg-transparent px-1 text-sm font-medium outline-hidden hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+        // v9 renders each dropdown as a native <select> PLUS an aria-hidden
+        // label span with a chevron. The select is the interactive layer, so
+        // hide it and let the label carry the styling — showing both painted
+        // the text twice ("October October", "2026 2026").
+        dropdown_root:
+          "relative rounded-md outline-hidden hover:bg-accent focus-within:ring-2 focus-within:ring-ring",
+        dropdown: "absolute inset-0 w-full appearance-none bg-transparent opacity-0",
         months_dropdown: "",
         years_dropdown: "",
+        caption_label:
+          "pointer-events-none flex h-9 max-sm:h-11 items-center gap-1 rounded-md px-2 text-sm font-medium select-none",
         nav: "flex items-center",
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
