@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useActionState, useEffect } from "react";
+import { use, useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,18 +23,19 @@ export default function LoginPage({
   const { callbackUrl } = use(searchParams);
   const router = useRouter();
   const { refresh } = useAuth();
+  // Refreshing the session re-renders the provider, so guard against running
+  // the post-sign-in navigation more than once.
+  const navigatedRef = useRef(false);
 
   // Sign-in runs in a server action, so the client session provider has to be
   // refreshed before navigating or the header keeps showing "Sign in".
   useEffect(() => {
-    if (!state.redirectTo) return;
-    let alive = true;
-    refresh().then(() => {
-      if (alive) router.push(state.redirectTo!);
-    });
-    return () => {
-      alive = false;
-    };
+    if (!state.redirectTo || navigatedRef.current) return;
+    navigatedRef.current = true;
+    const target = state.redirectTo;
+    refresh()
+      .catch(() => undefined)
+      .finally(() => router.push(target));
   }, [state.redirectTo, refresh, router]);
 
   return (
