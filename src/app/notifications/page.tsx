@@ -13,10 +13,10 @@ import {
 import { auth } from '@/auth';
 import { listNotifications } from '@/lib/notifications';
 import { isModerator } from '@/lib/roles';
-import { markAllNotificationsRead } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { AppealPlatinumButton } from '@/components/shared/appeal-platinum-button';
+import { MarkAllReadButton } from '@/components/shared/mark-all-read-button';
 import type { NotificationKind } from '@/generated/prisma/enums';
 
 export const metadata = {
@@ -56,13 +56,7 @@ export default async function NotificationsPage() {
           <Bell className="h-6 w-6 text-primary" aria-hidden />
           <h1 className="text-2xl font-bold font-headline">Notifications</h1>
         </div>
-        {notifications.some((item) => !item.readAt) && (
-          <form action={markAllNotificationsRead}>
-            <Button type="submit" variant="outline" size="sm">
-              Mark all as read
-            </Button>
-          </form>
-        )}
+        {notifications.some((item) => !item.readAt) && <MarkAllReadButton />}
       </div>
 
       {notifications.length === 0 ? (

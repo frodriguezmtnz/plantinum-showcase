@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 import { getUnreadNotificationCount } from '@/app/actions';
+import { NOTIFICATIONS_READ_EVENT } from '@/lib/notification-events';
 import { Button } from '@/components/ui/button';
 
 /** Bell that links to the owner's notices and dots when something is unread. */
@@ -12,15 +13,28 @@ export function NotificationBell({ className }: { className?: string }) {
 
   useEffect(() => {
     let alive = true;
-    getUnreadNotificationCount()
-      .then((count) => {
-        if (alive) setUnread(count);
-      })
-      .catch(() => {
-        // Notices are best-effort; a signed-out or offline visitor just sees 0.
-      });
+
+    const load = () => {
+      getUnreadNotificationCount()
+        .then((count) => {
+          if (alive) setUnread(count);
+        })
+        .catch(() => {
+          // Notices are best-effort; a signed-out or offline visitor just sees 0.
+        });
+    };
+
+    const handleRead = () => {
+      // Clear the dot immediately instead of waiting for the next count fetch.
+      setUnread(0);
+      load();
+    };
+
+    load();
+    window.addEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
     return () => {
       alive = false;
+      window.removeEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
     };
   }, []);
 
