@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { displayImageUrl, isPlateUnderModeration } from '@/lib/image-display';
+import {
+  displayImageUrl,
+  isPlateUnderModeration,
+  withPixelFlag,
+} from '@/lib/image-display';
 
 describe('isPlateUnderModeration', () => {
   it('is only false for published plates', () => {
@@ -27,6 +31,20 @@ describe('displayImageUrl', () => {
 
   it('appends to an existing query string', () => {
     expect(displayImageUrl('/api/images/abc.avif?v=2', 'HIDDEN')).toBe(
+      '/api/images/abc.avif?v=2&fx=pixel',
+    );
+  });
+});
+
+describe('withPixelFlag', () => {
+  it('adds the pixel flag used by spoiler-protected cards', () => {
+    expect(withPixelFlag('/api/images/platinums/abc.avif')).toBe(
+      '/api/images/platinums/abc.avif?fx=pixel',
+    );
+  });
+
+  it('respects an existing query string', () => {
+    expect(withPixelFlag('/api/images/abc.avif?v=2')).toBe(
       '/api/images/abc.avif?v=2&fx=pixel',
     );
   });

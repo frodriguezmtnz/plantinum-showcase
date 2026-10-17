@@ -407,7 +407,10 @@ input[type='search']::-webkit-search-decoration {
 }
 
 /* Spoiler plates: frost on the case, not a black hole on the field. */
-.platinum-card-spoiler > .spoiler-blur {
+/* The blurred image is nested inside the card's link/button, so a direct-child
+   selector never matched. Descendant keeps the blur as the remote-image
+   fallback (stored images are served pixelated instead). */
+.platinum-card-spoiler .spoiler-blur {
   filter: blur(22px);
   transform: scale(1.08);
   transition: filter 0.4s var(--ease-bloom);

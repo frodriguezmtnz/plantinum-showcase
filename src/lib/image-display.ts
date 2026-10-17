@@ -8,6 +8,12 @@ export function isPlateUnderModeration(status: ModerationStatus): boolean {
   return status !== 'PUBLISHED';
 }
 
+/** Append the pixelation flag to an image URL the route can serve. */
+export function withPixelFlag(imageUrl: string): string {
+  const separator = imageUrl.includes('?') ? '&' : '?';
+  return `${imageUrl}${separator}fx=${PIXELATE_QUERY_FLAG}`;
+}
+
 /**
  * Screenshots that are not public are requested with the pixelation flag. The
  * server is the one that decides: moderators still receive the untouched image
@@ -18,6 +24,5 @@ export function displayImageUrl(
   status: ModerationStatus,
 ): string {
   if (!isPlateUnderModeration(status)) return imageUrl;
-  const separator = imageUrl.includes('?') ? '&' : '?';
-  return `${imageUrl}${separator}fx=${PIXELATE_QUERY_FLAG}`;
+  return withPixelFlag(imageUrl);
 }

@@ -7,7 +7,7 @@ import type { Platinum, User } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Eye, Expand } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
-import { displayImageUrl, isPlateUnderModeration } from '@/lib/image-display';
+import { displayImageUrl, isPlateUnderModeration, withPixelFlag } from '@/lib/image-display';
 import { ModerationRibbon } from '@/components/shared/moderation-ribbon';
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -21,6 +21,12 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
   const underModeration = isPlateUnderModeration(platinum.moderationStatus);
+  // Same contract as the gallery card: hidden spoilers ask the server for the
+  // mosaic, so the original is not in the page before the user reveals it.
+  const imageSrc =
+    !showSpoiler && isStoredImage(platinum.imageUrl)
+      ? withPixelFlag(platinum.imageUrl)
+      : displayImageUrl(platinum.imageUrl, platinum.moderationStatus);
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,7 +53,7 @@ export function PlatinumDetailCard({ platinum, user }: PlatinumDetailCardProps) 
             )}
           >
             <Image
-              src={displayImageUrl(platinum.imageUrl, platinum.moderationStatus)}
+              src={imageSrc}
               alt={`Platinum screenshot for ${platinum.gameName}`}
               width={platinum.width}
               height={platinum.height}

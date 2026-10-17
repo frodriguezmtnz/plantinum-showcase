@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { EditPlatinumDialog } from '@/components/shared/edit-platinum-dialog';
 import { ModerationRibbon } from '@/components/shared/moderation-ribbon';
-import { displayImageUrl, isPlateUnderModeration } from '@/lib/image-display';
+import { displayImageUrl, isPlateUnderModeration, withPixelFlag } from '@/lib/image-display';
 import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 
 interface PlatinumCardProps {
@@ -38,6 +38,13 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
   const underModeration = isPlateUnderModeration(platinum.moderationStatus);
+  // While the spoiler wrapper is up, stored screenshots are requested as the
+  // server-side mosaic so the original never reaches the page (a CSS blur can
+  // be removed). Remote URLs cannot be pixelated server-side and keep the blur.
+  const imageSrc =
+    !showSpoiler && isStoredImage(platinum.imageUrl)
+      ? withPixelFlag(platinum.imageUrl)
+      : displayImageUrl(platinum.imageUrl, platinum.moderationStatus);
   const frameStyle = cover ? undefined : { aspectRatio: `${platinum.width} / ${platinum.height}` };
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
@@ -70,7 +77,7 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
             className="block h-full w-full"
           >
             <Image
-              src={displayImageUrl(platinum.imageUrl, platinum.moderationStatus)}
+              src={imageSrc}
               alt={`Platinum screenshot for ${platinum.gameName}`}
               width={platinum.width}
               height={platinum.height}
