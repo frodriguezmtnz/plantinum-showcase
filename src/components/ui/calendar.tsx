@@ -43,7 +43,8 @@ function Calendar({
         // the text twice ("October October", "2026 2026").
         dropdown_root:
           "relative rounded-md outline-hidden hover:bg-accent focus-within:ring-2 focus-within:ring-ring",
-        dropdown: "absolute inset-0 w-full appearance-none bg-transparent opacity-0",
+        dropdown:
+          "absolute inset-0 w-full appearance-none bg-popover text-popover-foreground opacity-0",
         months_dropdown: "",
         years_dropdown: "",
         caption_label:
