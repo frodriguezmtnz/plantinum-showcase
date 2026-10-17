@@ -7,8 +7,9 @@ import {
   getOpenReports,
   getUnderReviewPlatinums,
   MODERATION_PAGE_SIZE,
+  type ModerationVerdictFilter,
 } from '@/lib/data';
-import { REPORT_REASON_LABELS } from '@/lib/report-labels';
+import { REPORT_REASON_LABELS, MODERATION_REPORT_REASONS } from '@/lib/report-labels';
 import { ReportReason } from '@/generated/prisma/enums';
 import { getCachedVerdicts, type ImageVerdictView } from '@/lib/verdicts';
 import { isStoredImage } from '@/lib/utils';
@@ -25,15 +26,32 @@ export const metadata = {
   title: 'Moderation | Platinum Showcase',
 };
 
-const REASONS = Object.values(ReportReason);
+const REASONS = MODERATION_REPORT_REASONS;
 
 type ReportFilter = ReportReason | 'all';
+
+const VERDICT_FILTERS: { value: ModerationVerdictFilter; label: string }[] = [
+  { value: 'all', label: 'Any verdict' },
+  { value: 'unsafe', label: 'AI: unsafe' },
+  { value: 'review', label: 'AI: review' },
+  { value: 'safe', label: 'AI: safe' },
+];
+
+const VERDICT_VALUES = VERDICT_FILTERS.map((filter) => filter.value);
+
+function parseVerdict(value?: string): ModerationVerdictFilter {
+  return VERDICT_VALUES.includes(value as ModerationVerdictFilter)
+    ? (value as ModerationVerdictFilter)
+    : 'all';
+}
 
 type AdminReportsSearchParams = {
   rpage?: string;
   upage?: string;
   hpage?: string;
   reason?: string;
+  uverdict?: string;
+  hverdict?: string;
 };
 
 type Props = {
@@ -50,12 +68,18 @@ function buildHref(params: {
   rpage?: number;
   upage?: number;
   hpage?: number;
+  uverdict?: ModerationVerdictFilter;
+  hverdict?: ModerationVerdictFilter;
 }): string {
   const search = new URLSearchParams();
   if (params.reason && params.reason !== 'all') search.set('reason', params.reason);
   if (params.rpage && params.rpage > 1) search.set('rpage', String(params.rpage));
   if (params.upage && params.upage > 1) search.set('upage', String(params.upage));
   if (params.hpage && params.hpage > 1) search.set('hpage', String(params.hpage));
+  if (params.uverdict && params.uverdict !== 'all')
+    search.set('uverdict', params.uverdict);
+  if (params.hverdict && params.hverdict !== 'all')
+    search.set('hverdict', params.hverdict);
   const query = search.toString();
   return `/admin/reports${query ? `?${query}` : ''}`;
 }
@@ -100,6 +124,8 @@ function AiVerdictBadge({ verdict }: { verdict?: ImageVerdictView }) {
       : verdict.label === 'UNSAFE'
         ? 'AI: unsafe'
         : 'AI: review';
+  const confidence =
+    verdict.confidence != null ? ` ${Math.round(verdict.confidence * 100)}%` : '';
   const title = [
     verdict.category,
     verdict.confidence != null ? `${Math.round(verdict.confidence * 100)}%` : null,
@@ -110,6 +136,7 @@ function AiVerdictBadge({ verdict }: { verdict?: ImageVerdictView }) {
   return (
     <Badge variant="outline" className={styles} title={title || undefined}>
       {label}
+      <span className="tabular ml-1 opacity-70">{confidence}</span>
     </Badge>
   );
 }
@@ -130,8 +157,29 @@ function FilterPill({
   );
 }
 
-function Pagination({
-  label,
+function VerdictFilterPills({
+  active,
+  hrefFor,
+}: {
+  active: ModerationVerdictFilter;
+  hrefFor: (verdict: ModerationVerdictFilter) => string;
+}) {
+  return (
+    <div className="mb-4 flex flex-wrap gap-2">
+      {VERDICT_FILTERS.map((filter) => (
+        <FilterPill
+          key={filter.value}
+          active={active === filter.value}
+          href={hrefFor(filter.value)}
+        >
+          {filter.label}
+        </FilterPill>
+      ))}
+    </div>
+  );
+}
+
+function Pagination({  label,
   total,
   page,
   hasMore,
@@ -176,12 +224,14 @@ function Pagination({
 export default async function AdminReportsPage({ searchParams }: Props) {
   const params = await searchParams;
   const reason: ReportFilter =
-    params.reason && (REASONS as string[]).includes(params.reason)
+    params.reason && (REASONS as readonly string[]).includes(params.reason)
       ? (params.reason as ReportReason)
       : 'all';
   const reportsPage = parsePage(params.rpage);
   const underReviewPage = parsePage(params.upage);
   const hiddenPage = parsePage(params.hpage);
+  const underReviewVerdict = parseVerdict(params.uverdict);
+  const hiddenVerdict = parseVerdict(params.hverdict);
 
   const [reports, underReview, hidden] = await Promise.all([
     getOpenReports({
@@ -190,8 +240,12 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     }),
     getUnderReviewPlatinums({
       offset: (underReviewPage - 1) * MODERATION_PAGE_SIZE,
+      verdict: underReviewVerdict,
     }),
-    getHiddenPlatinums({ offset: (hiddenPage - 1) * MODERATION_PAGE_SIZE }),
+    getHiddenPlatinums({
+      offset: (hiddenPage - 1) * MODERATION_PAGE_SIZE,
+      verdict: hiddenVerdict,
+    }),
   ]);
 
   const verdicts = await getCachedVerdicts([
@@ -216,14 +270,17 @@ export default async function AdminReportsPage({ searchParams }: Props) {
       <section className="mb-12">
         <h2 className="mb-4 text-xl font-bold font-headline">Open reports</h2>
 
-        {reports.total > 0 && (
-          <div className="mb-4 flex flex-wrap gap-2">
+        {/* Always visible, even when the active reason has no matches: hiding
+            them would leave a moderator stuck on an empty filter. */}
+        <div className="mb-4 flex flex-wrap gap-2">
             <FilterPill
               active={reason === 'all'}
               href={buildHref({
                 rpage: 1,
                 upage: underReviewPage,
                 hpage: hiddenPage,
+                uverdict: underReviewVerdict,
+                hverdict: hiddenVerdict,
               })}
             >
               All
@@ -237,13 +294,14 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                   rpage: 1,
                   upage: underReviewPage,
                   hpage: hiddenPage,
+                  uverdict: underReviewVerdict,
+                  hverdict: hiddenVerdict,
                 })}
               >
                 {REPORT_REASON_LABELS[item]}
               </FilterPill>
             ))}
-          </div>
-        )}
+        </div>
 
         {reports.items.length === 0 ? (
           <EmptyState
@@ -302,13 +360,33 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           page={reportsPage}
           hasMore={reports.hasMore}
           hrefForPage={(page) =>
-            buildHref({ reason, rpage: page, upage: underReviewPage, hpage: hiddenPage })
+            buildHref({
+              reason,
+              rpage: page,
+              upage: underReviewPage,
+              hpage: hiddenPage,
+              uverdict: underReviewVerdict,
+              hverdict: hiddenVerdict,
+            })
           }
         />
       </section>
 
       <section className="mb-12">
         <h2 className="mb-4 text-xl font-bold font-headline">Under review</h2>
+        <VerdictFilterPills
+          active={underReviewVerdict}
+          hrefFor={(verdict) =>
+            buildHref({
+              reason,
+              upage: 1,
+              rpage: reportsPage,
+              hpage: hiddenPage,
+              uverdict: verdict,
+              hverdict: hiddenVerdict,
+            })
+          }
+        />
         {underReview.items.length === 0 ? (
           <EmptyState
             icon={SearchCheck}
@@ -360,13 +438,33 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           page={underReviewPage}
           hasMore={underReview.hasMore}
           hrefForPage={(page) =>
-            buildHref({ reason, upage: page, rpage: reportsPage, hpage: hiddenPage })
+            buildHref({
+              reason,
+              upage: page,
+              rpage: reportsPage,
+              hpage: hiddenPage,
+              uverdict: underReviewVerdict,
+              hverdict: hiddenVerdict,
+            })
           }
         />
       </section>
 
       <section>
         <h2 className="mb-4 text-xl font-bold font-headline">Hidden plates</h2>
+        <VerdictFilterPills
+          active={hiddenVerdict}
+          hrefFor={(verdict) =>
+            buildHref({
+              reason,
+              hpage: 1,
+              rpage: reportsPage,
+              upage: underReviewPage,
+              uverdict: underReviewVerdict,
+              hverdict: verdict,
+            })
+          }
+        />
         {hidden.items.length === 0 ? (
           <EmptyState
             icon={ShieldCheck}
@@ -415,7 +513,14 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           page={hiddenPage}
           hasMore={hidden.hasMore}
           hrefForPage={(page) =>
-            buildHref({ reason, hpage: page, rpage: reportsPage, upage: underReviewPage })
+            buildHref({
+              reason,
+              hpage: page,
+              rpage: reportsPage,
+              upage: underReviewPage,
+              uverdict: underReviewVerdict,
+              hverdict: hiddenVerdict,
+            })
           }
         />
       </section>

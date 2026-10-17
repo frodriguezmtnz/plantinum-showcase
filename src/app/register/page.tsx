@@ -1,17 +1,19 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Check, Loader2, X } from "lucide-react";
-import { registerAction, checkUsernameAvailability } from "./actions";
+import { registerAction, checkUsernameAvailability, type RegisterState } from "./actions";
+import { useAuth } from "@/hooks/use-auth";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
 import { cn } from "@/lib/utils";
 
-const initialState: { error?: string } = {};
+const initialState: RegisterState = {};
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
@@ -79,6 +81,22 @@ function UsernameHint({ status, username }: { status: UsernameStatus; username: 
 export default function RegisterPage() {
   const [state, formAction, isPending] = useActionState(registerAction, initialState);
   const [username, setUsername] = useState('');
+  const router = useRouter();
+  const { refresh } = useAuth();
+  // Refreshing the session re-renders the provider, so guard against running
+  // the post-sign-up navigation more than once.
+  const navigatedRef = useRef(false);
+
+  // Sign-up signs the user in through a server action, so refresh the client
+  // session before navigating or the header stays stuck on "Sign in".
+  useEffect(() => {
+    if (!state.redirectTo || navigatedRef.current) return;
+    navigatedRef.current = true;
+    const target = state.redirectTo;
+    refresh()
+      .catch(() => undefined)
+      .finally(() => router.push(target));
+  }, [state.redirectTo, refresh, router]);
   const [checkResult, setCheckResult] = useState<{ forUsername: string; status: UsernameStatus } | null>(
     null,
   );

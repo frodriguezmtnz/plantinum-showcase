@@ -9,6 +9,8 @@ import { signIn } from "@/auth";
 
 export interface RegisterState {
   error?: string;
+  /** Set on success; the page refreshes the client session and navigates. */
+  redirectTo?: string;
 }
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
@@ -123,11 +125,16 @@ export async function registerAction(_state: RegisterState, formData: FormData):
       },
     });
 
+    // `redirect: false` keeps navigation on the client so the page can refresh
+    // the session provider first; a server-side redirect would leave the cached
+    // header session stale until a hard reload.
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirect: false,
     });
+
+    return { redirectTo: "/" };
   } catch (error) {
     // Two sign-ups racing on the same handle/email slip past the pre-check;
     // the unique index catches them, so translate the violation for the user.
@@ -145,6 +152,4 @@ export async function registerAction(_state: RegisterState, formData: FormData):
     }
     throw error;
   }
-
-  return {};
 }

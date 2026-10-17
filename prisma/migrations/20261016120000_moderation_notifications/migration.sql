@@ -1,0 +1,4 @@
+-- AlterEnum
+ALTER TYPE "NotificationKind" ADD VALUE 'APPEAL_RECEIVED';
+ALTER TYPE "NotificationKind" ADD VALUE 'PLATE_FLAGGED';
+ALTER TYPE "NotificationKind" ADD VALUE 'REPORT_RECEIVED';

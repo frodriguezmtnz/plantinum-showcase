@@ -29,7 +29,7 @@ export function isTelegramConfigured(): boolean {
   return getTelegramConfig() !== null;
 }
 
-export type ModerationNoticeSource = 'upload' | 'report';
+export type ModerationNoticeSource = 'upload' | 'report' | 'appeal';
 
 export interface ModerationNotice {
   source: ModerationNoticeSource;
@@ -102,9 +102,11 @@ export function buildModerationNotice(notice: ModerationNotice): {
   const siteUrl = getTelegramConfig()?.siteUrl ?? '';
   const heading = notice.manual
     ? '📝 <b>Revisión manual requerida</b>'
-    : notice.source === 'upload'
-      ? '🚨 <b>Platino marcado por la IA</b>'
-      : '🚩 <b>Platino reportado y marcado por la IA</b>';
+    : notice.source === 'appeal'
+      ? '🙋 <b>Apelación del autor</b>'
+      : notice.source === 'upload'
+        ? '🚨 <b>Platino marcado por la IA</b>'
+        : '🚩 <b>Platino reportado y marcado por la IA</b>';
 
   const lines: string[] = [heading, ''];
   lines.push(`🎮 <b>${escapeHtml(notice.gameName)}</b>`);
@@ -129,14 +131,14 @@ export function buildModerationNotice(notice: ModerationNotice): {
     `🔖 Estado: <b>${notice.moderationStatus === 'HIDDEN' ? 'Hidden' : 'Under review'}</b>`,
   );
 
-  if (notice.source === 'report') {
+  if (notice.source === 'report' || notice.source === 'appeal') {
     lines.push('');
     const reason = notice.reportReason
       ? REPORT_REASON_LABELS[notice.reportReason]
       : 'Report';
-    lines.push(`🚩 Reporte: <b>${escapeHtml(reason)}</b>`);
+    lines.push(`🚩 ${notice.source === 'appeal' ? 'Motivo' : 'Reporte'}: <b>${escapeHtml(reason)}</b>`);
     if (notice.reporterUsername) {
-      lines.push(`🙋 Reportado por: <b>@${escapeHtml(notice.reporterUsername)}</b>`);
+      lines.push(`🙋 ${notice.source === 'appeal' ? 'Apela' : 'Reportado por'}: <b>@${escapeHtml(notice.reporterUsername)}</b>`);
     }
     if (notice.reportMessage) {
       lines.push(`💬 <i>${escapeHtml(notice.reportMessage)}</i>`);

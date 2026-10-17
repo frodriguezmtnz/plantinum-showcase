@@ -11,6 +11,8 @@ const WINDOW_MS = 5 * 60_000;
 
 export interface LoginState {
   error?: string;
+  /** Set on success; the page refreshes the client session and navigates. */
+  redirectTo?: string;
 }
 
 export async function loginAction(_state: LoginState, formData: FormData): Promise<LoginState> {
@@ -38,10 +40,13 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   }
 
   try {
+    // `redirect: false` keeps the navigation on the client so the page can
+    // refresh the session provider before moving on; letting next-auth redirect
+    // here would leave the cached header session stale until a hard reload.
     await signIn("credentials", {
       email,
       password,
-      redirectTo: callbackUrl,
+      redirect: false,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -55,5 +60,5 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     throw error;
   }
 
-  return {};
+  return { redirectTo: callbackUrl };
 }

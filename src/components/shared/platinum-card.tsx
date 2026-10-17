@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DeletePlatinumButton } from '@/components/shared/delete-platinum-button';
 import { EditPlatinumDialog } from '@/components/shared/edit-platinum-dialog';
+import { ModerationRibbon } from '@/components/shared/moderation-ribbon';
+import { displayImageUrl, isPlateUnderModeration, withPixelFlag } from '@/lib/image-display';
 import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 
 interface PlatinumCardProps {
@@ -35,6 +37,14 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
   });
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
+  const underModeration = isPlateUnderModeration(platinum.moderationStatus);
+  // While the spoiler wrapper is up, stored screenshots are requested as the
+  // server-side mosaic so the original never reaches the page (a CSS blur can
+  // be removed). Remote URLs cannot be pixelated server-side and keep the blur.
+  const imageSrc =
+    !showSpoiler && isStoredImage(platinum.imageUrl)
+      ? withPixelFlag(platinum.imageUrl)
+      : displayImageUrl(platinum.imageUrl, platinum.moderationStatus);
   const frameStyle = cover ? undefined : { aspectRatio: `${platinum.width} / ${platinum.height}` };
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
@@ -67,7 +77,7 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
             className="block h-full w-full"
           >
             <Image
-              src={platinum.imageUrl}
+              src={imageSrc}
               alt={`Platinum screenshot for ${platinum.gameName}`}
               width={platinum.width}
               height={platinum.height}
@@ -76,14 +86,7 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
               unoptimized={isStoredImage(platinum.imageUrl)}
             />
           </Link>
-          {platinum.moderationStatus !== 'PUBLISHED' && (
-            <Badge
-              variant="outline"
-              className="absolute left-2 top-2 z-10 border-destructive/50 bg-background/80 text-destructive backdrop-blur"
-            >
-              {platinum.moderationStatus === 'HIDDEN' ? 'Hidden' : 'Under review'}
-            </Badge>
-          )}
+          {underModeration && <ModerationRibbon status={platinum.moderationStatus} />}
           {!showSpoiler && (
             <div className="spoiler-frost-strong absolute inset-0 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
               <p className="text-lg font-bold flex items-center gap-2 text-foreground">

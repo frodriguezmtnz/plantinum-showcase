@@ -397,8 +397,20 @@ input[type='search']::-webkit-search-decoration {
   color: hsl(0 0% 10%);
 }
 
+/* Moderation ribbon: flat red band across the top of a screenshot, lifted off
+   the photo with a soft bottom shadow. */
+.moderation-ribbon {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  text-shadow: 0 1px 0 hsl(4 60% 20% / 0.35);
+  box-shadow: 0 3px 8px -2px hsl(4 60% 20% / 0.45);
+}
+
 /* Spoiler plates: frost on the case, not a black hole on the field. */
-.platinum-card-spoiler > .spoiler-blur {
+/* The blurred image is nested inside the card's link/button, so a direct-child
+   selector never matched. Descendant keeps the blur as the remote-image
+   fallback (stored images are served pixelated instead). */
+.platinum-card-spoiler .spoiler-blur {
   filter: blur(22px);
   transform: scale(1.08);
   transition: filter 0.4s var(--ease-bloom);

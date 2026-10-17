@@ -19,10 +19,18 @@ import { buildImageHint } from "@/lib/image-hint";
 import { isModerator } from "@/lib/roles";
 import { getAiTriageConfig, isAiTriageConfigured, triageImageHash } from "@/lib/ai-triage";
 import { moderationStatusForVerdict } from "@/lib/ai-verdict";
+import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
+import {
+  countUnreadNotifications,
+  markNotificationsRead,
+  notifyModerators,
+} from "@/lib/notifications";
+import { REPORT_REASON_LABELS } from "@/lib/report-labels";
 import { sendModerationNotice } from "@/lib/telegram";
 import {
   applyPlatinumModeration,
   applyReportDecision,
+  confirmPlateAsBad,
   removePlatinumRecord,
   revalidateVotePaths,
   type ModerationDecision,
@@ -88,9 +96,20 @@ async function screenPlatinumUpload(
       return;
     }
 
-    const status = moderationStatusForVerdict(
-      verdict,
-      getAiTriageConfig()?.autoHideUnsafe ?? false,
+    const owner = await prisma.platinum.findUnique({
+      where: { id: platinumId },
+      select: { user: { select: { id: true, username: true, strikes: true } } },
+    });
+    const strikes = owner?.user.strikes ?? 0;
+
+    // A user already on the escalation ladder never auto-publishes, however
+    // confident the classifier is.
+    const status = applyStrikePolicy(
+      moderationStatusForVerdict(
+        verdict,
+        getAiTriageConfig()?.autoHideUnsafe ?? false,
+      ),
+      strikes,
     );
 
     const updated = await prisma.platinum.updateMany({
@@ -103,13 +122,34 @@ async function screenPlatinumUpload(
     revalidatePath("/explore");
     revalidatePath("/hall-of-fame");
 
+    if (status === "HIDDEN") {
+      await confirmPlateAsBad(
+        platinumId,
+        verdict.summary ??
+          "The content classifier marked this image as disallowed.",
+      );
+    }
+
     if (status === "PUBLISHED") return;
 
+    // The moderator queue also gets an in-app notice, mirroring the chat ping.
+    await notifyModerators({
+      kind: "PLATE_FLAGGED",
+      title: `“${gameName}” flagged by the AI`,
+      body: [
+        verdict.label,
+        verdict.category,
+        verdict.confidence != null
+          ? `${Math.round(verdict.confidence * 100)}%`
+          : null,
+        verdict.summary,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      platinumId,
+    });
+
     if (isNew) {
-      const owner = await prisma.platinum.findUnique({
-        where: { id: platinumId },
-        select: { user: { select: { username: true } } },
-      });
       await sendModerationNotice({
         source: "upload",
         platinumId,
@@ -150,6 +190,12 @@ async function notifyManualReview(platinumId: string, gameName: string) {
       moderationStatus: "UNDER_REVIEW",
       manual: true,
     });
+    await notifyModerators({
+      kind: "PLATE_FLAGGED",
+      title: `“${gameName}” needs a manual review`,
+      body: "AI screening is not configured, so a human has to decide.",
+      platinumId,
+    });
   } catch (error) {
     console.warn("[upload] manual review notice failed", error);
   }
@@ -182,8 +228,19 @@ export async function uploadPlatinum(formData: FormData) {
 
   const account = await prisma.user.findUnique({
     where: { id: userId },
-    select: { plan: true },
+    select: { plan: true, strikes: true },
   });
+
+  // Repeat offenders stop being able to upload at all once they hit the top of
+  // the escalation ladder.
+  if (isUploadBlocked(account?.strikes ?? 0)) {
+    return {
+      success: false as const,
+      error:
+        "Your account is blocked from uploading after repeated content violations. Contact the moderators if you believe this is a mistake.",
+    };
+  }
+
   const usedThisMonth = await countUploadsInCurrentPeriod(userId);
   if (quotaReached(usedThisMonth, account?.plan)) {
     const limit = planConfig(account?.plan).monthlyUploadLimit;
@@ -292,6 +349,13 @@ export async function uploadPlatinum(formData: FormData) {
   const imageHint = buildImageHint(parsed.data.gameName);
   const screeningEnabled = isAiTriageConfigured();
 
+  // Content-addressed bytes a moderator already confirmed as disallowed bypass
+  // the classifier entirely: they never go public, not even briefly.
+  const flagged = await prisma.flaggedHash.findUnique({
+    where: { hash },
+    select: { reason: true },
+  });
+
   try {
     const platinum = await prisma.platinum.create({
       data: {
@@ -312,13 +376,40 @@ export async function uploadPlatinum(formData: FormData) {
         // Fail-closed: a plate is never public at creation. Only an explicit
         // SAFE verdict publishes it (screening below); otherwise, including when
         // the AI is not configured at all, a human decides.
-        moderationStatus: "UNDER_REVIEW",
+        moderationStatus: flagged ? "HIDDEN" : "UNDER_REVIEW",
       },
     });
 
     revalidatePath("/");
     revalidatePath("/explore");
     revalidatePath("/hall-of-fame");
+
+    if (flagged) {
+      const reason = flagged.reason ?? "This image was flagged by a moderator.";
+      await confirmPlateAsBad(platinum.id, reason);
+      await sendModerationNotice({
+        source: "upload",
+        platinumId: platinum.id,
+        gameName: platinum.gameName,
+        ownerUsername: session.user?.name ?? null,
+        label: "UNSAFE",
+        category: "repeat",
+        confidence: null,
+        summary: `Re-upload of a flagged screenshot. ${reason}`,
+        moderationStatus: "HIDDEN",
+      });
+      await notifyModerators({
+        kind: "PLATE_FLAGGED",
+        title: `“${platinum.gameName}” re-uploaded a flagged screenshot`,
+        body: "Content-addressed match against the disallowed list; taken down on arrival.",
+        platinumId: platinum.id,
+      });
+      return {
+        success: true as const,
+        platinumId: platinum.id,
+        moderationStatus: "HIDDEN" as const,
+      };
+    }
 
     if (screeningEnabled) {
       after(() =>
@@ -333,7 +424,11 @@ export async function uploadPlatinum(formData: FormData) {
       }
     }
 
-    return { success: true as const, platinumId: platinum.id };
+    return {
+      success: true as const,
+      platinumId: platinum.id,
+      moderationStatus: "UNDER_REVIEW" as const,
+    };
   } catch (error) {
     if ((error as { code?: string }).code === "P2002") {
       return {
@@ -587,6 +682,19 @@ export async function reportPlatinum(
 
   // Triage of the reported plate: reuse the upload verdict if it is cached,
   // otherwise classify once and alert the moderator chat.
+  await notifyModerators({
+    kind: "REPORT_RECEIVED",
+    title: `New report on “${platinum.gameName}”`,
+    body: [
+      REPORT_REASON_LABELS[parsed.data.reason],
+      parsed.data.message ?? null,
+      session.user.name ? `— @${session.user.name}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    platinumId,
+  });
+
   if (isAiTriageConfigured()) {
     after(async () => {
       try {
@@ -654,6 +762,130 @@ export async function withdrawReport(platinumId: string) {
   revalidatePath(`/platinum/${platinumId}`);
   revalidatePath("/admin/reports");
   return { success: true as const };
+}
+
+/**
+ * Owner appeal for a plate moderation took down. It rides the existing report
+ * pipeline (reason APPEAL) so it lands in the same moderator queue, and pings
+ * the chat with the restore/hide/delete buttons.
+ */
+export async function appealPlatinum(platinumId: string, message: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false as const, error: "You need to sign in to appeal." };
+  }
+  if (!checkRateLimit(`appeal:${userId}`, 5, 60 * 60_000).ok) {
+    return {
+      success: false as const,
+      error: "That is a lot of appeals at once. Please wait a moment.",
+    };
+  }
+
+  const trimmed = message.trim();
+  if (trimmed.length < 10) {
+    return {
+      success: false as const,
+      error: "Tell the moderators a little more (at least 10 characters).",
+    };
+  }
+  if (trimmed.length > 500) {
+    return { success: false as const, error: "Your appeal is too long." };
+  }
+
+  const platinum = await prisma.platinum.findUnique({
+    where: { id: platinumId },
+    select: {
+      id: true,
+      userId: true,
+      gameName: true,
+      moderationStatus: true,
+      user: { select: { username: true } },
+    },
+  });
+  if (!platinum) {
+    return { success: false as const, error: "This platinum does not exist." };
+  }
+  if (platinum.userId !== userId) {
+    return { success: false as const, error: "You can only appeal your own platinum." };
+  }
+  if (platinum.moderationStatus === "PUBLISHED") {
+    return { success: false as const, error: "This platinum is already public." };
+  }
+
+  const existing = await prisma.report.findUnique({
+    where: { userId_platinumId: { userId, platinumId } },
+    select: { id: true, status: true },
+  });
+  if (existing?.status === "OPEN") {
+    return {
+      success: false as const,
+      error: "You already have an appeal open. A moderator is on it.",
+    };
+  }
+
+  const reportData = {
+    reason: "APPEAL" as const,
+    message: trimmed,
+    status: "OPEN" as const,
+  };
+
+  let reportId: string;
+  if (existing) {
+    const updated = await prisma.report.update({
+      where: { userId_platinumId: { userId, platinumId } },
+      data: reportData,
+    });
+    reportId = updated.id;
+  } else {
+    const created = await prisma.report.create({
+      data: { userId, platinumId, ...reportData },
+    });
+    reportId = created.id;
+  }
+
+  await sendModerationNotice({
+    source: "appeal",
+    platinumId,
+    gameName: platinum.gameName,
+    ownerUsername: platinum.user.username,
+    label: "REVIEW",
+    category: "appeal",
+    confidence: null,
+    summary: `Owner appeal: ${trimmed}`,
+    moderationStatus:
+      platinum.moderationStatus === "HIDDEN" ? "HIDDEN" : "UNDER_REVIEW",
+    reportId,
+    reportReason: "APPEAL",
+    reportMessage: trimmed,
+    reporterUsername: platinum.user.username,
+  });
+
+  await notifyModerators({
+    kind: "APPEAL_RECEIVED",
+    title: `“${platinum.gameName}” — appeal from @${platinum.user.username}`,
+    body: trimmed,
+    platinumId,
+  });
+
+  revalidatePath(`/platinum/${platinumId}`);
+  revalidatePath("/admin/reports");
+  return { success: true as const };
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return;
+  await markNotificationsRead(userId);
+  revalidatePath("/notifications");
+}
+
+export async function getUnreadNotificationCount(): Promise<number> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return 0;
+  return countUnreadNotifications(userId);
 }
 
 export async function getMorePlatinums(options: {

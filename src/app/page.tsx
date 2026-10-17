@@ -233,11 +233,11 @@ export default async function Home() {
               <Sparkles className="cta-spark absolute right-1 top-1 h-6 w-6 text-dusk" aria-hidden />
               <Sparkles className="cta-spark cta-spark--late absolute bottom-2 left-0 h-4 w-4 text-live" aria-hidden />
             </div>
-            <div className="text-center md:text-left">
+            <div className="text-center">
               <h2 className="font-headline text-3xl font-bold tracking-tight text-balance md:text-4xl">
                 Your platinum belongs on this row.
               </h2>
-              <p className="mx-auto mt-3 max-w-md text-muted-foreground md:mx-0">
+              <p className="mx-auto mt-3 max-w-md text-muted-foreground">
                 Post the screenshot, let the community vote it up, and let it take the crown.
               </p>
               <Button asChild size="lg" className="group mt-7">

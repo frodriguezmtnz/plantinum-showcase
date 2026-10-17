@@ -17,6 +17,7 @@ function Calendar({
   showOutsideDays = true,
   weekStartsOn = 1,
   captionLayout = "dropdown",
+  navLayout = "around",
   fromYear = 2006, // PS3 launch — no platinum can predate it
   toYear = CURRENT_YEAR,
   autoFocus = true,
@@ -27,6 +28,7 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       weekStartsOn={weekStartsOn}
       captionLayout={captionLayout}
+      navLayout={navLayout}
       fromYear={fromYear}
       toYear={toYear}
       autoFocus={autoFocus}
@@ -34,23 +36,32 @@ function Calendar({
       className={cn("w-[19.5rem] max-w-[calc(100vw-2rem)] p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-3",
+        // The month is the positioning context for the nav buttons (v9 places
+        // them around the caption when navLayout="around").
+        month: "relative space-y-3",
         month_caption: "flex min-h-10 items-center justify-center px-1",
-        caption_label: "text-sm font-medium",
         dropdowns: "flex items-center justify-center gap-1",
-        dropdown_root: "relative",
+        // v9 renders each dropdown as a native <select> PLUS an aria-hidden
+        // label span with a chevron. The select is the interactive layer, so
+        // hide it and let the label carry the styling — showing both painted
+        // the text twice ("October October", "2026 2026").
+        dropdown_root:
+          "relative rounded-md outline-hidden hover:bg-accent focus-within:ring-2 focus-within:ring-ring",
         dropdown:
-          "h-9 max-sm:h-11 cursor-pointer rounded-md bg-transparent px-1 text-sm font-medium outline-hidden hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+          "absolute inset-0 w-full appearance-none bg-popover text-popover-foreground opacity-0",
         months_dropdown: "",
         years_dropdown: "",
-        nav: "flex items-center",
+        caption_label:
+          "pointer-events-none flex h-9 max-sm:h-11 items-center gap-1 rounded-md px-2 text-sm font-medium select-none",
+        // Sit the arrows in the caption row (top), not across the day grid:
+        // the caption is min-h-10, so top-0.5 centres the 36px button.
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "absolute left-1 h-9 w-9 bg-transparent p-0 opacity-60 hover:opacity-100 max-sm:h-11 max-sm:w-11"
+          "absolute left-1 top-0.5 h-9 w-9 bg-transparent p-0 opacity-60 hover:opacity-100 max-sm:-top-0.5 max-sm:h-11 max-sm:w-11"
         ),
         button_next: cn(
           buttonVariants({ variant: "outline" }),
-          "absolute right-1 h-9 w-9 bg-transparent p-0 opacity-60 hover:opacity-100 max-sm:h-11 max-sm:w-11"
+          "absolute right-1 top-0.5 h-9 w-9 bg-transparent p-0 opacity-60 hover:opacity-100 max-sm:-top-0.5 max-sm:h-11 max-sm:w-11"
         ),
         chevron: "h-4 w-4",
         // React Day Picker v9 renders a real <table>; keep it a table (no flex

@@ -7,8 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Flag, Loader2, Undo2 } from 'lucide-react';
 import { reportPlatinum, withdrawReport } from '@/app/actions';
 import { reportSchema, type ReportValues } from '@/lib/schemas';
-import { ReportReason } from '@/generated/prisma/enums';
-import { REPORT_REASON_LABELS } from '@/lib/report-labels';
+import { REPORT_REASON_LABELS, USER_REPORT_REASONS } from '@/lib/report-labels';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -33,7 +32,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
-const REASONS = Object.values(ReportReason);
+const REASONS = USER_REPORT_REASONS;
 
 interface ReportPlatinumButtonProps {
   platinumId: string;
