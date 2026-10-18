@@ -231,11 +231,12 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             )}
           </p>
           <div className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <div key={item.platinum.id} className="mb-6 break-inside-avoid">
                 <PlatinumCard
                   platinum={item.platinum}
                   user={item.user}
+                  priority={index < 4}
                 />
               </div>
             ))}

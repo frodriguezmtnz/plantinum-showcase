@@ -24,9 +24,11 @@ interface PlatinumCardProps {
   canDelete?: boolean;
   canEdit?: boolean;
   cover?: boolean;
+  /** Eager-load above-the-fold cards so the LCP image is not lazy. */
+  priority?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, isPride = false, showComment = false, canDelete = false, canEdit = false, cover = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, isPride = false, showComment = false, canDelete = false, canEdit = false, cover = false, priority = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
@@ -84,6 +86,7 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
               className={cn("h-full w-full object-cover group-hover:scale-[1.02] transition-transform duration-300", !showSpoiler && "spoiler-blur")}
               data-ai-hint={platinum.imageHint}
               unoptimized={isStoredImage(platinum.imageUrl)}
+              priority={priority}
             />
           </Link>
           {underModeration && <ModerationRibbon status={platinum.moderationStatus} />}

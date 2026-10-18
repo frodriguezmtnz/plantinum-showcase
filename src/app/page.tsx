@@ -201,12 +201,13 @@ export default async function Home() {
         {latestPlatinums.length > 0 ? (
           <>
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {latestPlatinums.map((platinum) => (
+              {latestPlatinums.map((platinum, index) => (
                 <PlatinumCard
                   key={platinum.id}
                   platinum={platinum}
                   user={getUserById(platinum.userId)}
                   cover
+                  priority={index < 4}
                 />
               ))}
             </div>
