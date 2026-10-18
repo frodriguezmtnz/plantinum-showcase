@@ -33,8 +33,8 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   // Brute-force barrier: cap attempts per account and per client address.
   const headerList = await headers();
   const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const perEmail = checkRateLimit(`login:${email}`, MAX_ATTEMPTS_PER_EMAIL, WINDOW_MS);
-  const perIp = checkRateLimit(`login-ip:${ip}`, MAX_ATTEMPTS_PER_IP, WINDOW_MS);
+  const perEmail = await checkRateLimit(`login:${email}`, MAX_ATTEMPTS_PER_EMAIL, WINDOW_MS);
+  const perIp = await checkRateLimit(`login-ip:${ip}`, MAX_ATTEMPTS_PER_IP, WINDOW_MS);
   if (!perEmail.ok || !perIp.ok) {
     return { error: "Too many sign-in attempts. Please wait a few minutes and try again." };
   }

@@ -58,7 +58,7 @@ export async function checkUsernameAvailability(
     headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     headerList.get("x-real-ip") ||
     "local";
-  if (!checkRateLimit(`username-check:${ip}`, 60, 60_000).ok) {
+  if (!(await checkRateLimit(`username-check:${ip}`, 60, 60_000)).ok) {
     return { available: false, reason: "rate-limited" };
   }
 

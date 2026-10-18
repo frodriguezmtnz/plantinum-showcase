@@ -218,7 +218,7 @@ export async function uploadPlatinum(formData: FormData) {
     };
   }
 
-  const uploadLimit = checkRateLimit(`upload:${userId}`, 10, 60 * 60_000);
+  const uploadLimit = await checkRateLimit(`upload:${userId}`, 10, 60 * 60_000);
   if (!uploadLimit.ok) {
     return {
       success: false as const,
@@ -464,7 +464,7 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
     return { success: false as const, error: "You need to sign in." };
   }
 
-  const editLimit = checkRateLimit(`edit:${userId}`, 20, 60 * 60_000);
+  const editLimit = await checkRateLimit(`edit:${userId}`, 20, 60 * 60_000);
   if (!editLimit.ok) {
     return {
       success: false as const,
@@ -566,7 +566,7 @@ export async function moderateReport(reportId: string, decision: ModerationDecis
   if (!(await isModerator(userId))) {
     return { success: false as const, error: "You don't have permission to moderate." };
   }
-  if (!checkRateLimit(`moderate:${userId}`, 60, 60_000).ok) {
+  if (!(await checkRateLimit(`moderate:${userId}`, 60, 60_000)).ok) {
     return { success: false as const, error: "Slow down a moment and try again." };
   }
   return applyReportDecision(reportId, decision);
@@ -585,7 +585,7 @@ export async function moderatePlatinum(
   if (!(await isModerator(userId))) {
     return { success: false as const, error: "You don't have permission to moderate." };
   }
-  if (!checkRateLimit(`moderate:${userId}`, 60, 60_000).ok) {
+  if (!(await checkRateLimit(`moderate:${userId}`, 60, 60_000)).ok) {
     return { success: false as const, error: "Slow down a moment and try again." };
   }
   return applyPlatinumModeration(platinumId, op);
@@ -600,7 +600,7 @@ export async function reportPlatinum(
   if (!userId) {
     return { success: false as const, error: "You need to sign in to report a platinum." };
   }
-  if (!checkRateLimit(`report:${userId}`, 10, 60_000).ok) {
+  if (!(await checkRateLimit(`report:${userId}`, 10, 60_000)).ok) {
     return {
       success: false as const,
       error: "That is a lot of reports at once. Please wait a moment and try again.",
@@ -737,7 +737,7 @@ export async function withdrawReport(platinumId: string) {
   if (!userId) {
     return { success: false as const, error: "You need to sign in to withdraw a report." };
   }
-  if (!checkRateLimit(`report:${userId}`, 10, 60_000).ok) {
+  if (!(await checkRateLimit(`report:${userId}`, 10, 60_000)).ok) {
     return {
       success: false as const,
       error: "That is a lot of reports at once. Please wait a moment and try again.",
@@ -775,7 +775,7 @@ export async function appealPlatinum(platinumId: string, message: string) {
   if (!userId) {
     return { success: false as const, error: "You need to sign in to appeal." };
   }
-  if (!checkRateLimit(`appeal:${userId}`, 5, 60 * 60_000).ok) {
+  if (!(await checkRateLimit(`appeal:${userId}`, 5, 60 * 60_000)).ok) {
     return {
       success: false as const,
       error: "That is a lot of appeals at once. Please wait a moment.",
@@ -915,7 +915,7 @@ export async function toggleVoteForPlatinum(
     return { success: false, error: "You need to sign in to vote." };
   }
 
-  const voteLimit = checkRateLimit(`vote:${userId}`, 20, 60_000);
+  const voteLimit = await checkRateLimit(`vote:${userId}`, 20, 60_000);
   if (!voteLimit.ok) {
     return {
       success: false,
