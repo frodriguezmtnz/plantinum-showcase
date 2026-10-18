@@ -30,11 +30,18 @@ export function NotificationBell({ className }: { className?: string }) {
       load();
     };
 
+    // Coming back from another tab is when new notices are most likely waiting.
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') load();
+    };
+
     load();
     window.addEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
+    document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       alive = false;
       window.removeEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 
