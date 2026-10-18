@@ -59,10 +59,7 @@ export default function LoginPage({
           <Input id="email" name="email" type="email" placeholder="m@example.com" required />
         </div>
         <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
-            <span className="ml-auto inline-block text-sm underline opacity-40">Forgot your password?</span>
-          </div>
+          <Label htmlFor="password">Password</Label>
           <PasswordInput id="password" name="password" required />
         </div>
         <Button type="submit" className="w-full" disabled={isPending}>
