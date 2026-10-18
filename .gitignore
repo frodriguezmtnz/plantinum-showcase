@@ -56,3 +56,6 @@ firestore-debug.log
 .impeccable/review/
 .impeccable/build/
 .impeccable/mocks/
+
+# local dev server logs
+dev-run*.log
