@@ -8,11 +8,17 @@ import { ThumbsUp, Trophy } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 import { EmptyState } from '@/components/shared/empty-state';
 import { JsonLd } from '@/components/shared/json-ld';
+import { ProfileStats } from '@/components/profile/profile-stats';
+import { Button } from '@/components/ui/button';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
+import Link from 'next/link';
 import type { Metadata } from 'next';
+
+const PAGE_SIZE = 12;
 
 type Props = {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ page?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -32,8 +38,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
+export default async function UserProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
+  const { page: rawPage } = await searchParams;
   const user = await getUserByUsername(username);
   if (!user) {
     notFound();
@@ -52,6 +59,16 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
   const otherPlatinums = pridePlatinum 
     ? platinums.filter(p => p.id !== user.pridePlatinumId)
     : platinums;
+
+  const requestedPage = Number(rawPage ?? '1');
+  const totalPages = Math.max(1, Math.ceil(otherPlatinums.length / PAGE_SIZE));
+  const currentPage = Number.isFinite(requestedPage)
+    ? Math.min(Math.max(1, Math.floor(requestedPage)), totalPages)
+    : 1;
+  const pagePlatinums = otherPlatinums.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   const profileUrl = canonicalUrl(`/u/${user.username}`);
   const profileJsonLd = {
@@ -88,6 +105,8 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
         </div>
       </div>
 
+      <ProfileStats platinums={platinums} />
+
       {pridePlatinum && (
         <section className="mb-16">
           <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">
@@ -102,13 +121,43 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
       <section>
         <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">Trophy Gallery</h2>
         {otherPlatinums.length > 0 ? (
-          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
-            {otherPlatinums.map(platinum => (
-              <div key={platinum.id} className="mb-6 break-inside-avoid">
-                <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
+              {pagePlatinums.map(platinum => (
+                <div key={platinum.id} className="mb-6 break-inside-avoid">
+                  <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
+                </div>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <nav
+                className="mt-10 flex flex-wrap items-center justify-center gap-3"
+                aria-label="Gallery pages"
+              >
+                {currentPage > 1 ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/u/${user.username}?page=${currentPage - 1}`}>Previous</Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Previous
+                  </Button>
+                )}
+                <span className="tabular text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </span>
+                {currentPage < totalPages ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/u/${user.username}?page=${currentPage + 1}`}>Next</Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" disabled>
+                    Next
+                  </Button>
+                )}
+              </nav>
+            )}
+          </>
         ) : (
            pridePlatinum ? (
             <EmptyState
