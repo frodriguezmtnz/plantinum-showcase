@@ -19,7 +19,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'pnpm dev',
+    // CI builds first and serves the production bundle; local runs use dev.
+    command: process.env.E2E_SERVER_COMMAND ?? 'pnpm dev',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
