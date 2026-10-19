@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { SiteChrome } from '@/components/layout/site-chrome';
+import { JsonLd } from '@/components/shared/json-ld';
 import { cn } from '@/lib/utils';
 import { getSiteUrl } from '@/lib/site';
 import { SessionProvider } from 'next-auth/react';
@@ -13,6 +14,22 @@ import { Mulish } from 'next/font/google';
 
 const APP_NAME = "Platinum Showcase";
 const APP_DESCRIPTION = "Showcase your PlayStation platinum trophies and climb the leaderboards.";
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: APP_NAME,
+  url: getSiteUrl(),
+  description: APP_DESCRIPTION,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${getSiteUrl()}/explore?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
 
 const fontBody = Mulish({
   subsets: ['latin'],
@@ -70,6 +87,7 @@ export default function RootLayout({
       <body className={cn(
         "min-h-screen font-body antialiased",
       )}>
+        <JsonLd data={websiteJsonLd} />
         <SessionProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <div className="sky-field" aria-hidden />

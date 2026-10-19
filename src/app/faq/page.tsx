@@ -11,6 +11,7 @@ import {
 export const metadata: Metadata = {
   title: 'FAQ | Platinum Showcase',
   description: 'Frequently Asked Questions about Platinum Showcase.',
+  alternates: { canonical: '/faq' },
 };
 
 interface Faq {
