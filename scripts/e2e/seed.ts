@@ -42,12 +42,19 @@ async function main() {
 
   await prisma.platinum.createMany({
     data: [
-      { ...base, hash: "e2e-gallery-plate", gameName: "E2E Gallery Plate", isSpoiler: false },
+      // Enough plates to exercise the profile gallery pagination (12 per page).
+      ...Array.from({ length: 13 }, (_, index) => ({
+        ...base,
+        hash: `e2e-gallery-${index + 1}`,
+        gameName: `E2E Plate ${String(index + 1).padStart(2, "0")}`,
+        isSpoiler: false,
+        votes: 13 - index,
+      })),
       { ...base, hash: "e2e-spoiler-plate", gameName: "E2E Spoiler Plate", isSpoiler: true },
     ],
   });
 
-  console.log(`Seeded ${email} with 2 published platinums.`);
+  console.log(`Seeded ${email} with 14 published platinums.`);
 }
 
 main().finally(() => prisma.$disconnect());
