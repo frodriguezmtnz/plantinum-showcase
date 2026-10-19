@@ -194,4 +194,19 @@ test.describe('authenticated', () => {
     await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
     await expect.poll(() => posts, { timeout: 5000 }).toBeGreaterThan(0);
   });
+
+  test('notification bell polls once a minute', async ({ page }) => {
+    // Install the fake clock before the app boots so the interval can be
+    // fast-forwarded instead of making the suite wait a real minute.
+    await page.clock.install();
+    await login(page);
+    await page.waitForTimeout(1500);
+
+    let posts = 0;
+    page.on('request', (req) => {
+      if (req.method() === 'POST' && req.url().startsWith(baseURL)) posts += 1;
+    });
+    await page.clock.fastForward(61_000);
+    await expect.poll(() => posts, { timeout: 5000 }).toBeGreaterThan(0);
+  });
 });

@@ -7,20 +7,30 @@ import { getUnreadNotificationCount } from '@/app/actions';
 import { NOTIFICATIONS_READ_EVENT } from '@/lib/notification-events';
 import { Button } from '@/components/ui/button';
 
+/** How often the bell re-reads the unread count while the tab is visible. */
+const POLL_MS = 60_000;
+
 /** Bell that links to the owner's notices and dots when something is unread. */
 export function NotificationBell({ className }: { className?: string }) {
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    let inFlight = false;
 
     const load = () => {
+      // Polling and the visibility handler can fire together; keep one request.
+      if (inFlight) return;
+      inFlight = true;
       getUnreadNotificationCount()
         .then((count) => {
           if (alive) setUnread(count);
         })
         .catch(() => {
           // Notices are best-effort; a signed-out or offline visitor just sees 0.
+        })
+        .finally(() => {
+          inFlight = false;
         });
     };
 
@@ -35,11 +45,17 @@ export function NotificationBell({ className }: { className?: string }) {
       if (document.visibilityState === 'visible') load();
     };
 
+    // Slow poll for notices that arrive while the user keeps this tab open.
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') load();
+    }, POLL_MS);
+
     load();
     window.addEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       alive = false;
+      window.clearInterval(timer);
       window.removeEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
