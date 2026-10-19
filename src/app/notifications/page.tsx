@@ -21,6 +21,7 @@ import type { NotificationKind } from '@/generated/prisma/enums';
 
 export const metadata = {
   title: 'Notifications | Platinum Showcase',
+  robots: { index: false, follow: false },
 };
 
 const KIND_ICON: Record<NotificationKind, typeof Bell> = {
