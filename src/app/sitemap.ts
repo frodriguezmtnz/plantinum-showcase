@@ -24,12 +24,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     take: 5000,
   });
 
+  const users = await prisma.user.findMany({
+    where: { username: { not: null } },
+    select: { username: true },
+    take: 5000,
+  });
+
   return [
     ...staticRoutes.map((route) => ({
       url: `${base}${route.path}`,
       changeFrequency: route.changeFrequency,
       priority: route.priority,
     })),
+    ...users
+      .filter((user): user is { username: string } => Boolean(user.username))
+      .map((user) => ({
+        url: `${base}/u/${user.username}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      })),
     ...platinums.map((platinum) => ({
       url: `${base}/platinum/${platinum.id}`,
       lastModified: platinum.platinumDate,

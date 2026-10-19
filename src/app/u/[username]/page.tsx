@@ -7,6 +7,8 @@ import { notFound } from 'next/navigation';
 import { ThumbsUp, Trophy } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 import { EmptyState } from '@/components/shared/empty-state';
+import { JsonLd } from '@/components/shared/json-ld';
+import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
 import type { Metadata } from 'next';
 
 type Props = {
@@ -26,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${user.username}'s Profile | Platinum Showcase`,
     description: `Check out ${user.username}'s collection of PlayStation platinum trophies.`,
+    alternates: { canonical: `/u/${user.username}` },
   };
 }
 
@@ -50,8 +53,23 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
     ? platinums.filter(p => p.id !== user.pridePlatinumId)
     : platinums;
 
+  const profileUrl = canonicalUrl(`/u/${user.username}`);
+  const profileJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    url: profileUrl,
+    mainEntity: {
+      '@type': 'Person',
+      name: user.username,
+      alternateName: user.username,
+      url: profileUrl,
+      image: absoluteAssetUrl(user.avatarUrl),
+    },
+  };
+
   return (
     <div className="container py-8 md:py-12">
+      <JsonLd data={profileJsonLd} />
       <div className="flex flex-col items-center text-center mb-12">
         <Avatar className="w-24 h-24 mb-4 border-4 border-primary">
           <AvatarImage src={user.avatarUrl} alt={user.username} />
