@@ -478,12 +478,41 @@ export type HiddenPlatinumItem = ModerationPlateItem;
 export type HiddenPlatinumPage = ModerationPlatePage;
 export type UnderReviewPlatinumItem = ModerationPlateItem;
 
+/** Narrow a moderation list by the cached AI label of the screenshot. */
+export type ModerationVerdictFilter = 'all' | 'unsafe' | 'review' | 'safe';
+
+const VERDICT_FILTER_LABEL = {
+  unsafe: 'UNSAFE',
+  review: 'REVIEW',
+  safe: 'SAFE',
+} as const;
+
 async function getPlatinumsByModerationStatus(
   status: ModerationStatus,
-  options: { offset?: number; limit?: number } = {},
+  options: {
+    offset?: number;
+    limit?: number;
+    verdict?: ModerationVerdictFilter;
+  } = {},
 ): Promise<ModerationPlatePage> {
-  const { offset = 0, limit = MODERATION_PAGE_SIZE } = options;
-  const where = { moderationStatus: status };
+  const { offset = 0, limit = MODERATION_PAGE_SIZE, verdict = 'all' } = options;
+
+  let hashes: string[] | null = null;
+  if (verdict !== 'all') {
+    const rows = await prisma.imageVerdict.findMany({
+      where: { label: VERDICT_FILTER_LABEL[verdict] },
+      select: { hash: true },
+    });
+    hashes = rows.map((row) => row.hash);
+    if (hashes.length === 0) {
+      return { items: [], total: 0, hasMore: false };
+    }
+  }
+
+  const where = {
+    moderationStatus: status,
+    ...(hashes ? { hash: { in: hashes } } : {}),
+  };
 
   const [plates, total] = await Promise.all([
     prisma.platinum.findMany({
@@ -515,14 +544,22 @@ async function getPlatinumsByModerationStatus(
 
 /** Plates currently taken down, newest first, paginated. */
 export function getHiddenPlatinums(
-  options: { offset?: number; limit?: number } = {},
+  options: {
+    offset?: number;
+    limit?: number;
+    verdict?: ModerationVerdictFilter;
+  } = {},
 ): Promise<ModerationPlatePage> {
   return getPlatinumsByModerationStatus('HIDDEN', options);
 }
 
 /** Plates flagged by AI screening that still need a moderator decision. */
 export function getUnderReviewPlatinums(
-  options: { offset?: number; limit?: number } = {},
+  options: {
+    offset?: number;
+    limit?: number;
+    verdict?: ModerationVerdictFilter;
+  } = {},
 ): Promise<ModerationPlatePage> {
   return getPlatinumsByModerationStatus('UNDER_REVIEW', options);
 }

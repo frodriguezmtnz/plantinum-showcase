@@ -397,8 +397,20 @@ input[type='search']::-webkit-search-decoration {
   color: hsl(0 0% 10%);
 }
 
+/* Moderation ribbon: flat red band across the top of a screenshot, lifted off
+   the photo with a soft bottom shadow. */
+.moderation-ribbon {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  text-shadow: 0 1px 0 hsl(4 60% 20% / 0.35);
+  box-shadow: 0 3px 8px -2px hsl(4 60% 20% / 0.45);
+}
+
 /* Spoiler plates: frost on the case, not a black hole on the field. */
-.platinum-card-spoiler > .spoiler-blur {
+/* The blurred image is nested inside the card's link/button, so a direct-child
+   selector never matched. Descendant keeps the blur as the remote-image
+   fallback (stored images are served pixelated instead). */
+.platinum-card-spoiler .spoiler-blur {
   filter: blur(22px);
   transform: scale(1.08);
   transition: filter 0.4s var(--ease-bloom);
@@ -674,13 +686,38 @@ header[data-hidden]:focus-within {
   color: hsl(0 0% 98%);
 }
 
-.footer-shell a {
+.footer-shell .footer-link {
+  position: relative;
   color: hsl(0 0% 98% / 0.7);
   transition: color 0.2s;
 }
 
-.footer-shell a:hover {
-  color: hsl(0 0% 98%);
+/* Animated underline that grows from the left on hover. */
+.footer-shell .footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  transition: transform 0.25s var(--ease-bloom);
+}
+
+.footer-shell .footer-link:hover {
+  color: hsl(322 100% 68%);
+}
+
+.footer-shell .footer-link:hover::after {
+  transform: scaleX(1);
+}
+
+.footer-shell .footer-link-divider {
+  width: 1px;
+  height: 1rem;
+  background: hsl(0 0% 98% / 0.2);
 }
 
 .footer-shell .field-mark {

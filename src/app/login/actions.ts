@@ -11,6 +11,8 @@ const WINDOW_MS = 5 * 60_000;
 
 export interface LoginState {
   error?: string;
+  /** Set on success; the page refreshes the client session and navigates. */
+  redirectTo?: string;
 }
 
 export async function loginAction(_state: LoginState, formData: FormData): Promise<LoginState> {
@@ -31,17 +33,20 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   // Brute-force barrier: cap attempts per account and per client address.
   const headerList = await headers();
   const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const perEmail = checkRateLimit(`login:${email}`, MAX_ATTEMPTS_PER_EMAIL, WINDOW_MS);
-  const perIp = checkRateLimit(`login-ip:${ip}`, MAX_ATTEMPTS_PER_IP, WINDOW_MS);
+  const perEmail = await checkRateLimit(`login:${email}`, MAX_ATTEMPTS_PER_EMAIL, WINDOW_MS);
+  const perIp = await checkRateLimit(`login-ip:${ip}`, MAX_ATTEMPTS_PER_IP, WINDOW_MS);
   if (!perEmail.ok || !perIp.ok) {
     return { error: "Too many sign-in attempts. Please wait a few minutes and try again." };
   }
 
   try {
+    // `redirect: false` keeps the navigation on the client so the page can
+    // refresh the session provider before moving on; letting next-auth redirect
+    // here would leave the cached header session stale until a hard reload.
     await signIn("credentials", {
       email,
       password,
-      redirectTo: callbackUrl,
+      redirect: false,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -55,5 +60,5 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     throw error;
   }
 
-  return {};
+  return { redirectTo: callbackUrl };
 }

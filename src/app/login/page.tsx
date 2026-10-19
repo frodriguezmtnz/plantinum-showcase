@@ -1,16 +1,18 @@
 'use client';
 
-import { use, useActionState } from "react";
+import { use, useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { loginAction } from "./actions";
+import { loginAction, type LoginState } from "./actions";
+import { useAuth } from "@/hooks/use-auth";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
 
-const initialState: { error?: string } = {};
+const initialState: LoginState = {};
 
 export default function LoginPage({
   searchParams,
@@ -19,6 +21,22 @@ export default function LoginPage({
 }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const { callbackUrl } = use(searchParams);
+  const router = useRouter();
+  const { refresh } = useAuth();
+  // Refreshing the session re-renders the provider, so guard against running
+  // the post-sign-in navigation more than once.
+  const navigatedRef = useRef(false);
+
+  // Sign-in runs in a server action, so the client session provider has to be
+  // refreshed before navigating or the header keeps showing "Sign in".
+  useEffect(() => {
+    if (!state.redirectTo || navigatedRef.current) return;
+    navigatedRef.current = true;
+    const target = state.redirectTo;
+    refresh()
+      .catch(() => undefined)
+      .finally(() => router.push(target));
+  }, [state.redirectTo, refresh, router]);
 
   return (
     <AuthShell
@@ -41,10 +59,7 @@ export default function LoginPage({
           <Input id="email" name="email" type="email" placeholder="m@example.com" required />
         </div>
         <div className="grid gap-2">
-          <div className="flex items-center">
-            <Label htmlFor="password">Password</Label>
-            <span className="ml-auto inline-block text-sm underline opacity-40">Forgot your password?</span>
-          </div>
+          <Label htmlFor="password">Password</Label>
           <PasswordInput id="password" name="password" required />
         </div>
         <Button type="submit" className="w-full" disabled={isPending}>
