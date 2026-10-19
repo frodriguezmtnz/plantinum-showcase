@@ -8,6 +8,7 @@ import { getCommunityStats } from '@/lib/data';
 export const metadata: Metadata = {
   title: 'About | Platinum Showcase',
   description: 'Learn more about Platinum Showcase, the community for PlayStation trophy hunters.',
+  alternates: { canonical: '/about' },
 };
 
 const rules = [

@@ -4,6 +4,7 @@ import { UploadForm } from './upload-form';
 
 export const metadata = {
   title: 'Upload a Platinum | Platinum Showcase',
+  robots: { index: false, follow: false },
 };
 
 export default async function UploadPage() {

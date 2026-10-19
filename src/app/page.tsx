@@ -14,6 +14,11 @@ import Link from 'next/link';
 import { Camera, Crown, Sparkles, Trophy, Vote } from 'lucide-react';
 import { PlatinumMarkIcon } from '@/components/icons/platinum-mark-icon';
 import { isStoredImage } from '@/lib/utils';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default async function Home() {
   const session = await auth();

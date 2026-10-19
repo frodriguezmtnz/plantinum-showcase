@@ -15,6 +15,8 @@ import { PlatinumDetailCard } from './platinum-detail-card';
 import type { User } from '@/lib/data';
 import { displayImageUrl } from '@/lib/image-display';
 import { AppealPlatinumButton } from '@/components/shared/appeal-platinum-button';
+import { JsonLd } from '@/components/shared/json-ld';
+import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 import { SocialShare } from './SocialShare';
 
@@ -60,6 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: { canonical: `/platinum/${platinum.id}` },
     ...(isPublic ? {} : { robots: { index: false, follow: false } }),
     openGraph: {
       type: 'article',
@@ -98,8 +101,49 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
     ? await getOpenReportForUser(platinum.id, currentUserId)
     : false;
 
+  const pageUrl = canonicalUrl(`/platinum/${platinum.id}`);
+  const profileUrl = user ? canonicalUrl(`/u/${user.username}`) : undefined;
+  const isPublic = platinum.moderationStatus === 'PUBLISHED';
+
+  const graph: Record<string, unknown>[] = [
+    {
+      '@type': 'VideoGame',
+      '@id': `${pageUrl}#game`,
+      name: platinum.gameName,
+      gamePlatform: platinum.platform,
+      url: pageUrl,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: canonicalUrl('/') },
+        { '@type': 'ListItem', position: 2, name: 'Explore', item: canonicalUrl('/explore') },
+        { '@type': 'ListItem', position: 3, name: platinum.gameName, item: pageUrl },
+      ],
+    },
+  ];
+
+  // Only public, non-spoiler plates advertise a screenshot. Spoilers stay out
+  // of structured data for the same reason they stay out of link previews.
+  if (isPublic && !platinum.isSpoiler) {
+    graph.splice(1, 0, {
+      '@type': 'ImageObject',
+      '@id': `${pageUrl}#screenshot`,
+      contentUrl: absoluteAssetUrl(displayImageUrl(platinum.imageUrl, platinum.moderationStatus)),
+      url: pageUrl,
+      datePublished: platinum.platinumDate,
+      about: { '@id': `${pageUrl}#game` },
+      ...(user && profileUrl
+        ? { author: { '@type': 'Person', name: user.username, url: profileUrl } }
+        : {}),
+    });
+  }
+
+  const structuredData = { '@context': 'https://schema.org', '@graph': graph };
+
   return (
     <div className="container py-8 md:py-12">
+      <JsonLd data={structuredData} />
       <Link
         href="/explore"
         className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"

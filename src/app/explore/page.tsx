@@ -5,6 +5,7 @@ import { MonthlyRace } from '@/components/explore/monthly-race';
 
 export const metadata = {
   title: 'Explore Gallery | Platinum Showcase',
+  alternates: { canonical: '/explore' },
 };
 
 type Props = {

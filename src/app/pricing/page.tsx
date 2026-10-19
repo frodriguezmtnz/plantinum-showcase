@@ -16,6 +16,7 @@ const NO_WATERMARK_PERK = 'No watermark on your uploads';
 export const metadata: Metadata = {
   title: 'Pricing | Platinum Showcase',
   description: `Voting and the Hall of Fame are free forever. Upload tiers keep the lights on: Free ${PLANS.FREE.monthlyUploadLimit}/month, PRO ${PLANS.PRO.monthlyUploadLimit}/month with no watermark, PLATINUM unlimited with supporter flair.`,
+  alternates: { canonical: '/pricing' },
 };
 
 const plans = [

@@ -10,6 +10,7 @@ import { cn, isStoredImage } from '@/lib/utils';
 
 export const metadata = {
   title: 'Hall of Fame | Platinum Showcase',
+  alternates: { canonical: '/hall-of-fame' },
 };
 
 function daysUntilMonthEnd(now: Date): number {
