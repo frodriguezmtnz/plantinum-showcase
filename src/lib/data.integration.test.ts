@@ -200,10 +200,68 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(await data.getUsersByIds([])).toEqual([]);
   });
 
-  it('resolves a user by username with their pride platinum', async () => {
+  it('resolves a user by username', async () => {
     const alice = await data.getUserByUsername(`it_alice_${stamp}`);
     expect(alice?.id).toBe(u.alice);
-    expect(alice?.pridePlatinumId).toBe(p.a);
+    expect(alice?.username).toBe(`it_alice_${stamp}`);
+  });
+
+  it('builds a profile summary from aggregates', async () => {
+    const owner = await data.getProfileSummary(u.alice, u.alice);
+    expect(owner.totalPlatinums).toBe(4);
+    expect(owner.totalVotes).toBe(16);
+    expect(owner.months).toHaveLength(12);
+    expect(owner.months.at(-1)?.key).toBe(period);
+    expect(owner.platforms).toEqual([
+      { platform: 'PS5', count: 2 },
+      { platform: 'PS4', count: 1 },
+      { platform: 'PC', count: 1 },
+    ]);
+    expect(owner.topVoted.map((x) => x.id)).toEqual([p.f, p.a]);
+
+    const visitor = await data.getProfileSummary(u.alice, u.bob);
+    expect(visitor.totalPlatinums).toBe(3);
+    expect(visitor.totalVotes).toBe(7);
+    expect(visitor.platforms).toEqual([
+      { platform: 'PS5', count: 1 },
+      { platform: 'PS4', count: 1 },
+      { platform: 'PC', count: 1 },
+    ]);
+    expect(visitor.topVoted.map((x) => x.id)).toEqual([p.a]);
+  });
+
+  it('paginates a profile gallery with a stable newest-first order', async () => {
+    const ownerPage1 = await data.getProfileGalleryPage(u.alice, u.alice, {
+      page: 1,
+      pageSize: 2,
+    });
+    expect(ownerPage1.total).toBe(4);
+    expect(ownerPage1.totalPages).toBe(2);
+    expect(ownerPage1.items.map((x) => x.id)).toEqual([p.f, p.d]);
+
+    const ownerPage2 = await data.getProfileGalleryPage(u.alice, u.alice, {
+      page: 2,
+      pageSize: 2,
+    });
+    expect(ownerPage2.currentPage).toBe(2);
+    expect(ownerPage2.items.map((x) => x.id)).toEqual([p.a, p.e]);
+
+    const visitorPage1 = await data.getProfileGalleryPage(u.alice, u.bob, {
+      page: 1,
+      pageSize: 2,
+    });
+    expect(visitorPage1.total).toBe(3);
+    expect(visitorPage1.totalPages).toBe(2);
+    expect(visitorPage1.items.map((x) => x.id)).toEqual([p.d, p.a]);
+  });
+
+  it('clamps an out-of-range profile page', async () => {
+    const page = await data.getProfileGalleryPage(u.alice, u.bob, {
+      page: 99,
+      pageSize: 2,
+    });
+    expect(page.currentPage).toBe(2);
+    expect(page.items.map((x) => x.id)).toEqual([p.e]);
   });
 
   it('counts uploads only inside the current period', async () => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   closeCopy,
   formatPeriodLabel,
+  formatPeriodShortLabel,
   getCurrentPeriod,
   getPreviousPeriod,
   shiftPeriod,
@@ -66,6 +67,16 @@ describe('formatPeriodLabel', () => {
 
   it('does not slip a month on the first of the month', () => {
     expect(formatPeriodLabel('2026-01')).toBe('January 2026');
+  });
+});
+
+describe('formatPeriodShortLabel', () => {
+  it('renders a short month', () => {
+    expect(formatPeriodShortLabel('2026-09')).toBe('Sep');
+  });
+
+  it('does not slip a month on the first of the month', () => {
+    expect(formatPeriodShortLabel('2026-01')).toBe('Jan');
   });
 });
 

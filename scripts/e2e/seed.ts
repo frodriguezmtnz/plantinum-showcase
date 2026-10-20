@@ -5,8 +5,8 @@ import { prisma } from "../../src/lib/prisma";
 /**
  * Idempotent fixture for the E2E suite.
  *
- * Creates (or refreshes) the test account and two published plates: one plain
- * and one spoiler. Uses a local asset so CI needs no external image host.
+ * Creates (or refreshes) the test account and 14 published plates: 13 gallery
+ * plates plus one spoiler. Uses a local asset so CI needs no external image host.
  *
  *   E2E_EMAIL=... E2E_PASSWORD=... pnpm tsx scripts/e2e/seed.ts
  */
