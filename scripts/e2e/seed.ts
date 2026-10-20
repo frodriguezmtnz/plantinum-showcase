@@ -42,7 +42,7 @@ async function main() {
 
   await prisma.platinum.createMany({
     data: [
-      // Enough plates to exercise the profile gallery pagination (12 per page).
+      // Enough platinums to exercise the profile infinite gallery (8 per page).
       ...Array.from({ length: 13 }, (_, index) => ({
         ...base,
         hash: `e2e-gallery-${index + 1}`,
