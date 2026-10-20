@@ -4,15 +4,25 @@ import { formatPeriodShortLabel } from '@/lib/period';
 import { cn } from '@/lib/utils';
 
 export type ProfilePaceFilter = 'active' | 'all';
+export type ProfileSort = 'newest' | 'oldest' | 'most-voted' | 'least-voted' | 'name-asc' | 'name-desc' | 'platform-asc' | 'platform-desc';
+export type ProfilePlatformFilter = 'all' | 'PS5' | 'PS4' | 'PS3';
 
 interface ProfileStatsProps {
   summary: ProfileSummary;
   pace: ProfilePaceFilter;
   username: string;
+  platform?: ProfilePlatformFilter;
+  sort?: ProfileSort;
 }
 
 /** Activity summary for a profile: monthly pace, top voted plates, platforms. */
-export function ProfileStats({ summary, pace, username }: ProfileStatsProps) {
+export function ProfileStats({
+  summary,
+  pace,
+  username,
+  platform = 'all',
+  sort = 'newest',
+}: ProfileStatsProps) {
   if (summary.totalPlatinums === 0) return null;
 
   const months =
@@ -24,7 +34,13 @@ export function ProfileStats({ summary, pace, username }: ProfileStatsProps) {
     (sum, platform) => sum + platform.count,
     0,
   );
-  const paceHref = (next: ProfilePaceFilter) => `/u/${username}?pace=${next}`;
+  const paceHref = (next: ProfilePaceFilter) => {
+    const params = new URLSearchParams();
+    params.set('pace', next);
+    if (platform !== 'all') params.set('platform', platform);
+    if (sort !== 'newest') params.set('sort', sort);
+    return `/u/${username}?${params}`;
+  };
 
   return (
     <section className="mb-12 grid gap-4 lg:grid-cols-[1.35fr_1fr]">

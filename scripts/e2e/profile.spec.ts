@@ -21,7 +21,8 @@ test.describe('profile', () => {
     await expect(page.getByRole('link', { name: 'E2E Plate 01', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'E2E Plate 03', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'E2E Plate 05', exact: true })).toBeVisible();
-    await expect(page.locator('[data-platform="PS5"]')).toContainText('14');
+    await expect(page.locator('[data-platform="PS5"]')).toContainText('13');
+    await expect(page.locator('[data-platform="PS4"]')).toContainText('1');
   });
 
   test('filters the pace between active months and the full year', async ({ page }) => {
@@ -43,22 +44,39 @@ test.describe('profile', () => {
     await expect(page.locator('[data-month]')).toHaveCount(1);
   });
 
-  test('paginates the trophy gallery', async ({ page }) => {
-    const response = await page.goto(PROFILE);
-    test.skip(response?.status() === 404, 'E2E profile is not seeded');
+  test('loads 8 plates by default and loads more on demand', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 400 });
+    await page.goto(PROFILE);
     await page.waitForLoadState('networkidle');
 
     const cards = page.locator('.break-inside-avoid');
-    await expect(cards).toHaveCount(12);
-    await expect(page.getByText('Page 1 of 2').first()).toBeVisible();
+    await expect(cards).toHaveCount(8);
+    await expect(page.getByText(/Showing 8 of 14/)).toBeVisible();
 
-    await page.getByRole('link', { name: 'Next' }).click();
-    await page.waitForURL(/\?page=2$/);
-    await expect(cards).toHaveCount(2);
-    await expect(page.getByText('Page 2 of 2').first()).toBeVisible();
+    await page.getByRole('button', { name: 'Load more' }).click();
+    await page.waitForLoadState('networkidle');
+    await expect(cards).toHaveCount(14);
+    await expect(page.getByText(/Showing 14 of 14/)).toBeVisible();
 
-    await page.getByRole('link', { name: 'Previous' }).click();
-    await page.waitForURL(/\/u\/e2e-runner$/);
-    await expect(cards).toHaveCount(12);
+    // Button should disappear when hasMore is false.
+    await expect(page.getByRole('button', { name: 'Load more' })).not.toBeVisible();
+  });
+
+  test('sorts the gallery by name', async ({ page }) => {
+    await page.goto(`${PROFILE}?sort=name-asc`);
+    await page.waitForLoadState('networkidle');
+
+    const firstCard = page.locator('.break-inside-avoid').first();
+    await expect(firstCard.getByRole('heading', { name: 'E2E Plate 01' })).toBeVisible();
+  });
+
+  test('filters by platform via URL and shows correct cards', async ({ page }) => {
+    await page.goto(`${PROFILE}?platform=PS4`);
+    await page.waitForLoadState('networkidle');
+
+    const cards = page.locator('.break-inside-avoid');
+    await expect(cards).toHaveCount(1);
+    await expect(page.getByText(/Showing 1 of 1/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'E2E Spoiler Plate' })).toBeVisible();
   });
 });

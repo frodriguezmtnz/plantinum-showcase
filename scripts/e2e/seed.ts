@@ -50,7 +50,7 @@ async function main() {
         isSpoiler: false,
         votes: 13 - index,
       })),
-      { ...base, hash: "e2e-spoiler-plate", gameName: "E2E Spoiler Plate", isSpoiler: true },
+      { ...base, hash: "e2e-spoiler-plate", gameName: "E2E Spoiler Plate", platform: "PS4", isSpoiler: true },
     ],
   });
 
