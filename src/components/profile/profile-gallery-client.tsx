@@ -25,7 +25,24 @@ import {
   type ProfileSort,
 } from '@/lib/profile-gallery';
 import { getMoreProfilePlatinums } from '@/app/actions';
+import { cn } from '@/lib/utils';
 import { Loader2, SearchX, Trophy } from 'lucide-react';
+
+const GALLERY_COLUMNS = {
+  1: 'columns-1',
+  2: 'columns-1 sm:columns-2',
+  3: 'columns-1 sm:columns-2 lg:columns-3',
+  4: 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4',
+} as const;
+
+function galleryColumnsClass(count: number): string {
+  if (count <= 1) return GALLERY_COLUMNS[1];
+  if (count === 2) return GALLERY_COLUMNS[2];
+  if (count === 3 || count === 5 || count === 6 || count === 9) {
+    return GALLERY_COLUMNS[3];
+  }
+  return GALLERY_COLUMNS[4];
+}
 
 interface ProfileGalleryClientProps {
   username: string;
@@ -136,7 +153,7 @@ export function ProfileGalleryClient({
       setHasMore(result.hasMore);
     } catch {
       toast({
-        title: 'Could not load more',
+        title: 'Could not load more platinums',
         description: 'The next page failed to arrive. Check your connection and try again.',
         variant: 'destructive',
       });
@@ -218,24 +235,26 @@ export function ProfileGalleryClient({
         <>
           <p className="mb-6 text-sm text-muted-foreground" aria-live="polite">
             {isPending ? (
-              'Updating plates…'
+              'Updating platinums…'
             ) : isLoadingMore ? (
-              'Loading more plates…'
+              'Loading more platinums…'
             ) : (
               <>
                 Showing{' '}
                 <span className="tabular font-semibold text-foreground">
                   {items.length}
                 </span>{' '}
-                of <span className="tabular">{total}</span> plate
+                of <span className="tabular">{total}</span> platinum
                 {total === 1 ? '' : 's'}
               </>
             )}
           </p>
           <div
-            className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 transition-opacity ${
-              isPending ? 'opacity-60' : ''
-            }`}
+            className={cn(
+              'gap-6',
+              galleryColumnsClass(total),
+              `transition-opacity ${isPending ? 'opacity-60' : ''}`,
+            )}
           >
             {items.map((platinum, index) => (
               <div key={platinum.id} className="mb-6 break-inside-avoid">
@@ -272,7 +291,7 @@ export function ProfileGalleryClient({
                   {isLoadingMore && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {isLoadingMore ? 'Loading...' : 'Load more'}
+                  {isLoadingMore ? 'Loading...' : 'Load more platinums'}
                 </Button>
               </div>
             </>
@@ -282,11 +301,11 @@ export function ProfileGalleryClient({
         <EmptyState
           icon={hasFilters ? SearchX : Trophy}
           title={hasFilters ? 'No platinums found' : 'No platinums yet'}
-          description={
-            hasFilters
-              ? 'No plates match these filters. Try another platform or sort order.'
-              : "This hunter hasn't shared any platinum screenshots yet."
-          }
+description={
+                hasFilters
+                  ? 'No platinums match these filters. Try another platform or sort order.'
+                  : "This hunter hasn't shared any platinum screenshots yet."
+              }
           {...(hasFilters
             ? { actionLabel: 'Clear filters', onAction: handleClearFilters }
             : { actionLabel: 'Upload a platinum', actionHref: '/upload' })}

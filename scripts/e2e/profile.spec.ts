@@ -53,13 +53,13 @@ test.describe('profile', () => {
     await expect(cards).toHaveCount(8);
     await expect(page.getByText(/Showing 8 of 14/)).toBeVisible();
 
-    await page.getByRole('button', { name: 'Load more' }).click();
+    await page.getByRole('button', { name: 'Load more platinums' }).click();
     await page.waitForLoadState('networkidle');
     await expect(cards).toHaveCount(14);
     await expect(page.getByText(/Showing 14 of 14/)).toBeVisible();
 
     // Button should disappear when hasMore is false.
-    await expect(page.getByRole('button', { name: 'Load more' })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Load more platinums' })).not.toBeVisible();
   });
 
   test('sorts the gallery by name', async ({ page }) => {
