@@ -12,6 +12,11 @@ const PERIOD_LABEL_FORMATTER = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
+const PERIOD_SHORT_LABEL_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'UTC',
+  month: 'short',
+});
+
 export function getCurrentPeriod(date: Date = new Date()): string {
   const parts = PERIOD_FORMATTER.formatToParts(date);
   const year = parts.find((part) => part.type === 'year')?.value;
@@ -37,6 +42,14 @@ export function getPreviousPeriod(date: Date = new Date()): string {
 export function formatPeriodLabel(period: string): string {
   const [year, month] = period.split('-').map(Number);
   return PERIOD_LABEL_FORMATTER.format(new Date(Date.UTC(year!, month! - 1, 1)));
+}
+
+/** "2026-09" → "Sep". */
+export function formatPeriodShortLabel(period: string): string {
+  const [year, month] = period.split('-').map(Number);
+  return PERIOD_SHORT_LABEL_FORMATTER.format(
+    new Date(Date.UTC(year!, month! - 1, 1)),
+  );
 }
 
 /** The countdown line shown next to the live race. */

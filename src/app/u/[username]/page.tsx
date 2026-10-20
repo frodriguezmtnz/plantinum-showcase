@@ -1,5 +1,5 @@
 
-import { getUserByUsername, getPlatinumsByUserId, getPlatinumById } from '@/lib/data';
+import { getProfileGalleryPage, getProfileSummary, getUserByUsername } from '@/lib/data';
 import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,17 +8,18 @@ import { ThumbsUp, Trophy } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 import { EmptyState } from '@/components/shared/empty-state';
 import { JsonLd } from '@/components/shared/json-ld';
-import { ProfileStats } from '@/components/profile/profile-stats';
+import {
+  ProfileStats,
+  type ProfilePaceFilter,
+} from '@/components/profile/profile-stats';
 import { Button } from '@/components/ui/button';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
-const PAGE_SIZE = 12;
-
 type Props = {
   params: Promise<{ username: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; pace?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UserProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
-  const { page: rawPage } = await searchParams;
+  const { page: rawPage, pace: rawPace } = await searchParams;
   const user = await getUserByUsername(username);
   if (!user) {
     notFound();
@@ -49,26 +50,21 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
   const session = await auth();
   const currentUserId = session?.user?.id;
   const isOwner = currentUserId === user.id;
-
-  const platinums = await getPlatinumsByUserId(user.id, currentUserId);
-  const pridePlatinum = user.pridePlatinumId
-    ? await getPlatinumById(user.pridePlatinumId, currentUserId)
-    : null;
-  
-  // Exclude pride platinum from the main gallery if it exists
-  const otherPlatinums = pridePlatinum 
-    ? platinums.filter(p => p.id !== user.pridePlatinumId)
-    : platinums;
-
+  const pace: ProfilePaceFilter = rawPace === 'all' ? 'all' : 'active';
   const requestedPage = Number(rawPage ?? '1');
-  const totalPages = Math.max(1, Math.ceil(otherPlatinums.length / PAGE_SIZE));
-  const currentPage = Number.isFinite(requestedPage)
-    ? Math.min(Math.max(1, Math.floor(requestedPage)), totalPages)
-    : 1;
-  const pagePlatinums = otherPlatinums.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
+
+  const [summary, gallery] = await Promise.all([
+    getProfileSummary(user.id, currentUserId),
+    getProfileGalleryPage(user.id, currentUserId, { page: requestedPage }),
+  ]);
+
+  const pageHref = (target: number) => {
+    const params = new URLSearchParams();
+    if (target > 1) params.set('page', String(target));
+    if (pace === 'all') params.set('pace', 'all');
+    const query = params.toString();
+    return `/u/${user.username}${query ? `?${query}` : ''}`;
+  };
 
   const profileUrl = canonicalUrl(`/u/${user.username}`);
   const profileJsonLd = {
@@ -96,47 +92,36 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         <div className="flex items-center gap-4 mt-2 text-muted-foreground">
           <div className="flex items-center gap-2">
             <PlatinumTrophyIcon className="w-5 h-5"/>
-            <span>{platinums.length} Platinums</span>
+            <span>{summary.totalPlatinums} Platinums</span>
           </div>
           <div className="flex items-center gap-2">
             <ThumbsUp className="w-5 h-5 text-primary"/>
-            <span>{platinums.reduce((acc, p) => acc + p.votes, 0)} Total Votes</span>
+            <span>{summary.totalVotes} Total Votes</span>
           </div>
         </div>
       </div>
 
-      <ProfileStats platinums={platinums} />
+      <ProfileStats summary={summary} pace={pace} username={user.username} />
 
-      {pridePlatinum && (
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">
-            Pride of the Collection
-          </h2>
-          <div className="max-w-2xl mx-auto">
-            <PlatinumCard platinum={pridePlatinum} user={user} isPride showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
-          </div>
-        </section>
-      )}
-      
       <section>
-        <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">Trophy Gallery</h2>
-        {otherPlatinums.length > 0 ? (
+        <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">Your Platinum Trophy Gallery</h2>
+        {gallery.total > 0 ? (
           <>
             <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
-              {pagePlatinums.map(platinum => (
+              {gallery.items.map(platinum => (
                 <div key={platinum.id} className="mb-6 break-inside-avoid">
                   <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
                 </div>
               ))}
             </div>
-            {totalPages > 1 && (
+            {gallery.totalPages > 1 && (
               <nav
                 className="mt-10 flex flex-wrap items-center justify-center gap-3"
                 aria-label="Gallery pages"
               >
-                {currentPage > 1 ? (
+                {gallery.currentPage > 1 ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/u/${user.username}?page=${currentPage - 1}`}>Previous</Link>
+                    <Link href={pageHref(gallery.currentPage - 1)}>Previous</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
@@ -144,11 +129,11 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                   </Button>
                 )}
                 <span className="tabular text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages}
+                  Page {gallery.currentPage} of {gallery.totalPages}
                 </span>
-                {currentPage < totalPages ? (
+                {gallery.currentPage < gallery.totalPages ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/u/${user.username}?page=${currentPage + 1}`}>Next</Link>
+                    <Link href={pageHref(gallery.currentPage + 1)}>Next</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
@@ -159,21 +144,13 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
             )}
           </>
         ) : (
-           pridePlatinum ? (
-            <EmptyState
-              icon={Trophy}
-              title="Just one platinum for now"
-              description="This hunter hasn't shown off any other platinums yet."
-            />
-           ) : (
-            <EmptyState
-              icon={Trophy}
-              title="No platinums yet"
-              description="This hunter hasn't shared any platinum screenshots yet."
-              actionLabel="Upload a platinum"
-              actionHref="/upload"
-            />
-           )
+          <EmptyState
+            icon={Trophy}
+            title="No platinums yet"
+            description="This hunter hasn't shared any platinum screenshots yet."
+            actionLabel="Upload a platinum"
+            actionHref="/upload"
+          />
         )}
       </section>
     </div>

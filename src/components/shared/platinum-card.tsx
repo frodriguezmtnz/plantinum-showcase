@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Award, Eye, Heart, Quote } from 'lucide-react';
+import { Eye, Heart, Quote } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,6 @@ import { useVotePlatinum } from '@/hooks/use-vote-platinum';
 interface PlatinumCardProps {
   platinum: Platinum;
   user?: User;
-  isPride?: boolean;
   showComment?: boolean;
   canDelete?: boolean;
   canEdit?: boolean;
@@ -28,7 +27,7 @@ interface PlatinumCardProps {
   priority?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, isPride = false, showComment = false, canDelete = false, canEdit = false, cover = false, priority = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, showComment = false, canDelete = false, canEdit = false, cover = false, priority = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
@@ -61,13 +60,7 @@ export function PlatinumCard({ platinum, user, isPride = false, showComment = fa
   };
 
   return (
-    <Card className={cn("panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom", isPride && "ring-2 ring-primary/60")}>
-       {isPride && (
-        <div className="bg-primary/10 text-primary text-xs font-bold tracking-[0.14em] uppercase flex items-center justify-center gap-2 py-2.5">
-            <Award className="w-4 h-4 text-primary" />
-            <span>Pride of the Collection</span>
-        </div>
-       )}
+    <Card className="panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom">
        <CardContent className="p-0">
         <div
           className={cn("relative overflow-hidden bg-muted", cover ? "aspect-video" : "", !showSpoiler && "platinum-card-spoiler")}

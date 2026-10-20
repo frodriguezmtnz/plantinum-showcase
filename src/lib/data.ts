@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCurrentPeriod } from "@/lib/period";
+import { getCurrentPeriod, shiftPeriod } from "@/lib/period";
 import type { ReportReason } from "@/generated/prisma/enums";
 
 export type ModerationStatus = 'PUBLISHED' | 'UNDER_REVIEW' | 'HIDDEN';
@@ -30,7 +30,6 @@ export interface User {
   id: string;
   username: string;
   avatarUrl: string;
-  pridePlatinumId?: string;
 }
 
 interface PlatinumRecord {
@@ -77,11 +76,10 @@ const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   moderationStatus: p.moderationStatus as ModerationStatus,
 });
 
-const toUserView = (u: UserRecord, pridePlatinumId?: string): User => ({
+const toUserView = (u: UserRecord): User => ({
   id: u.id,
   username: u.username ?? 'Unknown',
   avatarUrl: u.image ?? `https://i.pravatar.cc/150?u=${u.id}`,
-  ...(pridePlatinumId ? { pridePlatinumId } : {}),
 });
 
 async function attachVoteStatus(
@@ -105,15 +103,6 @@ async function attachVoteStatus(
   return platinums.map((p) => toPlatinumView(p, votedIds.has(p.id)));
 }
 
-async function getPridePlatinumId(userId: string): Promise<string | undefined> {
-  const pride = await prisma.platinum.findFirst({
-    where: { userId, ...PUBLISHED_ONLY },
-    orderBy: [{ votes: 'desc' }, { monthlyVotes: 'desc' }],
-    select: { id: true },
-  });
-  return pride?.id;
-}
-
 // Data access functions
 export async function getUsers(): Promise<User[]> {
   const users = await prisma.user.findMany();
@@ -131,15 +120,13 @@ export async function getUsersByIds(ids: string[]): Promise<User[]> {
 export async function getUserById(id: string): Promise<User | undefined> {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return undefined;
-  const pridePlatinumId = await getPridePlatinumId(user.id);
-  return toUserView(user, pridePlatinumId);
+  return toUserView(user);
 }
 
 export async function getUserByUsername(username: string): Promise<User | undefined> {
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) return undefined;
-  const pridePlatinumId = await getPridePlatinumId(user.id);
-  return toUserView(user, pridePlatinumId);
+  return toUserView(user);
 }
 
 export async function getPlatinums(): Promise<Platinum[]> {
@@ -240,8 +227,141 @@ export async function getPlatinumsByUserId(
   // the published ones.
   const where =
     userId === currentUserId ? { userId } : { userId, ...PUBLISHED_ONLY };
-  const platinums = await prisma.platinum.findMany({ where });
+  const platinums = await prisma.platinum.findMany({
+    where,
+    orderBy: [{ platinumDate: 'desc' }, { id: 'desc' }],
+  });
   return attachVoteStatus(platinums, currentUserId);
+}
+
+export const PROFILE_PAGE_SIZE = 12;
+
+export interface ProfileSummary {
+  totalPlatinums: number;
+  totalVotes: number;
+  activeMonths: number;
+  months: { key: string; count: number }[];
+  platforms: { platform: string; count: number }[];
+  topVoted: { id: string; gameName: string; votes: number }[];
+}
+
+export interface ProfileGalleryPage {
+  items: Platinum[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+const PROFILE_PLATFORM_ORDER = ['PS5', 'PS4', 'PS3'];
+
+/** Totals, monthly pace, platform split and top-voted plates for a profile. */
+export async function getProfileSummary(
+  userId: string,
+  currentUserId?: string,
+): Promise<ProfileSummary> {
+  const isOwner = userId === currentUserId;
+  const where = {
+    userId,
+    ...(isOwner ? {} : PUBLISHED_ONLY),
+  };
+
+  const currentPeriod = getCurrentPeriod();
+  const periods = Array.from({ length: 12 }, (_, index) =>
+    shiftPeriod(currentPeriod, index - 11),
+  );
+  const [startYear, startMonth] = periods[0]!.split('-').map(Number);
+
+  const [totals, monthlyRows, platformRows, topVoted] = await Promise.all([
+    prisma.platinum.aggregate({
+      where,
+      _count: { _all: true },
+      _sum: { votes: true },
+    }),
+    prisma.$queryRaw<{ month: string; count: number }[]>`
+      SELECT
+        to_char(
+          date_trunc(
+            'month',
+            ("platinumDate" AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Madrid'
+          ),
+          'YYYY-MM'
+        ) AS month,
+        count(*)::int AS count
+      FROM "Platinum"
+      WHERE "userId" = ${userId}
+        AND (${isOwner}::boolean OR "moderationStatus" = 'PUBLISHED')
+        AND date_trunc(
+          'month',
+          ("platinumDate" AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Madrid'
+        ) >= make_date(${startYear!}, ${startMonth!}, 1)
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `,
+    prisma.platinum.groupBy({
+      by: ['platform'],
+      where,
+      _count: { _all: true },
+    }),
+    prisma.platinum.findMany({
+      where: { ...where, votes: { gt: 0 } },
+      orderBy: [{ votes: 'desc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+      take: 5,
+      select: { id: true, gameName: true, votes: true },
+    }),
+  ]);
+
+  const counts = new Map(monthlyRows.map((row) => [row.month, row.count]));
+  const months = periods.map((key) => ({ key, count: counts.get(key) ?? 0 }));
+  const platforms = platformRows
+    .map((row) => ({ platform: row.platform, count: row._count._all }))
+    .sort((a, b) => {
+      const aIndex = PROFILE_PLATFORM_ORDER.indexOf(a.platform);
+      const bIndex = PROFILE_PLATFORM_ORDER.indexOf(b.platform);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.platform.localeCompare(b.platform);
+    });
+
+  return {
+    totalPlatinums: totals._count._all,
+    totalVotes: totals._sum.votes ?? 0,
+    activeMonths: months.filter((month) => month.count > 0).length,
+    months,
+    platforms,
+    topVoted,
+  };
+}
+
+/** One page of a profile gallery, ordered newest first with a stable tie-break. */
+export async function getProfileGalleryPage(
+  userId: string,
+  currentUserId?: string,
+  options: { page?: number; pageSize?: number } = {},
+): Promise<ProfileGalleryPage> {
+  const { page = 1, pageSize = PROFILE_PAGE_SIZE } = options;
+  const where =
+    userId === currentUserId ? { userId } : { userId, ...PUBLISHED_ONLY };
+
+  const total = await prisma.platinum.count({ where });
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Number.isFinite(page)
+    ? Math.min(Math.max(1, Math.floor(page)), totalPages)
+    : 1;
+
+  const platinums = await prisma.platinum.findMany({
+    where,
+    orderBy: [{ platinumDate: 'desc' }, { id: 'desc' }],
+    skip: (currentPage - 1) * pageSize,
+    take: pageSize,
+  });
+
+  return {
+    items: await attachVoteStatus(platinums, currentUserId),
+    total,
+    totalPages,
+    currentPage,
+  };
 }
 
 /** Uploads created by the user in the current Europe/Madrid calendar month. */
