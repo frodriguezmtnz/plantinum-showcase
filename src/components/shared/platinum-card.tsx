@@ -23,11 +23,12 @@ interface PlatinumCardProps {
   canDelete?: boolean;
   canEdit?: boolean;
   cover?: boolean;
+  layout?: 'grid' | 'list';
   /** Eager-load above-the-fold cards so the LCP image is not lazy. */
   priority?: boolean;
 }
 
-export function PlatinumCard({ platinum, user, showComment = false, canDelete = false, canEdit = false, cover = false, priority = false }: PlatinumCardProps) {
+export function PlatinumCard({ platinum, user, showComment = false, canDelete = false, canEdit = false, cover = false, layout = 'grid', priority = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
   const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
@@ -39,6 +40,7 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
 
   const showSpoiler = isSpoilerVisible || !platinum.isSpoiler;
   const underModeration = isPlateUnderModeration(platinum.moderationStatus);
+  const isList = layout === 'list';
   // While the spoiler wrapper is up, stored screenshots are requested as the
   // server-side mosaic so the original never reaches the page (a CSS blur can
   // be removed). Remote URLs cannot be pixelated server-side and keep the blur.
@@ -46,7 +48,7 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
     !showSpoiler && isStoredImage(platinum.imageUrl)
       ? withPixelFlag(platinum.imageUrl)
       : displayImageUrl(platinum.imageUrl, platinum.moderationStatus);
-  const frameStyle = cover ? undefined : { aspectRatio: `${platinum.width} / ${platinum.height}` };
+  const frameStyle = cover || isList ? undefined : { aspectRatio: `${platinum.width} / ${platinum.height}` };
 
   const handleShowSpoiler = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -60,11 +62,22 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
   };
 
   return (
-    <Card className="panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom">
-       <CardContent className="p-0">
+    <Card
+      data-layout={layout}
+      className={cn(
+        'panel-solid flex flex-col overflow-hidden group rounded-xl animate-in fade-in slide-in-from-bottom-3 duration-500 shadow-lift transition-shadow duration-300 hover:shadow-bloom focus-within:shadow-bloom',
+        isList && 'sm:flex-row',
+      )}
+    >
+       <CardContent className={cn('p-0', isList && 'sm:w-64 sm:shrink-0')}>
         <div
-          className={cn("relative overflow-hidden bg-muted", cover ? "aspect-video" : "", !showSpoiler && "platinum-card-spoiler")}
-          style={cover ? undefined : frameStyle}
+          className={cn(
+            'relative overflow-hidden bg-muted',
+            (cover || isList) && 'aspect-video',
+            isList && 'sm:h-full',
+            !showSpoiler && 'platinum-card-spoiler',
+          )}
+          style={frameStyle}
         >
           <Link
             href={`/platinum/${platinum.id}`}
@@ -96,7 +109,7 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
           )}
         </div>
       </CardContent>
-      <div className="p-4">
+      <div className={cn('p-4', isList && 'flex flex-1 flex-col justify-between sm:p-5')}>
         <div className="flex justify-between items-start gap-2">
             <h3 className="font-semibold truncate pr-2">{platinum.gameName}</h3>
             <Badge variant="outline" className="shrink-0">{platinum.platform}</Badge>

@@ -19,14 +19,16 @@ import type { Platinum, User } from '@/lib/data';
 import {
   DEFAULT_PROFILE_PLATFORM,
   DEFAULT_PROFILE_SORT,
+  DEFAULT_PROFILE_VIEW,
   PROFILE_PLATFORM_FILTERS,
   PROFILE_SORTS,
   type ProfilePlatformFilter,
   type ProfileSort,
+  type ProfileView,
 } from '@/lib/profile-gallery';
 import { getMoreProfilePlatinums } from '@/app/actions';
 import { cn } from '@/lib/utils';
-import { Loader2, SearchX, Trophy } from 'lucide-react';
+import { LayoutGrid, List, Loader2, SearchX, Trophy } from 'lucide-react';
 
 const GALLERY_COLUMNS = {
   1: 'columns-1',
@@ -53,6 +55,7 @@ interface ProfileGalleryClientProps {
   initialHasMore: boolean;
   platform: ProfilePlatformFilter;
   sort: ProfileSort;
+  view: ProfileView;
   pace: 'active' | 'all';
 }
 
@@ -66,6 +69,18 @@ function GhostCard() {
   );
 }
 
+function ListGhostCard() {
+  return (
+    <div className="panel-solid flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-center">
+      <Skeleton className="aspect-video w-full rounded-xl sm:w-64" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-3 w-3/4" />
+      </div>
+    </div>
+  );
+}
+
 export function ProfileGalleryClient({
   username,
   user,
@@ -75,6 +90,7 @@ export function ProfileGalleryClient({
   initialHasMore,
   platform,
   sort,
+  view,
   pace,
 }: ProfileGalleryClientProps) {
   const router = useRouter();
@@ -99,9 +115,10 @@ export function ProfileGalleryClient({
   }
 
   const updateUrl = useCallback(
-    (next: { platform?: string; sort?: string }) => {
+    (next: { platform?: string; sort?: string; view?: string }) => {
       const nextPlatform = next.platform ?? platformFilter;
       const nextSort = next.sort ?? sortOrder;
+      const nextView = next.view ?? view;
       const params = new URLSearchParams();
 
       if (pace === 'all') params.set('pace', 'all');
@@ -109,6 +126,7 @@ export function ProfileGalleryClient({
         params.set('platform', nextPlatform);
       }
       if (nextSort !== DEFAULT_PROFILE_SORT) params.set('sort', nextSort);
+      if (nextView !== DEFAULT_PROFILE_VIEW) params.set('view', nextView);
 
       const query = params.toString();
       startTransition(() => {
@@ -117,7 +135,7 @@ export function ProfileGalleryClient({
         });
       });
     },
-    [pace, pathname, platformFilter, router, sortOrder],
+    [pace, pathname, platformFilter, router, sortOrder, view],
   );
 
   const handlePlatformChange = (value: string) => {
@@ -128,6 +146,10 @@ export function ProfileGalleryClient({
   const handleSortChange = (value: string) => {
     setSortOrder(value as ProfileSort);
     updateUrl({ sort: value });
+  };
+
+  const handleViewChange = (next: ProfileView) => {
+    if (next !== view) updateUrl({ view: next });
   };
 
   const handleClearFilters = () => {
@@ -228,6 +250,37 @@ export function ProfileGalleryClient({
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-2 sm:shrink-0">
+            <span className="text-sm font-medium">View:</span>
+            <div
+              className="inline-flex rounded-full border border-border/70 bg-background/40 p-0.5"
+              role="group"
+              aria-label="Gallery view"
+            >
+              <Button
+                type="button"
+                size="sm"
+                variant={view === 'grid' ? 'secondary' : 'ghost'}
+                className="h-8 rounded-full px-3"
+                onClick={() => handleViewChange('grid')}
+                aria-pressed={view === 'grid'}
+              >
+                <LayoutGrid className="mr-1.5 h-4 w-4" aria-hidden />
+                Grid
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                className="h-8 rounded-full px-3"
+                onClick={() => handleViewChange('list')}
+                aria-pressed={view === 'list'}
+              >
+                <List className="mr-1.5 h-4 w-4" aria-hidden />
+                List
+              </Button>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -249,34 +302,62 @@ export function ProfileGalleryClient({
               </>
             )}
           </p>
-          <div
-            className={cn(
-              'gap-6',
-              galleryColumnsClass(total),
-              `transition-opacity ${isPending ? 'opacity-60' : ''}`,
-            )}
-          >
-            {items.map((platinum, index) => (
-              <div key={platinum.id} className="mb-6 break-inside-avoid">
+          {view === 'grid' ? (
+            <div
+              data-gallery-view="grid"
+              className={cn(
+                'gap-6',
+                galleryColumnsClass(total),
+                `transition-opacity ${isPending ? 'opacity-60' : ''}`,
+              )}
+            >
+              {items.map((platinum, index) => (
+                <div key={platinum.id} className="mb-6 break-inside-avoid">
+                  <PlatinumCard
+                    platinum={platinum}
+                    user={user}
+                    showComment={isOwner}
+                    canDelete={isOwner}
+                    canEdit={isOwner}
+                    layout="grid"
+                    priority={index < 4}
+                  />
+                </div>
+              ))}
+              {isLoadingMore && (
+                <>
+                  <GhostCard />
+                  <GhostCard />
+                  <GhostCard />
+                  <GhostCard />
+                </>
+              )}
+            </div>
+          ) : (
+            <div
+              data-gallery-view="list"
+              className={cn('space-y-4', isPending && 'opacity-60')}
+            >
+              {items.map((platinum, index) => (
                 <PlatinumCard
+                  key={platinum.id}
                   platinum={platinum}
                   user={user}
                   showComment={isOwner}
                   canDelete={isOwner}
                   canEdit={isOwner}
+                  layout="list"
                   priority={index < 4}
                 />
-              </div>
-            ))}
-            {isLoadingMore && (
-              <>
-                <GhostCard />
-                <GhostCard />
-                <GhostCard />
-                <GhostCard />
-              </>
-            )}
-          </div>
+              ))}
+              {isLoadingMore && (
+                <>
+                  <ListGhostCard />
+                  <ListGhostCard />
+                </>
+              )}
+            </div>
+          )}
 
           {hasMore && (
             <>

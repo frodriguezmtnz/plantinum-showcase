@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ProfileSummary } from '@/lib/data';
 import { formatPeriodShortLabel } from '@/lib/period';
+import type { ProfileView } from '@/lib/profile-gallery';
 import { cn } from '@/lib/utils';
 
 export type ProfilePaceFilter = 'active' | 'all';
@@ -13,6 +14,7 @@ interface ProfileStatsProps {
   username: string;
   platform?: ProfilePlatformFilter;
   sort?: ProfileSort;
+  view?: ProfileView;
 }
 
 /** Activity summary for a profile: monthly pace, top voted plates, platforms. */
@@ -22,6 +24,7 @@ export function ProfileStats({
   username,
   platform = 'all',
   sort = 'newest',
+  view = 'grid',
 }: ProfileStatsProps) {
   if (summary.totalPlatinums === 0) return null;
 
@@ -39,6 +42,7 @@ export function ProfileStats({
     params.set('pace', next);
     if (platform !== 'all') params.set('platform', platform);
     if (sort !== 'newest') params.set('sort', sort);
+    if (view !== 'grid') params.set('view', view);
     return `/u/${username}?${params}`;
   };
 

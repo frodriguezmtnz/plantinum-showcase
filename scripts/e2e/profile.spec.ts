@@ -70,6 +70,27 @@ test.describe('profile', () => {
     await expect(firstCard.getByRole('heading', { name: 'E2E Plate 01' })).toBeVisible();
   });
 
+  test('switches between grid and list views', async ({ page }) => {
+    await page.goto(PROFILE);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('[data-gallery-view="grid"]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Grid' })).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('button', { name: 'List' }).click();
+    await page.waitForURL(/view=list/);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('[data-gallery-view="list"]')).toBeVisible();
+    await expect(page.locator('[data-layout="list"]')).toHaveCount(8);
+
+    await page.getByRole('button', { name: 'Grid' }).click();
+    await page.waitForURL(/\/u\/e2e-runner$/);
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('[data-gallery-view="grid"]')).toBeVisible();
+  });
+
   test('filters by platform via URL and shows correct cards', async ({ page }) => {
     await page.goto(`${PROFILE}?platform=PS4`);
     await page.waitForLoadState('networkidle');

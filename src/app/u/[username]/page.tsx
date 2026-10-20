@@ -12,7 +12,7 @@ import {
 } from '@/components/profile/profile-stats';
 import { ProfileGalleryClient } from '@/components/profile/profile-gallery-client';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
-import { parseProfilePlatform, parseProfileSort } from '@/lib/profile-gallery';
+import { parseProfilePlatform, parseProfileSort, parseProfileView } from '@/lib/profile-gallery';
 import type { Metadata } from 'next';
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
     pace?: string;
     platform?: string;
     sort?: string;
+    view?: string;
   }>;
 };
 
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UserProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
-  const { pace: rawPace, platform: rawPlatform, sort: rawSort } =
+  const { pace: rawPace, platform: rawPlatform, sort: rawSort, view: rawView } =
     await searchParams;
   const user = await getUserByUsername(username);
   if (!user) {
@@ -56,6 +57,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
   const pace: ProfilePaceFilter = rawPace === 'all' ? 'all' : 'active';
   const platform = parseProfilePlatform(rawPlatform);
   const sort = parseProfileSort(rawSort);
+  const view = parseProfileView(rawView);
 
   const [summary, gallery] = await Promise.all([
     getProfileSummary(user.id, currentUserId),
@@ -108,6 +110,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         username={user.username}
         platform={platform}
         sort={sort}
+        view={view}
       />
 
       <section>
@@ -124,6 +127,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           initialHasMore={gallery.hasMore}
           platform={platform}
           sort={sort}
+          view={view}
           pace={pace}
         />
       </section>

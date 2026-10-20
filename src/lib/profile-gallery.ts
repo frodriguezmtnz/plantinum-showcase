@@ -1,5 +1,20 @@
 export const PROFILE_PAGE_SIZE = 8;
 
+export const PROFILE_VIEWS = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'list', label: 'List' },
+] as const;
+
+export type ProfileView = (typeof PROFILE_VIEWS)[number]['value'];
+
+export const DEFAULT_PROFILE_VIEW: ProfileView = 'grid';
+
+export function parseProfileView(value?: string): ProfileView {
+  return PROFILE_VIEWS.some((option) => option.value === value)
+    ? (value as ProfileView)
+    : DEFAULT_PROFILE_VIEW;
+}
+
 export const PROFILE_SORTS = [
   { value: 'newest', label: 'Newest first' },
   { value: 'oldest', label: 'Oldest first' },
