@@ -230,38 +230,78 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(visitor.topVoted.map((x) => x.id)).toEqual([p.a]);
   });
 
-  it('paginates a profile gallery with a stable newest-first order', async () => {
-    const ownerPage1 = await data.getProfileGalleryPage(u.alice, u.alice, {
-      page: 1,
-      pageSize: 2,
+  it('returns an offset window with a stable newest-first order', async () => {
+    const ownerPage1 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      limit: 2,
     });
     expect(ownerPage1.total).toBe(4);
-    expect(ownerPage1.totalPages).toBe(2);
+    expect(ownerPage1.hasMore).toBe(true);
     expect(ownerPage1.items.map((x) => x.id)).toEqual([p.f, p.d]);
 
-    const ownerPage2 = await data.getProfileGalleryPage(u.alice, u.alice, {
-      page: 2,
-      pageSize: 2,
+    const ownerPage2 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      limit: 2,
+      offset: 2,
     });
-    expect(ownerPage2.currentPage).toBe(2);
+    expect(ownerPage2.hasMore).toBe(false);
     expect(ownerPage2.items.map((x) => x.id)).toEqual([p.a, p.e]);
 
-    const visitorPage1 = await data.getProfileGalleryPage(u.alice, u.bob, {
-      page: 1,
-      pageSize: 2,
+    const visitorPage1 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.bob,
+      limit: 2,
     });
     expect(visitorPage1.total).toBe(3);
-    expect(visitorPage1.totalPages).toBe(2);
+    expect(visitorPage1.hasMore).toBe(true);
     expect(visitorPage1.items.map((x) => x.id)).toEqual([p.d, p.a]);
   });
 
-  it('clamps an out-of-range profile page', async () => {
-    const page = await data.getProfileGalleryPage(u.alice, u.bob, {
-      page: 99,
-      pageSize: 2,
+  it('supports platform filtering in a profile gallery', async () => {
+    const ps5 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      platform: 'PS5',
     });
-    expect(page.currentPage).toBe(2);
-    expect(page.items.map((x) => x.id)).toEqual([p.e]);
+    expect(ps5.total).toBe(2);
+    expect(ps5.items.map((x) => x.id)).toEqual([p.f, p.d]);
+
+    const visitorPs5 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.bob,
+      platform: 'PS5',
+    });
+    expect(visitorPs5.total).toBe(1);
+    expect(visitorPs5.items.map((x) => x.id)).toEqual([p.d]);
+  });
+
+  it('sorts by votes and name in a profile gallery', async () => {
+    const byVotesDesc = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      sort: 'most-voted',
+    });
+    expect(byVotesDesc.items.map((x) => x.id)).toEqual([p.f, p.a, p.d, p.e]);
+
+    const byNameAsc = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      sort: 'name-asc',
+    });
+    expect(byNameAsc.items.map((x) => x.id)).toEqual([p.d, p.a, p.f, p.e]);
+  });
+
+  it('returns an empty window when offset is beyond total', async () => {
+    const page = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.bob,
+      offset: 100,
+      limit: 5,
+    });
+    expect(page.items).toHaveLength(0);
+    expect(page.hasMore).toBe(false);
   });
 
   it('counts uploads only inside the current period', async () => {

@@ -1,6 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentPeriod, shiftPeriod } from "@/lib/period";
+import {
+  PROFILE_PAGE_SIZE,
+  type ProfilePlatformFilter,
+  type ProfileSort,
+} from "@/lib/profile-gallery";
 import type { ReportReason } from "@/generated/prisma/enums";
+import type { Prisma } from "@/generated/prisma/client";
 
 export type ModerationStatus = 'PUBLISHED' | 'UNDER_REVIEW' | 'HIDDEN';
 
@@ -234,8 +240,6 @@ export async function getPlatinumsByUserId(
   return attachVoteStatus(platinums, currentUserId);
 }
 
-export const PROFILE_PAGE_SIZE = 12;
-
 export interface ProfileSummary {
   totalPlatinums: number;
   totalVotes: number;
@@ -245,11 +249,10 @@ export interface ProfileSummary {
   topVoted: { id: string; gameName: string; votes: number }[];
 }
 
-export interface ProfileGalleryPage {
+export interface ProfileGalleryResult {
   items: Platinum[];
   total: number;
-  totalPages: number;
-  currentPage: number;
+  hasMore: boolean;
 }
 
 const PROFILE_PLATFORM_ORDER = ['PS5', 'PS4', 'PS3'];
@@ -333,34 +336,69 @@ export async function getProfileSummary(
   };
 }
 
-/** One page of a profile gallery, ordered newest first with a stable tie-break. */
-export async function getProfileGalleryPage(
-  userId: string,
-  currentUserId?: string,
-  options: { page?: number; pageSize?: number } = {},
-): Promise<ProfileGalleryPage> {
-  const { page = 1, pageSize = PROFILE_PAGE_SIZE } = options;
-  const where =
-    userId === currentUserId ? { userId } : { userId, ...PUBLISHED_ONLY };
+const PROFILE_ORDER_BY: Record<
+  ProfileSort,
+  Prisma.PlatinumOrderByWithRelationInput[]
+> = {
+  newest: [{ platinumDate: 'desc' }, { id: 'desc' }],
+  oldest: [{ platinumDate: 'asc' }, { id: 'asc' }],
+  'most-voted': [{ votes: 'desc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+  'least-voted': [{ votes: 'asc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+  'name-asc': [{ gameName: 'asc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+  'name-desc': [{ gameName: 'desc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+  'platform-asc': [
+    { platform: 'asc' },
+    { platinumDate: 'desc' },
+    { id: 'desc' },
+  ],
+  'platform-desc': [
+    { platform: 'desc' },
+    { platinumDate: 'desc' },
+    { id: 'desc' },
+  ],
+};
 
-  const total = await prisma.platinum.count({ where });
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const currentPage = Number.isFinite(page)
-    ? Math.min(Math.max(1, Math.floor(page)), totalPages)
-    : 1;
+/** Offset window for a profile gallery, with filters and a stable sort. */
+export async function getProfileGalleryItems(options: {
+  userId: string;
+  currentUserId?: string;
+  platform?: ProfilePlatformFilter;
+  sort?: ProfileSort;
+  offset?: number;
+  limit?: number;
+}): Promise<ProfileGalleryResult> {
+  const {
+    userId,
+    currentUserId,
+    platform = 'all',
+    sort = 'newest',
+    offset = 0,
+    limit = PROFILE_PAGE_SIZE,
+  } = options;
 
-  const platinums = await prisma.platinum.findMany({
-    where,
-    orderBy: [{ platinumDate: 'desc' }, { id: 'desc' }],
-    skip: (currentPage - 1) * pageSize,
-    take: pageSize,
-  });
+  const where = {
+    userId,
+    ...(userId === currentUserId ? {} : PUBLISHED_ONLY),
+    ...(platform !== 'all' ? { platform } : {}),
+  };
+
+  const [total, platinums] = await Promise.all([
+    prisma.platinum.count({ where }),
+    prisma.platinum.findMany({
+      where,
+      orderBy: PROFILE_ORDER_BY[sort],
+      skip: offset,
+      take: limit + 1,
+    }),
+  ]);
+
+  const hasMore = platinums.length > limit;
+  const visible = platinums.slice(0, limit);
 
   return {
-    items: await attachVoteStatus(platinums, currentUserId),
+    items: await attachVoteStatus(visible, currentUserId),
     total,
-    totalPages,
-    currentPage,
+    hasMore,
   };
 }
 

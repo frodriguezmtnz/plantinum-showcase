@@ -1,0 +1,297 @@
+'use client';
+
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { EmptyState } from '@/components/shared/empty-state';
+import { PlatinumCard } from '@/components/shared/platinum-card';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import type { Platinum, User } from '@/lib/data';
+import {
+  DEFAULT_PROFILE_PLATFORM,
+  DEFAULT_PROFILE_SORT,
+  PROFILE_PLATFORM_FILTERS,
+  PROFILE_SORTS,
+  type ProfilePlatformFilter,
+  type ProfileSort,
+} from '@/lib/profile-gallery';
+import { getMoreProfilePlatinums } from '@/app/actions';
+import { Loader2, SearchX, Trophy } from 'lucide-react';
+
+interface ProfileGalleryClientProps {
+  username: string;
+  user: User;
+  isOwner: boolean;
+  initialItems: Platinum[];
+  initialTotal: number;
+  initialHasMore: boolean;
+  platform: ProfilePlatformFilter;
+  sort: ProfileSort;
+  pace: 'active' | 'all';
+}
+
+function GhostCard() {
+  return (
+    <div className="panel-solid mb-6 break-inside-avoid rounded-2xl p-4">
+      <Skeleton className="aspect-video w-full rounded-xl" />
+      <Skeleton className="mt-4 h-4 w-3/4" />
+      <Skeleton className="mt-2 h-3 w-1/2" />
+    </div>
+  );
+}
+
+export function ProfileGalleryClient({
+  username,
+  user,
+  isOwner,
+  initialItems,
+  initialTotal,
+  initialHasMore,
+  platform,
+  sort,
+  pace,
+}: ProfileGalleryClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+
+  const [items, setItems] = useState(initialItems);
+  const [total, setTotal] = useState(initialTotal);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState(platform);
+  const [sortOrder, setSortOrder] = useState(sort);
+
+  const serverKey = `${platform}|${sort}`;
+  const [syncedKey, setSyncedKey] = useState(serverKey);
+  if (syncedKey !== serverKey) {
+    setSyncedKey(serverKey);
+    setItems(initialItems);
+    setTotal(initialTotal);
+    setHasMore(initialHasMore);
+  }
+
+  const updateUrl = useCallback(
+    (next: { platform?: string; sort?: string }) => {
+      const nextPlatform = next.platform ?? platformFilter;
+      const nextSort = next.sort ?? sortOrder;
+      const params = new URLSearchParams();
+
+      if (pace === 'all') params.set('pace', 'all');
+      if (nextPlatform !== DEFAULT_PROFILE_PLATFORM) {
+        params.set('platform', nextPlatform);
+      }
+      if (nextSort !== DEFAULT_PROFILE_SORT) params.set('sort', nextSort);
+
+      const query = params.toString();
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
+      });
+    },
+    [pace, pathname, platformFilter, router, sortOrder],
+  );
+
+  const handlePlatformChange = (value: string) => {
+    setPlatformFilter(value as ProfilePlatformFilter);
+    updateUrl({ platform: value });
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortOrder(value as ProfileSort);
+    updateUrl({ sort: value });
+  };
+
+  const handleClearFilters = () => {
+    setPlatformFilter(DEFAULT_PROFILE_PLATFORM);
+    setSortOrder(DEFAULT_PROFILE_SORT);
+    updateUrl({
+      platform: DEFAULT_PROFILE_PLATFORM,
+      sort: DEFAULT_PROFILE_SORT,
+    });
+  };
+
+  async function handleLoadMore() {
+    setIsLoadingMore(true);
+    try {
+      const result = await getMoreProfilePlatinums({
+        username,
+        platform: platformFilter,
+        sort: sortOrder,
+        offset: items.length,
+      });
+      setItems((prev) => [...prev, ...result.items]);
+      setTotal(result.total);
+      setHasMore(result.hasMore);
+    } catch {
+      toast({
+        title: 'Could not load more',
+        description: 'The next page failed to arrive. Check your connection and try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    loadMoreRef.current = () => {
+      if (hasMore && !isLoadingMore && !isPending) void handleLoadMore();
+    };
+  });
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMoreRef.current();
+      },
+      { rootMargin: '600px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const hasFilters =
+    platformFilter !== DEFAULT_PROFILE_PLATFORM ||
+    sortOrder !== DEFAULT_PROFILE_SORT;
+
+  return (
+    <div>
+      <Card className="panel mb-6 rounded-2xl p-4">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="flex flex-1 items-center gap-2">
+            <label
+              htmlFor="profile-platform"
+              className="shrink-0 text-sm font-medium"
+            >
+              Platform:
+            </label>
+            <Select value={platformFilter} onValueChange={handlePlatformChange}>
+              <SelectTrigger id="profile-platform" className="w-full">
+                <SelectValue placeholder="Filter by platform" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROFILE_PLATFORM_FILTERS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-1 items-center gap-2">
+            <label htmlFor="profile-sort" className="shrink-0 text-sm font-medium">
+              Sort by:
+            </label>
+            <Select value={sortOrder} onValueChange={handleSortChange}>
+              <SelectTrigger id="profile-sort" className="w-full">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROFILE_SORTS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
+      {items.length > 0 ? (
+        <>
+          <p className="mb-6 text-sm text-muted-foreground" aria-live="polite">
+            {isPending ? (
+              'Updating plates…'
+            ) : isLoadingMore ? (
+              'Loading more plates…'
+            ) : (
+              <>
+                Showing{' '}
+                <span className="tabular font-semibold text-foreground">
+                  {items.length}
+                </span>{' '}
+                of <span className="tabular">{total}</span> plate
+                {total === 1 ? '' : 's'}
+              </>
+            )}
+          </p>
+          <div
+            className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 transition-opacity ${
+              isPending ? 'opacity-60' : ''
+            }`}
+          >
+            {items.map((platinum, index) => (
+              <div key={platinum.id} className="mb-6 break-inside-avoid">
+                <PlatinumCard
+                  platinum={platinum}
+                  user={user}
+                  showComment={isOwner}
+                  canDelete={isOwner}
+                  canEdit={isOwner}
+                  priority={index < 4}
+                />
+              </div>
+            ))}
+            {isLoadingMore && (
+              <>
+                <GhostCard />
+                <GhostCard />
+                <GhostCard />
+                <GhostCard />
+              </>
+            )}
+          </div>
+
+          {hasMore && (
+            <>
+              <div ref={sentinelRef} aria-hidden className="h-px" />
+              <div className="mt-12 flex justify-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore || isPending}
+                >
+                  {isLoadingMore && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {isLoadingMore ? 'Loading...' : 'Load more'}
+                </Button>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <EmptyState
+          icon={hasFilters ? SearchX : Trophy}
+          title={hasFilters ? 'No platinums found' : 'No platinums yet'}
+          description={
+            hasFilters
+              ? 'No plates match these filters. Try another platform or sort order.'
+              : "This hunter hasn't shared any platinum screenshots yet."
+          }
+          {...(hasFilters
+            ? { actionLabel: 'Clear filters', onAction: handleClearFilters }
+            : { actionLabel: 'Upload a platinum', actionHref: '/upload' })}
+        />
+      )}
+    </div>
+  );
+}
