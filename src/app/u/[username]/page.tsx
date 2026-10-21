@@ -12,7 +12,12 @@ import {
 } from '@/components/profile/profile-stats';
 import { ProfileGalleryClient } from '@/components/profile/profile-gallery-client';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
-import { parseProfilePlatform, parseProfileSort, parseProfileView } from '@/lib/profile-gallery';
+import {
+  parseProfileInfinite,
+  parseProfilePlatform,
+  parseProfileSort,
+  parseProfileView,
+} from '@/lib/profile-gallery';
 import type { Metadata } from 'next';
 
 type Props = {
@@ -22,6 +27,7 @@ type Props = {
     platform?: string;
     sort?: string;
     view?: string;
+    infinite?: string;
   }>;
 };
 
@@ -44,8 +50,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UserProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
-  const { pace: rawPace, platform: rawPlatform, sort: rawSort, view: rawView } =
-    await searchParams;
+  const {
+    pace: rawPace,
+    platform: rawPlatform,
+    sort: rawSort,
+    view: rawView,
+    infinite: rawInfinite,
+  } = await searchParams;
   const user = await getUserByUsername(username);
   if (!user) {
     notFound();
@@ -58,6 +69,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
   const platform = parseProfilePlatform(rawPlatform);
   const sort = parseProfileSort(rawSort);
   const view = parseProfileView(rawView);
+  const infinite = parseProfileInfinite(rawInfinite);
 
   const [summary, gallery] = await Promise.all([
     getProfileSummary(user.id, currentUserId),
@@ -111,6 +123,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         platform={platform}
         sort={sort}
         view={view}
+        infinite={infinite}
       />
 
       <section>
@@ -128,6 +141,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           platform={platform}
           sort={sort}
           view={view}
+          infinite={infinite}
           pace={pace}
         />
       </section>

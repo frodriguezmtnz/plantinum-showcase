@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import type { Platinum, User } from '@/lib/data';
 import {
@@ -56,6 +57,7 @@ interface ProfileGalleryClientProps {
   platform: ProfilePlatformFilter;
   sort: ProfileSort;
   view: ProfileView;
+  infinite: boolean;
   pace: 'active' | 'all';
 }
 
@@ -91,6 +93,7 @@ export function ProfileGalleryClient({
   platform,
   sort,
   view,
+  infinite,
   pace,
 }: ProfileGalleryClientProps) {
   const router = useRouter();
@@ -115,10 +118,16 @@ export function ProfileGalleryClient({
   }
 
   const updateUrl = useCallback(
-    (next: { platform?: string; sort?: string; view?: string }) => {
+    (next: {
+      platform?: string;
+      sort?: string;
+      view?: string;
+      infinite?: boolean;
+    }) => {
       const nextPlatform = next.platform ?? platformFilter;
       const nextSort = next.sort ?? sortOrder;
       const nextView = next.view ?? view;
+      const nextInfinite = next.infinite ?? infinite;
       const params = new URLSearchParams();
 
       if (pace === 'all') params.set('pace', 'all');
@@ -127,6 +136,7 @@ export function ProfileGalleryClient({
       }
       if (nextSort !== DEFAULT_PROFILE_SORT) params.set('sort', nextSort);
       if (nextView !== DEFAULT_PROFILE_VIEW) params.set('view', nextView);
+      if (nextInfinite) params.set('infinite', 'on');
 
       const query = params.toString();
       startTransition(() => {
@@ -135,7 +145,7 @@ export function ProfileGalleryClient({
         });
       });
     },
-    [pace, pathname, platformFilter, router, sortOrder, view],
+    [infinite, pace, pathname, platformFilter, router, sortOrder, view],
   );
 
   const handlePlatformChange = (value: string) => {
@@ -150,6 +160,10 @@ export function ProfileGalleryClient({
 
   const handleViewChange = (next: ProfileView) => {
     if (next !== view) updateUrl({ view: next });
+  };
+
+  const handleInfiniteChange = (checked: boolean) => {
+    updateUrl({ infinite: checked });
   };
 
   const handleClearFilters = () => {
@@ -193,6 +207,7 @@ export function ProfileGalleryClient({
   });
 
   useEffect(() => {
+    if (!infinite) return;
     const el = sentinelRef.current;
     if (!el) return;
     const io = new IntersectionObserver(
@@ -203,7 +218,7 @@ export function ProfileGalleryClient({
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [infinite]);
 
   const hasFilters =
     platformFilter !== DEFAULT_PROFILE_PLATFORM ||
@@ -280,6 +295,16 @@ export function ProfileGalleryClient({
                 List
               </Button>
             </div>
+          </div>
+          <div className="flex items-center gap-2 sm:shrink-0">
+            <Switch
+              id="profile-infinite"
+              checked={infinite}
+              onCheckedChange={handleInfiniteChange}
+            />
+            <label htmlFor="profile-infinite" className="text-sm font-medium">
+              Infinite scroll
+            </label>
           </div>
         </div>
       </Card>

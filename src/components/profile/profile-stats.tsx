@@ -15,6 +15,7 @@ interface ProfileStatsProps {
   platform?: ProfilePlatformFilter;
   sort?: ProfileSort;
   view?: ProfileView;
+  infinite?: boolean;
 }
 
 /** Activity summary for a profile: monthly pace, top voted plates, platforms. */
@@ -25,6 +26,7 @@ export function ProfileStats({
   platform = 'all',
   sort = 'newest',
   view = 'grid',
+  infinite = false,
 }: ProfileStatsProps) {
   if (summary.totalPlatinums === 0) return null;
 
@@ -43,6 +45,7 @@ export function ProfileStats({
     if (platform !== 'all') params.set('platform', platform);
     if (sort !== 'newest') params.set('sort', sort);
     if (view !== 'grid') params.set('view', view);
+    if (infinite) params.set('infinite', 'on');
     return `/u/${username}?${params}`;
   };
 

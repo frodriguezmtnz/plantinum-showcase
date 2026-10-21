@@ -50,8 +50,15 @@ test.describe('profile', () => {
     await page.waitForLoadState('networkidle');
 
     const cards = page.locator('.break-inside-avoid');
+    const infiniteSwitch = page.getByRole('switch', { name: 'Infinite scroll' });
     await expect(cards).toHaveCount(8);
     await expect(page.getByText(/Showing 8 of 14/)).toBeVisible();
+    await expect(infiniteSwitch).not.toBeChecked();
+
+    // Infinite scroll is off by default: reaching the bottom must not fetch.
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(300);
+    await expect(cards).toHaveCount(8);
 
     await page.getByRole('button', { name: 'Load more platinums' }).click();
     await page.waitForLoadState('networkidle');
@@ -60,6 +67,22 @@ test.describe('profile', () => {
 
     // Button should disappear when hasMore is false.
     await expect(page.getByRole('button', { name: 'Load more platinums' })).not.toBeVisible();
+  });
+
+  test('enables infinite scroll from the switch', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 400 });
+    await page.goto(PROFILE);
+    await page.waitForLoadState('networkidle');
+
+    const cards = page.locator('.break-inside-avoid');
+    const infiniteSwitch = page.getByRole('switch', { name: 'Infinite scroll' });
+    await infiniteSwitch.click();
+    await page.waitForURL(/infinite=on/);
+    await page.waitForLoadState('networkidle');
+    await expect(infiniteSwitch).toBeChecked();
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(cards).toHaveCount(14, { timeout: 10_000 });
   });
 
   test('sorts the gallery by name', async ({ page }) => {
