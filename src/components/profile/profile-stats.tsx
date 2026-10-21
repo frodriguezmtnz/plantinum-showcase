@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import type { ProfileSummary } from '@/lib/data';
 import { formatPeriodShortLabel } from '@/lib/period';
-import type { ProfileView } from '@/lib/profile-gallery';
+import type {
+  ProfilePlatformFilter,
+  ProfileSort,
+  ProfileView,
+} from '@/lib/profile-gallery';
 import { cn } from '@/lib/utils';
 
 export type ProfilePaceFilter = 'active' | 'all';
-export type ProfileSort = 'newest' | 'oldest' | 'most-voted' | 'least-voted' | 'name-asc' | 'name-desc' | 'platform-asc' | 'platform-desc';
-export type ProfilePlatformFilter = 'all' | 'PS5' | 'PS4' | 'PS3';
 
 interface ProfileStatsProps {
   summary: ProfileSummary;

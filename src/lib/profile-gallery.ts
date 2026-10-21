@@ -15,8 +15,6 @@ export function parseProfileView(value?: string): ProfileView {
     : DEFAULT_PROFILE_VIEW;
 }
 
-export const DEFAULT_PROFILE_INFINITE = false;
-
 export function parseProfileInfinite(value?: string): boolean {
   return value === 'on';
 }
