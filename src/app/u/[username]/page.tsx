@@ -1,18 +1,34 @@
 
-import { getUserByUsername, getPlatinumsByUserId, getPlatinumById } from '@/lib/data';
+import { getProfileGalleryItems, getProfileSummary, getUserByUsername } from '@/lib/data';
 import { auth } from '@/auth';
-import { PlatinumCard } from '@/components/shared/platinum-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
-import { ThumbsUp, Trophy } from 'lucide-react';
+import { ThumbsUp } from 'lucide-react';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
-import { EmptyState } from '@/components/shared/empty-state';
 import { JsonLd } from '@/components/shared/json-ld';
+import {
+  ProfileStats,
+  type ProfilePaceFilter,
+} from '@/components/profile/profile-stats';
+import { ProfileGalleryClient } from '@/components/profile/profile-gallery-client';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
+import {
+  parseProfileInfinite,
+  parseProfilePlatform,
+  parseProfileSort,
+  parseProfileView,
+} from '@/lib/profile-gallery';
 import type { Metadata } from 'next';
 
 type Props = {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{
+    pace?: string;
+    platform?: string;
+    sort?: string;
+    view?: string;
+    infinite?: string;
+  }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -32,8 +48,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
+export default async function UserProfilePage({ params, searchParams }: Props) {
   const { username } = await params;
+  const {
+    pace: rawPace,
+    platform: rawPlatform,
+    sort: rawSort,
+    view: rawView,
+    infinite: rawInfinite,
+  } = await searchParams;
   const user = await getUserByUsername(username);
   if (!user) {
     notFound();
@@ -42,16 +65,21 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
   const session = await auth();
   const currentUserId = session?.user?.id;
   const isOwner = currentUserId === user.id;
+  const pace: ProfilePaceFilter = rawPace === 'all' ? 'all' : 'active';
+  const platform = parseProfilePlatform(rawPlatform);
+  const sort = parseProfileSort(rawSort);
+  const view = parseProfileView(rawView);
+  const infinite = parseProfileInfinite(rawInfinite);
 
-  const platinums = await getPlatinumsByUserId(user.id, currentUserId);
-  const pridePlatinum = user.pridePlatinumId
-    ? await getPlatinumById(user.pridePlatinumId, currentUserId)
-    : null;
-  
-  // Exclude pride platinum from the main gallery if it exists
-  const otherPlatinums = pridePlatinum 
-    ? platinums.filter(p => p.id !== user.pridePlatinumId)
-    : platinums;
+  const [summary, gallery] = await Promise.all([
+    getProfileSummary(user.id, currentUserId),
+    getProfileGalleryItems({
+      userId: user.id,
+      currentUserId,
+      platform,
+      sort,
+    }),
+  ]);
 
   const profileUrl = canonicalUrl(`/u/${user.username}`);
   const profileJsonLd = {
@@ -79,53 +107,43 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
         <div className="flex items-center gap-4 mt-2 text-muted-foreground">
           <div className="flex items-center gap-2">
             <PlatinumTrophyIcon className="w-5 h-5"/>
-            <span>{platinums.length} Platinums</span>
+            <span>{summary.totalPlatinums} Platinums</span>
           </div>
           <div className="flex items-center gap-2">
             <ThumbsUp className="w-5 h-5 text-primary"/>
-            <span>{platinums.reduce((acc, p) => acc + p.votes, 0)} Total Votes</span>
+            <span>{summary.totalVotes} Total Votes</span>
           </div>
         </div>
       </div>
 
-      {pridePlatinum && (
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">
-            Pride of the Collection
-          </h2>
-          <div className="max-w-2xl mx-auto">
-            <PlatinumCard platinum={pridePlatinum} user={user} isPride showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
-          </div>
-        </section>
-      )}
-      
+      <ProfileStats
+        summary={summary}
+        pace={pace}
+        username={user.username}
+        platform={platform}
+        sort={sort}
+        view={view}
+        infinite={infinite}
+      />
+
       <section>
-        <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">Trophy Gallery</h2>
-        {otherPlatinums.length > 0 ? (
-          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6">
-            {otherPlatinums.map(platinum => (
-              <div key={platinum.id} className="mb-6 break-inside-avoid">
-                <PlatinumCard platinum={platinum} user={user} showComment={isOwner} canDelete={isOwner} canEdit={isOwner} />
-              </div>
-            ))}
-          </div>
-        ) : (
-           pridePlatinum ? (
-            <EmptyState
-              icon={Trophy}
-              title="Just one platinum for now"
-              description="This hunter hasn't shown off any other platinums yet."
-            />
-           ) : (
-            <EmptyState
-              icon={Trophy}
-              title="No platinums yet"
-              description="This hunter hasn't shared any platinum screenshots yet."
-              actionLabel="Upload a platinum"
-              actionHref="/upload"
-            />
-           )
-        )}
+        <h2 className="text-3xl font-bold tracking-tight mb-6 text-center font-headline">
+          Your Platinum Trophy Gallery
+        </h2>
+        <ProfileGalleryClient
+          key={`${platform}|${sort}`}
+          username={user.username}
+          user={user}
+          isOwner={isOwner}
+          initialItems={gallery.items}
+          initialTotal={gallery.total}
+          initialHasMore={gallery.hasMore}
+          platform={platform}
+          sort={sort}
+          view={view}
+          infinite={infinite}
+          pace={pace}
+        />
       </section>
     </div>
   );

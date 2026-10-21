@@ -5,8 +5,8 @@ import { prisma } from "../../src/lib/prisma";
 /**
  * Idempotent fixture for the E2E suite.
  *
- * Creates (or refreshes) the test account and two published plates: one plain
- * and one spoiler. Uses a local asset so CI needs no external image host.
+ * Creates (or refreshes) the test account and 14 published plates: 13 gallery
+ * plates plus one spoiler. Uses a local asset so CI needs no external image host.
  *
  *   E2E_EMAIL=... E2E_PASSWORD=... pnpm tsx scripts/e2e/seed.ts
  */
@@ -42,12 +42,19 @@ async function main() {
 
   await prisma.platinum.createMany({
     data: [
-      { ...base, hash: "e2e-gallery-plate", gameName: "E2E Gallery Plate", isSpoiler: false },
-      { ...base, hash: "e2e-spoiler-plate", gameName: "E2E Spoiler Plate", isSpoiler: true },
+      // Enough platinums to exercise the profile infinite gallery (8 per page).
+      ...Array.from({ length: 13 }, (_, index) => ({
+        ...base,
+        hash: `e2e-gallery-${index + 1}`,
+        gameName: `E2E Plate ${String(index + 1).padStart(2, "0")}`,
+        isSpoiler: false,
+        votes: 13 - index,
+      })),
+      { ...base, hash: "e2e-spoiler-plate", gameName: "E2E Spoiler Plate", platform: "PS4", isSpoiler: true },
     ],
   });
 
-  console.log(`Seeded ${email} with 2 published platinums.`);
+  console.log(`Seeded ${email} with 14 published platinums.`);
 }
 
 main().finally(() => prisma.$disconnect());

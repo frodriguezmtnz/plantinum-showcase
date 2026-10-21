@@ -200,10 +200,108 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     expect(await data.getUsersByIds([])).toEqual([]);
   });
 
-  it('resolves a user by username with their pride platinum', async () => {
+  it('resolves a user by username', async () => {
     const alice = await data.getUserByUsername(`it_alice_${stamp}`);
     expect(alice?.id).toBe(u.alice);
-    expect(alice?.pridePlatinumId).toBe(p.a);
+    expect(alice?.username).toBe(`it_alice_${stamp}`);
+  });
+
+  it('builds a profile summary from aggregates', async () => {
+    const owner = await data.getProfileSummary(u.alice, u.alice);
+    expect(owner.totalPlatinums).toBe(4);
+    expect(owner.totalVotes).toBe(16);
+    expect(owner.months).toHaveLength(12);
+    expect(owner.months.at(-1)?.key).toBe(period);
+    expect(owner.platforms).toEqual([
+      { platform: 'PS5', count: 2 },
+      { platform: 'PS4', count: 1 },
+      { platform: 'PC', count: 1 },
+    ]);
+    expect(owner.topVoted.map((x) => x.id)).toEqual([p.f, p.a]);
+
+    const visitor = await data.getProfileSummary(u.alice, u.bob);
+    expect(visitor.totalPlatinums).toBe(3);
+    expect(visitor.totalVotes).toBe(7);
+    expect(visitor.platforms).toEqual([
+      { platform: 'PS5', count: 1 },
+      { platform: 'PS4', count: 1 },
+      { platform: 'PC', count: 1 },
+    ]);
+    expect(visitor.topVoted.map((x) => x.id)).toEqual([p.a]);
+  });
+
+  it('returns an offset window with a stable newest-first order', async () => {
+    const ownerPage1 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      limit: 2,
+    });
+    expect(ownerPage1.total).toBe(4);
+    expect(ownerPage1.hasMore).toBe(true);
+    expect(ownerPage1.items.map((x) => x.id)).toEqual([p.f, p.d]);
+
+    const ownerPage2 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      limit: 2,
+      offset: 2,
+    });
+    expect(ownerPage2.hasMore).toBe(false);
+    expect(ownerPage2.items.map((x) => x.id)).toEqual([p.a, p.e]);
+
+    const visitorPage1 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.bob,
+      limit: 2,
+    });
+    expect(visitorPage1.total).toBe(3);
+    expect(visitorPage1.hasMore).toBe(true);
+    expect(visitorPage1.items.map((x) => x.id)).toEqual([p.d, p.a]);
+  });
+
+  it('supports platform filtering in a profile gallery', async () => {
+    const ps5 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      platform: 'PS5',
+    });
+    expect(ps5.total).toBe(2);
+    expect(ps5.items.map((x) => x.id)).toEqual([p.f, p.d]);
+
+    const visitorPs5 = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.bob,
+      platform: 'PS5',
+    });
+    expect(visitorPs5.total).toBe(1);
+    expect(visitorPs5.items.map((x) => x.id)).toEqual([p.d]);
+  });
+
+  it('sorts by votes and name in a profile gallery', async () => {
+    const byVotesDesc = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      sort: 'most-voted',
+    });
+    expect(byVotesDesc.items.map((x) => x.id)).toEqual([p.f, p.a, p.d, p.e]);
+
+    const byNameAsc = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.alice,
+      sort: 'name-asc',
+    });
+    expect(byNameAsc.items.map((x) => x.id)).toEqual([p.d, p.a, p.f, p.e]);
+  });
+
+  it('returns an empty window when offset is beyond total', async () => {
+    const page = await data.getProfileGalleryItems({
+      userId: u.alice,
+      currentUserId: u.bob,
+      offset: 100,
+      limit: 5,
+    });
+    expect(page.items).toHaveLength(0);
+    expect(page.hasMore).toBe(false);
   });
 
   it('counts uploads only inside the current period', async () => {

@@ -6,8 +6,18 @@ import { after } from "next/server";
 import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlatinumsPage, PLATINUMS_PAGE_SIZE, countUploadsInCurrentPeriod } from "@/lib/data";
+import {
+  getPlatinumsPage,
+  getProfileGalleryItems,
+  getUserByUsername,
+  PLATINUMS_PAGE_SIZE,
+  countUploadsInCurrentPeriod,
+} from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
+import {
+  parseProfilePlatform,
+  parseProfileSort,
+} from "@/lib/profile-gallery";
 import { ensureSnapshots } from "@/lib/history";
 import { isStorageConfigured, putImage, storageImageKey } from "@/lib/b2";
 import { encodePlate } from "@/lib/watermark";
@@ -899,6 +909,25 @@ export async function getMorePlatinums(options: {
     ...options,
     currentUserId: session?.user?.id,
     limit: PLATINUMS_PAGE_SIZE,
+  });
+}
+
+export async function getMoreProfilePlatinums(options: {
+  username: string;
+  platform?: string;
+  sort?: string;
+  offset?: number;
+}) {
+  const session = await auth();
+  const user = await getUserByUsername(options.username);
+  if (!user) return { items: [], total: 0, hasMore: false };
+
+  return getProfileGalleryItems({
+    userId: user.id,
+    currentUserId: session?.user?.id,
+    platform: parseProfilePlatform(options.platform),
+    sort: parseProfileSort(options.sort),
+    offset: options.offset ?? 0,
   });
 }
 

@@ -306,7 +306,6 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 
 ### Cards / Containers
 - **Frost card (`.panel-solid`):** 92% frost, cloud-edge border, 16px corners, `--lift`; gallery cards add a uniform 500ms mount fade (`animate-in fade-in slide-in-from-bottom-3 duration-500`) — deliberately no per-card stagger — and hover to `--bloom` (shadow only; the image scales 1.02).
-- **"Pride of the Collection":** `ring-2 ring-primary/60` plus a top banner (primary at 10% ground, 12px bold 0.14em uppercase).
 - **Section shells:** 74% `.panel` with rounded-2xl and p-6→p-10 (home below-fold, explore filter card, header, footer).
 
 ### Browse Plate + Race Row (signature)

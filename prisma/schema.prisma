@@ -159,6 +159,8 @@ model Platinum {
   @@unique([userId, hash])
   @@index([monthlyVotesMonth, monthlyVotes])
   @@index([moderationStatus])
+  @@index([userId, platinumDate(sort: Desc)])
+  @@index([userId, moderationStatus, platinumDate(sort: Desc)])
 }
 
 // One report per user per plate: re-reporting updates the existing row.
