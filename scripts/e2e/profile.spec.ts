@@ -6,8 +6,6 @@ test.describe('profile', () => {
   test('shows activity stats and the top voted plates', async ({ page }) => {
     const response = await page.goto(PROFILE);
     test.skip(response?.status() === 404, 'E2E profile is not seeded');
-    // Let React finish streaming so a transient hidden copy of the page is gone.
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('#main span').filter({ hasText: /^14 Platinums$/ }).first()).toBeVisible();
     await expect(page.locator('#main span').filter({ hasText: /^91 Total Votes$/ }).first()).toBeVisible();
@@ -28,26 +26,22 @@ test.describe('profile', () => {
   test('filters the pace between active months and the full year', async ({ page }) => {
     const response = await page.goto(PROFILE);
     test.skip(response?.status() === 404, 'E2E profile is not seeded');
-    await page.waitForLoadState('networkidle');
 
     // The fixture creates all plates in the current month.
     await expect(page.locator('[data-month]')).toHaveCount(1);
 
-    await page.getByRole('link', { name: 'Last 12 months' }).click();
-    await page.waitForURL(/\?pace=all$/);
-    await page.waitForLoadState('networkidle');
+    await page.locator('a:visible', { hasText: 'Last 12 months' }).first().click();
+    await page.waitForURL(/[?&]pace=all(?:&|$)/, { waitUntil: 'commit' });
     await expect(page.locator('[data-month]')).toHaveCount(12);
 
-    await page.getByRole('link', { name: 'Active months' }).click();
-    await page.waitForURL(/\?pace=active$/);
-    await page.waitForLoadState('networkidle');
+    await page.locator('a:visible', { hasText: 'Active months' }).first().click();
+    await page.waitForURL(/[?&]pace=active(?:&|$)/, { waitUntil: 'commit' });
     await expect(page.locator('[data-month]')).toHaveCount(1);
   });
 
   test('loads 8 plates by default and loads more on demand', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 400 });
     await page.goto(PROFILE);
-    await page.waitForLoadState('networkidle');
 
     const cards = page.locator('.break-inside-avoid');
     const infiniteSwitch = page.getByRole('switch', { name: 'Infinite scroll' });
@@ -61,7 +55,6 @@ test.describe('profile', () => {
     await expect(cards).toHaveCount(8);
 
     await page.getByRole('button', { name: 'Load more platinums' }).click();
-    await page.waitForLoadState('networkidle');
     await expect(cards).toHaveCount(14);
     await expect(page.getByText(/Showing 14 of 14/)).toBeVisible();
 
@@ -72,13 +65,12 @@ test.describe('profile', () => {
   test('enables infinite scroll from the switch', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 400 });
     await page.goto(PROFILE);
-    await page.waitForLoadState('networkidle');
 
     const cards = page.locator('.break-inside-avoid');
     const infiniteSwitch = page.getByRole('switch', { name: 'Infinite scroll' });
+    await expect(cards).toHaveCount(8);
     await infiniteSwitch.click();
-    await page.waitForURL(/infinite=on/);
-    await page.waitForLoadState('networkidle');
+    await page.waitForURL(/infinite=on/, { waitUntil: 'commit' });
     await expect(infiniteSwitch).toBeChecked();
 
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -87,36 +79,30 @@ test.describe('profile', () => {
 
   test('sorts the gallery by name', async ({ page }) => {
     await page.goto(`${PROFILE}?sort=name-asc`);
-    await page.waitForLoadState('networkidle');
 
+    await expect(page.locator('[data-gallery-view="grid"]')).toBeVisible();
     const firstCard = page.locator('.break-inside-avoid').first();
     await expect(firstCard.getByRole('heading', { name: 'E2E Plate 01' })).toBeVisible();
   });
 
   test('switches between grid and list views', async ({ page }) => {
     await page.goto(PROFILE);
-    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('[data-gallery-view="grid"]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Grid' })).toHaveAttribute('aria-pressed', 'true');
 
     await page.getByRole('button', { name: 'List' }).click();
-    await page.waitForURL(/view=list/);
-    await page.waitForLoadState('networkidle');
-
+    await page.waitForURL(/view=list/, { waitUntil: 'commit' });
     await expect(page.locator('[data-gallery-view="list"]')).toBeVisible();
     await expect(page.locator('[data-layout="list"]')).toHaveCount(8);
 
     await page.getByRole('button', { name: 'Grid' }).click();
-    await page.waitForURL(/\/u\/e2e-runner$/);
-    await page.waitForLoadState('networkidle');
-
+    await page.waitForURL(/\/u\/e2e-runner$/, { waitUntil: 'commit' });
     await expect(page.locator('[data-gallery-view="grid"]')).toBeVisible();
   });
 
   test('filters by platform via URL and shows correct cards', async ({ page }) => {
     await page.goto(`${PROFILE}?platform=PS4`);
-    await page.waitForLoadState('networkidle');
 
     const cards = page.locator('.break-inside-avoid');
     await expect(cards).toHaveCount(1);
