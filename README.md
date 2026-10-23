@@ -29,7 +29,7 @@ Para obtener una copia local y ponerla en marcha, sigue estos sencillos pasos.
 
 ### Prerrequisitos
 
-- [Node.js](https://nodejs.org/) (LTS 22, o v20.9+; usa `.nvmrc`)
+- [Node.js](https://nodejs.org/) 24.22.1+ (usa `.nvmrc`; versiones anteriores están afectadas por los CVEs de octubre 2026)
 - [pnpm](https://pnpm.io/) (se usa la versión fijada en `packageManager`)
 
 ### Instalación
