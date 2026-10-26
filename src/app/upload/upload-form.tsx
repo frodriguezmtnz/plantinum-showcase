@@ -68,7 +68,8 @@ const WATERMARK_POSITION_DOT: Record<WatermarkPosition, string> = {
   'bottom-right': 'right-1 bottom-1',
 }
 
-type UploadFormValues = z.infer<typeof uploadFormSchema>
+type UploadFormInputValues = z.input<typeof uploadFormSchema>
+type UploadFormValues = z.output<typeof uploadFormSchema>
 
 type UploadStage = 'idle' | 'compressing' | 'uploading'
 
@@ -100,7 +101,7 @@ export function UploadForm() {
     };
   }, []);
 
-  const form = useForm<UploadFormValues>({
+  const form = useForm<UploadFormInputValues, unknown, UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
     // Validate as the user fills the form so the submit button can stay
     // disabled until every field, screenshot and rule checkbox is in.

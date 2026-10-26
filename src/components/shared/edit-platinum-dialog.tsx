@@ -7,7 +7,11 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2, Pencil } from 'lucide-react';
 import { editPlatinum } from '@/app/actions';
-import { platinumMetaSchema, type PlatinumMetaValues } from '@/lib/schemas';
+import {
+  platinumMetaSchema,
+  type PlatinumMetaInputValues,
+  type PlatinumMetaValues,
+} from '@/lib/schemas';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -78,7 +82,7 @@ export function EditPlatinumDialog({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<PlatinumMetaValues>({
+  const form = useForm<PlatinumMetaInputValues, unknown, PlatinumMetaValues>({
     resolver: zodResolver(platinumMetaSchema),
     defaultValues: toDefaults(platinum),
   });
