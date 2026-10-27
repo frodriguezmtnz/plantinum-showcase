@@ -11,8 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, SearchX, X } from 'lucide-react';
-import { getMorePlatinums } from '@/app/actions';
+import { Globe, Loader2, SearchX, Users, X } from 'lucide-react';
+import { getMoreFollowingPlatinums, getMorePlatinums } from '@/app/actions';
+import { cn } from '@/lib/utils';
+
+export type ExploreSource = 'all' | 'following';
 
 interface ExploreClientProps {
   initialItems: PlatinumPageItem[];
@@ -20,7 +23,14 @@ interface ExploreClientProps {
   q: string;
   platform: string;
   sort: string;
+  source: ExploreSource;
+  isSignedIn: boolean;
 }
+
+const SOURCE_TABS: { value: ExploreSource; label: string; icon: typeof Globe }[] = [
+  { value: 'all', label: 'All hunters', icon: Globe },
+  { value: 'following', label: 'Following', icon: Users },
+];
 
 // Keep the old grid visible (dimmed) while the server navigation for new
 // filters resolves, instead of flashing the route skeleton on every keystroke.
@@ -34,7 +44,15 @@ function GhostCard() {
   );
 }
 
-export function ExploreClient({ initialItems, initialHasMore, q, platform, sort }: ExploreClientProps) {
+export function ExploreClient({
+  initialItems,
+  initialHasMore,
+  q,
+  platform,
+  sort,
+  source,
+  isSignedIn,
+}: ExploreClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
@@ -50,7 +68,7 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
 
   // Sync server results into state only when they come from a navigation
   // (filter change); "load more" never touches the URL, so it keeps the list.
-  const serverKey = `${q}|${platform}|${sort}`;
+  const serverKey = `${q}|${platform}|${sort}|${source}`;
   const [syncedKey, setSyncedKey] = useState(serverKey);
   if (syncedKey !== serverKey) {
     setSyncedKey(serverKey);
@@ -59,22 +77,24 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
   }
 
   const updateUrl = useCallback(
-    (next: { q?: string; platform?: string; sort?: string }) => {
+    (next: { q?: string; platform?: string; sort?: string; source?: ExploreSource }) => {
       const nextQ = next.q ?? searchQuery;
       const nextPlatform = next.platform ?? platformFilter;
       const nextSort = next.sort ?? sortOrder;
+      const nextSource = next.source ?? source;
 
       const params = new URLSearchParams();
       if (nextQ.trim()) params.set('q', nextQ.trim());
       if (nextPlatform && nextPlatform !== 'all') params.set('platform', nextPlatform);
       if (nextSort && nextSort !== 'recent') params.set('sort', nextSort);
+      if (nextSource === 'following') params.set('source', 'following');
 
       const query = params.toString();
       startTransition(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
       });
     },
-    [pathname, router, searchQuery, platformFilter, sortOrder],
+    [pathname, router, searchQuery, platformFilter, sortOrder, source],
   );
 
   useEffect(() => {
@@ -93,6 +113,15 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
     updateUrl({ sort: value });
   };
 
+  const handleSourceChange = (next: ExploreSource) => {
+    if (next === source) return;
+    if (next === 'following' && !isSignedIn) {
+      router.push('/login?callbackUrl=/explore%3Fsource%3Dfollowing');
+      return;
+    }
+    updateUrl({ source: next });
+  };
+
   const hasFilters = q.trim() !== '' || platform !== 'all' || sort !== 'recent';
 
   const handleClearFilters = () => {
@@ -105,12 +134,20 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
   async function handleLoadMore() {
     setIsLoadingMore(true);
     try {
-      const result = await getMorePlatinums({
-        q: searchQuery,
-        platform: platformFilter,
-        sort: sortOrder,
-        offset: items.length,
-      });
+      const result =
+        source === 'following'
+          ? await getMoreFollowingPlatinums({
+              q: searchQuery,
+              platform: platformFilter,
+              sort: sortOrder,
+              offset: items.length,
+            })
+          : await getMorePlatinums({
+              q: searchQuery,
+              platform: platformFilter,
+              sort: sortOrder,
+              offset: items.length,
+            });
       setItems((prev) => [...prev, ...result.items]);
       setHasMore(result.hasMore);
     } catch {
@@ -149,6 +186,32 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
 
   return (
     <div>
+      <div className="mb-6 flex justify-center">
+        <div className="inline-flex rounded-full border border-border/70 bg-background/40 p-0.5 text-xs">
+          {SOURCE_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = source === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => handleSourceChange(tab.value)}
+                aria-pressed={active}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+                  active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <Card className="panel p-4 mb-12 rounded-2xl">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center">
           <div className="flex flex-1 min-w-[180px] items-center gap-2">
@@ -267,6 +330,19 @@ export function ExploreClient({ initialItems, initialHasMore, q, platform, sort 
             </>
           )}
         </>
+      ) : source === 'following' ? (
+        <EmptyState
+          icon={Users}
+          title={hasFilters ? 'No matching plates in your feed' : 'Your feed is empty'}
+          description={
+            hasFilters
+              ? 'None of the hunters you follow match these filters. Widen the search.'
+              : 'Follow hunters to see their platinums here. Start from the community board.'
+          }
+          {...(hasFilters
+            ? { actionLabel: 'Clear filters', onAction: handleClearFilters }
+            : { actionLabel: 'Explore all plates', actionHref: '/explore' })}
+        />
       ) : (
         <EmptyState
           icon={SearchX}

@@ -152,6 +152,19 @@ export interface PlatinumPageResult {
 
 export const PLATINUMS_PAGE_SIZE = 24;
 
+/** Shared sort for the gallery-style lists (Explore and the follow feed). */
+function platinumListOrderBy(
+  sort: string,
+): Prisma.PlatinumOrderByWithRelationInput[] {
+  if (sort === 'most-voted') {
+    return [{ votes: 'desc' }, { platinumDate: 'desc' }];
+  }
+  if (sort === 'least-voted') {
+    return [{ votes: 'asc' }, { platinumDate: 'desc' }];
+  }
+  return [{ platinumDate: 'desc' }];
+}
+
 export async function getPlatinumsPage(options: {
   q?: string;
   platform?: string;
@@ -179,16 +192,65 @@ export async function getPlatinumsPage(options: {
       : {}),
   };
 
-  const orderBy =
-    sort === 'most-voted'
-      ? [{ votes: 'desc' as const }, { platinumDate: 'desc' as const }]
-      : sort === 'least-voted'
-        ? [{ votes: 'asc' as const }, { platinumDate: 'desc' as const }]
-        : [{ platinumDate: 'desc' as const }];
+  const platinums = await prisma.platinum.findMany({
+    where,
+    orderBy: platinumListOrderBy(sort),
+    skip: offset,
+    take: limit + 1,
+    include: { user: true },
+  });
+
+  const hasMore = platinums.length > limit;
+  const visible = platinums.slice(0, limit);
+  const views = await attachVoteStatus(visible, currentUserId);
+
+  return {
+    items: views.map((platinum, index) => ({
+      platinum,
+      user: toUserView(visible[index]!.user),
+    })),
+    hasMore,
+  };
+}
+
+/**
+ * Gallery plates limited to the hunters `followerId` follows. Same filters and
+ * sort as Explore, so the feed is just another source over the same board.
+ */
+export async function getFollowingFeedPage(options: {
+  followerId: string;
+  q?: string;
+  platform?: string;
+  sort?: string;
+  offset?: number;
+  limit?: number;
+  currentUserId?: string;
+}): Promise<PlatinumPageResult> {
+  const {
+    followerId,
+    q = '',
+    platform = 'all',
+    sort = 'recent',
+    offset = 0,
+    limit = PLATINUMS_PAGE_SIZE,
+    currentUserId,
+  } = options;
+
+  const search = q.trim();
+
+  const where = {
+    ...PUBLISHED_ONLY,
+    // The plate's author is followed by the viewer.
+    user: { followers: { some: { followerId } } },
+    ...(platform && platform !== 'all' ? { platform } : {}),
+    ...(search
+      ? { gameName: { contains: search, mode: 'insensitive' as const } }
+      : {}),
+  };
 
   const platinums = await prisma.platinum.findMany({
     where,
-    orderBy,
+    orderBy: platinumListOrderBy(sort),
     skip: offset,
     take: limit + 1,
     include: { user: true },
@@ -731,6 +793,28 @@ export async function getMonthlyRanking(
       ...PUBLISHED_ONLY,
       monthlyVotesMonth: getCurrentPeriod(),
       monthlyVotes: { gt: 0 },
+    },
+    orderBy: [{ monthlyVotes: 'desc' }, { votes: 'desc' }],
+    take: limit,
+  });
+  return attachVoteStatus(platinums, currentUserId);
+}
+
+/**
+ * The same monthly race, but scoped to the hunters `viewerId` follows. Powers
+ * the "My circle" tab in the Hall of Fame.
+ */
+export async function getFollowingMonthlyRanking(
+  viewerId: string,
+  limit: number = 10,
+  currentUserId?: string,
+): Promise<Platinum[]> {
+  const platinums = await prisma.platinum.findMany({
+    where: {
+      ...PUBLISHED_ONLY,
+      monthlyVotesMonth: getCurrentPeriod(),
+      monthlyVotes: { gt: 0 },
+      user: { followers: { some: { followerId: viewerId } } },
     },
     orderBy: [{ monthlyVotes: 'desc' }, { votes: 'desc' }],
     take: limit,

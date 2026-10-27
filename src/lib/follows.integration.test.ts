@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { getCurrentPeriod } from '@/lib/period';
 
 /**
  * Postgres integration suite for the follow graph. Like the data suite it only
@@ -9,6 +10,7 @@ const url = process.env.TEST_DATABASE_URL;
 
 describe.skipIf(!url)('follows.ts — Postgres integration', () => {
   let follows: typeof import('@/lib/follows');
+  let data: typeof import('@/lib/data');
   let prisma: (typeof import('@/lib/prisma'))['prisma'];
 
   const stamp = Date.now();
@@ -21,9 +23,43 @@ describe.skipIf(!url)('follows.ts — Postgres integration', () => {
 
   const at = (seconds: number) => new Date(Date.UTC(2026, 0, 1, 0, 0, seconds));
 
+  const period = getCurrentPeriod();
+  const p = {
+    aliceNew: `it-follow-${stamp}-plate-alice-new`,
+    aliceOld: `it-follow-${stamp}-plate-alice-old`,
+    aliceHidden: `it-follow-${stamp}-plate-alice-hidden`,
+    bob: `it-follow-${stamp}-plate-bob`,
+    carol: `it-follow-${stamp}-plate-carol`,
+  };
+
+  const plate = (
+    id: string,
+    userId: string,
+    gameName: string,
+    monthlyVotes: number,
+    platinumDate: string,
+    moderationStatus: 'PUBLISHED' | 'HIDDEN' = 'PUBLISHED',
+  ) => ({
+    id,
+    userId,
+    gameName,
+    platform: 'PS5',
+    hash: `hash-${id}`,
+    imageUrl: `https://example.test/${id}.avif`,
+    imageHint: 'test',
+    width: 1600,
+    height: 900,
+    votes: monthlyVotes,
+    monthlyVotes,
+    monthlyVotesMonth: monthlyVotes > 0 ? period : null,
+    platinumDate: new Date(platinumDate),
+    moderationStatus,
+  });
+
   beforeAll(async () => {
     process.env.DATABASE_URL = url;
     follows = await import('@/lib/follows');
+    data = await import('@/lib/data');
     prisma = (await import('@/lib/prisma')).prisma;
 
     await prisma.user.createMany({
@@ -43,9 +79,20 @@ describe.skipIf(!url)('follows.ts — Postgres integration', () => {
         { followerId: u.alice, followingId: u.carol, createdAt: at(4) },
       ],
     });
+
+    await prisma.platinum.createMany({
+      data: [
+        plate(p.aliceNew, u.alice, 'Alice New', 3, '2026-02-01'),
+        plate(p.aliceOld, u.alice, 'Alice Old', 0, '2026-01-01'),
+        plate(p.aliceHidden, u.alice, 'Alice Hidden', 9, '2026-03-01', 'HIDDEN'),
+        plate(p.bob, u.bob, 'Bob Plate', 5, '2026-02-02'),
+        plate(p.carol, u.carol, 'Carol Plate', 4, '2026-02-03'),
+      ],
+    });
   });
 
   afterAll(async () => {
+    await prisma.platinum.deleteMany({ where: { userId: { in: Object.values(u) } } });
     await prisma.follow.deleteMany({
       where: {
         OR: [
@@ -94,6 +141,46 @@ describe.skipIf(!url)('follows.ts — Postgres integration', () => {
     });
     expect(second.hasMore).toBe(false);
     expect(second.items.map((item) => item.id)).toEqual([u.bob]);
+  });
+
+  it('feeds only published plates from followed hunters, newest first', async () => {
+    const page = await data.getFollowingFeedPage({
+      followerId: u.bob,
+      currentUserId: u.bob,
+    });
+    expect(page.items.map((item) => item.platinum.id)).toEqual([
+      p.aliceNew,
+      p.aliceOld,
+    ]);
+    expect(page.items.every((item) => item.user.id === u.alice)).toBe(true);
+  });
+
+  it('paginates the follow feed', async () => {
+    const first = await data.getFollowingFeedPage({
+      followerId: u.bob,
+      currentUserId: u.bob,
+      limit: 1,
+    });
+    expect(first.hasMore).toBe(true);
+    expect(first.items.map((item) => item.platinum.id)).toEqual([p.aliceNew]);
+
+    const second = await data.getFollowingFeedPage({
+      followerId: u.bob,
+      currentUserId: u.bob,
+      limit: 1,
+      offset: 1,
+    });
+    expect(second.hasMore).toBe(false);
+    expect(second.items.map((item) => item.platinum.id)).toEqual([p.aliceOld]);
+  });
+
+  it('builds the monthly circle ranking from followed hunters only', async () => {
+    const ranking = await data.getFollowingMonthlyRanking(u.alice, 10, u.alice);
+    expect(ranking.map((platinum) => platinum.id)).toEqual([p.bob, p.carol]);
+    expect(ranking[0]!.monthlyVotes).toBe(5);
+
+    const single = await data.getFollowingMonthlyRanking(u.bob, 10, u.bob);
+    expect(single.map((platinum) => platinum.id)).toEqual([p.aliceNew]);
   });
 
   it('cascades follow edges when an account is deleted', async () => {

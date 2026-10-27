@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  getFollowingFeedPage,
   getPlatinumsPage,
   getProfileGalleryItems,
   getUserByUsername,
@@ -914,6 +915,24 @@ export async function getMorePlatinums(options: {
   return getPlatinumsPage({
     ...options,
     currentUserId: session?.user?.id,
+    limit: PLATINUMS_PAGE_SIZE,
+  });
+}
+
+export async function getMoreFollowingPlatinums(options: {
+  q?: string;
+  platform?: string;
+  sort?: string;
+  offset?: number;
+}) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { items: [], hasMore: false };
+
+  return getFollowingFeedPage({
+    ...options,
+    followerId: userId,
+    currentUserId: userId,
     limit: PLATINUMS_PAGE_SIZE,
   });
 }

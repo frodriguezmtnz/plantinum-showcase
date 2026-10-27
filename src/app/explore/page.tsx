@@ -1,4 +1,5 @@
-import { getPlatinumsPage } from '@/lib/data';
+import { redirect } from 'next/navigation';
+import { getFollowingFeedPage, getPlatinumsPage } from '@/lib/data';
 import { auth } from '@/auth';
 import { ExploreClient } from '@/components/explore/explore-client';
 import { MonthlyRace } from '@/components/explore/monthly-race';
@@ -9,19 +10,45 @@ export const metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ q?: string; platform?: string; sort?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    platform?: string;
+    sort?: string;
+    source?: string;
+  }>;
 };
 
 export default async function ExplorePage({ searchParams }: Props) {
-  const { q = '', platform = 'all', sort = 'recent' } = await searchParams;
+  const {
+    q = '',
+    platform = 'all',
+    sort = 'recent',
+    source: rawSource,
+  } = await searchParams;
+  const source = rawSource === 'following' ? 'following' : 'all';
   const session = await auth();
+  const userId = session?.user?.id;
 
-  const { items, hasMore } = await getPlatinumsPage({
-    q,
-    platform,
-    sort,
-    currentUserId: session?.user?.id,
-  });
+  // The follow feed is per-account; send anonymous visitors to sign in first.
+  if (source === 'following' && !userId) {
+    redirect('/login?callbackUrl=/explore%3Fsource%3Dfollowing');
+  }
+
+  const { items, hasMore } =
+    source === 'following'
+      ? await getFollowingFeedPage({
+          q,
+          platform,
+          sort,
+          followerId: userId!,
+          currentUserId: userId,
+        })
+      : await getPlatinumsPage({
+          q,
+          platform,
+          sort,
+          currentUserId: userId,
+        });
 
   return (
     <section className="container py-8 md:py-12">
@@ -43,6 +70,8 @@ export default async function ExplorePage({ searchParams }: Props) {
         q={q}
         platform={platform}
         sort={sort}
+        source={source}
+        isSignedIn={Boolean(userId)}
       />
     </section>
   );
