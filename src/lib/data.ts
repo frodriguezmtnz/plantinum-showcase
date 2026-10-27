@@ -82,7 +82,7 @@ const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   moderationStatus: p.moderationStatus as ModerationStatus,
 });
 
-const toUserView = (u: UserRecord): User => ({
+export const toUserView = (u: UserRecord): User => ({
   id: u.id,
   username: u.username ?? 'Unknown',
   avatarUrl: u.image ?? `https://i.pravatar.cc/150?u=${u.id}`,
