@@ -7,8 +7,8 @@ import {
 
 /** Reasons a user can pick when flagging a plate. */
 export const reportSchema = z.object({
-  reason: z.nativeEnum(ReportReason, {
-    errorMap: () => ({ message: "Pick a reason for the report." }),
+  reason: z.enum(ReportReason, {
+    error: "Pick a reason for the report.",
   }),
   message: z
     .string()
@@ -38,10 +38,10 @@ export const platinumMetaSchema = z.object({
     .min(5, { message: "Game name must be at least 5 characters." })
     .max(120, { message: "Game name is too long." }),
   platform: z.enum(PLATINUM_PLATFORMS, {
-    required_error: "You need to select a platform.",
+    error: "You need to select a platform.",
   }),
   platinumDate: z.date({
-    required_error: "A date for your platinum is required.",
+    error: "A date for your platinum is required.",
   }),
   isSpoiler: z.boolean().default(false),
   comment: z
@@ -51,7 +51,9 @@ export const platinumMetaSchema = z.object({
     .optional(),
 });
 
-export type PlatinumMetaValues = z.infer<typeof platinumMetaSchema>;
+export type PlatinumMetaValues = z.output<typeof platinumMetaSchema>;
+/** Raw form input: `isSpoiler` may be omitted because it has a default. */
+export type PlatinumMetaInputValues = z.input<typeof platinumMetaSchema>;
 
 /** Server variant: the date arrives coerced from FormData or a Server Action. */
 export const platinumMetaInputSchema = platinumMetaSchema.extend({
