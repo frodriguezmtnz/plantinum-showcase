@@ -40,3 +40,9 @@ updates:
       - dependency-name: "@prisma/adapter-pg"
         update-types:
           - version-update:semver-major
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "lucide-react"
+        update-types:
+          - version-update:semver-major

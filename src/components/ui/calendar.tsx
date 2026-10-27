@@ -10,6 +10,8 @@ import { buttonVariants } from "@/components/ui/button"
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 const CURRENT_YEAR = new Date().getFullYear()
+const START_MONTH = new Date(2006, 0) // PS3 launch — no platinum can predate it
+const END_MONTH = new Date(CURRENT_YEAR, 11)
 
 function Calendar({
   className,
@@ -18,8 +20,6 @@ function Calendar({
   weekStartsOn = 1,
   captionLayout = "dropdown",
   navLayout = "around",
-  fromYear = 2006, // PS3 launch — no platinum can predate it
-  toYear = CURRENT_YEAR,
   autoFocus = true,
   ...props
 }: CalendarProps) {
@@ -29,22 +29,22 @@ function Calendar({
       weekStartsOn={weekStartsOn}
       captionLayout={captionLayout}
       navLayout={navLayout}
-      fromYear={fromYear}
-      toYear={toYear}
+      startMonth={START_MONTH}
+      endMonth={END_MONTH}
       autoFocus={autoFocus}
       // A definite width keeps the shared popover from stretching on phones.
       className={cn("w-[19.5rem] max-w-[calc(100vw-2rem)] p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        // The month is the positioning context for the nav buttons (v9 places
-        // them around the caption when navLayout="around").
+        // The month is the positioning context for the nav buttons (DayPicker
+        // places them around the caption when navLayout="around").
         month: "relative space-y-3",
         month_caption: "flex min-h-10 items-center justify-center px-1",
         dropdowns: "flex items-center justify-center gap-1",
-        // v9 renders each dropdown as a native <select> PLUS an aria-hidden
-        // label span with a chevron. The select is the interactive layer, so
-        // hide it and let the label carry the styling — showing both painted
-        // the text twice ("October October", "2026 2026").
+        // DayPicker renders each dropdown as a native <select> PLUS an
+        // aria-hidden label span with a chevron. The select is the
+        // interactive layer, so hide it and let the label carry the styling —
+        // showing both painted the text twice ("October October", "2026 2026").
         dropdown_root:
           "relative rounded-md outline-hidden hover:bg-accent focus-within:ring-2 focus-within:ring-ring",
         dropdown:
@@ -64,7 +64,7 @@ function Calendar({
           "absolute right-1 top-0.5 h-9 w-9 bg-transparent p-0 opacity-60 hover:opacity-100 max-sm:-top-0.5 max-sm:h-11 max-sm:w-11"
         ),
         chevron: "h-4 w-4",
-        // React Day Picker v9 renders a real <table>; keep it a table (no flex
+        // React Day Picker renders a real <table>; keep it a table (no flex
         // rows) and let fixed layout split the width evenly on any screen.
         month_grid: "w-full border-collapse table-fixed",
         weekdays: "",
@@ -89,8 +89,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        // v9 puts the selection/today flags on the <td>; copy them onto the
-        // button so the Tailwind `data-*` variants above can do their job.
+        // DayPicker puts the selection/today flags on the <td>; copy them onto
+        // the button so the Tailwind `data-*` variants above can do their job.
         DayButton: ({ day, modifiers, className, ...props }) => (
           <button
             type="button"
