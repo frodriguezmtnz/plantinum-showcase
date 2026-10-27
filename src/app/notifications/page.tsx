@@ -9,6 +9,7 @@ import {
   Gavel,
   Flag,
   ShieldCheck,
+  UserPlus,
 } from 'lucide-react';
 import { auth } from '@/auth';
 import { listNotifications } from '@/lib/notifications';
@@ -31,6 +32,7 @@ const KIND_ICON: Record<NotificationKind, typeof Bell> = {
   APPEAL_RECEIVED: Gavel,
   PLATE_FLAGGED: ShieldAlert,
   REPORT_RECEIVED: Flag,
+  NEW_FOLLOWER: UserPlus,
 };
 
 /** Kinds that belong to the moderator queue rather than to a plate's owner. */
@@ -98,6 +100,16 @@ export default async function NotificationsPage() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                   </p>
+                  {!item.platinumId && item.linkUrl && (
+                    <div className="mt-3">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={item.linkUrl}>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          View profile
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
                   {item.platinumId && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {isQueueItem && canModerate ? (
