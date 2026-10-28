@@ -486,6 +486,23 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
+/* Toast lifetime indicator: shrinks over TOAST_REMOVE_DELAY and pauses in
+   sync with the removal timer while the stack is hovered or focused. */
+.toast-progress {
+  animation-name: toast-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .plate-shell:hover .plate-bloom,
   .plate-shell:focus-visible .plate-bloom,
