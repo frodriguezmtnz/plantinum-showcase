@@ -33,6 +33,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Next dev blocks HMR/fonts from a different host; quick cloudflared tunnels
+  // rotate their hostname, so allow the whole family during development.
+  allowedDevOrigins: ['*.trycloudflare.com'],
   experimental: {
     // Server Action bodies default to 1 MB, which a compressed screenshot can
     // easily exceed. The upload form caps the file at 4 MB client-side, so 6 MB
