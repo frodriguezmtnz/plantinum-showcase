@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  getFollowingFeedPage,
   getPlatinumsPage,
   getProfileGalleryItems,
   getUserByUsername,
@@ -34,7 +35,13 @@ import {
   countUnreadNotifications,
   markNotificationsRead,
   notifyModerators,
+  notifyUser,
 } from "@/lib/notifications";
+import {
+  FOLLOW_PAGE_SIZE,
+  getFollowersPage,
+  getFollowingPage,
+} from "@/lib/follows";
 import { REPORT_REASON_LABELS } from "@/lib/report-labels";
 import { sendModerationNotice } from "@/lib/telegram";
 import {
@@ -912,6 +919,24 @@ export async function getMorePlatinums(options: {
   });
 }
 
+export async function getMoreFollowingPlatinums(options: {
+  q?: string;
+  platform?: string;
+  sort?: string;
+  offset?: number;
+}) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { items: [], hasMore: false };
+
+  return getFollowingFeedPage({
+    ...options,
+    followerId: userId,
+    currentUserId: userId,
+    limit: PLATINUMS_PAGE_SIZE,
+  });
+}
+
 export async function getMoreProfilePlatinums(options: {
   username: string;
   platform?: string;
@@ -1082,4 +1107,149 @@ export async function toggleVoteForPlatinum(
       error: "Could not record the vote. Please try again.",
     };
   }
+}
+
+export type FollowActionResult =
+  | { success: true; isFollowing: boolean; followers: number }
+  | { success: false; error: string };
+
+/**
+ * Follow / unfollow another hunter. Idempotent: a double click can only flip
+ * the single edge guarded by `@@unique([followerId, followingId])`.
+ */
+export async function toggleFollow(username: string): Promise<FollowActionResult> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { success: false, error: "You need to sign in to follow hunters." };
+  }
+
+  const followLimit = await checkRateLimit(`follow:${userId}`, 30, 60_000);
+  if (!followLimit.ok) {
+    return {
+      success: false,
+      error: "That is a lot of follows at once. Please wait a moment and try again.",
+    };
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true, username: true },
+  });
+  if (!target || !target.username) {
+    return { success: false, error: "This hunter does not exist." };
+  }
+  if (target.id === userId) {
+    return { success: false, error: "You can't follow yourself." };
+  }
+
+  const edge = { followerId: userId, followingId: target.id };
+
+  try {
+    const existing = await prisma.follow.findUnique({
+      where: { followerId_followingId: edge },
+      select: { id: true },
+    });
+
+    let isFollowing: boolean;
+    if (existing) {
+      await prisma.follow.delete({ where: { id: existing.id } });
+      isFollowing = false;
+    } else {
+      await prisma.follow.create({ data: edge });
+      isFollowing = true;
+
+      // Best-effort: a failed notice must never undo the follow itself.
+      try {
+        const follower = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { username: true },
+        });
+        if (follower?.username) {
+          const linkUrl = `/u/${follower.username}`;
+          // A quick follow/unfollow/follow must not stack notices: if the
+          // same profile already left an unread one, reuse it.
+          const pending = await prisma.notification.findFirst({
+            where: {
+              userId: target.id,
+              kind: "NEW_FOLLOWER",
+              linkUrl,
+              readAt: null,
+            },
+            select: { id: true },
+          });
+          if (!pending) {
+            await notifyUser({
+              userId: target.id,
+              kind: "NEW_FOLLOWER",
+              title: `@${follower.username} started following you`,
+              body: "Open their profile to see their platinum shelf.",
+              linkUrl,
+            });
+          }
+        }
+      } catch (noticeError) {
+        console.warn("[follows] could not store follower notice", noticeError);
+      }
+    }
+
+    const followers = await prisma.follow.count({
+      where: { followingId: target.id },
+    });
+
+    revalidatePath(`/u/${target.username}`);
+    return { success: true, isFollowing, followers };
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    // Two concurrent follows: the unique index already recorded this edge.
+    if (code === "P2002") {
+      const followers = await prisma.follow.count({
+        where: { followingId: target.id },
+      });
+      return { success: true, isFollowing: true, followers };
+    }
+    // Two concurrent unfollows: the row is already gone.
+    if (code === "P2025") {
+      const followers = await prisma.follow.count({
+        where: { followingId: target.id },
+      });
+      return { success: true, isFollowing: false, followers };
+    }
+
+    console.error("[follows] could not toggle follow", error);
+    return {
+      success: false,
+      error: "Could not update the follow. Please try again.",
+    };
+  }
+}
+
+export async function getMoreFollowers(options: {
+  username: string;
+  offset?: number;
+}) {
+  const session = await auth();
+  const user = await getUserByUsername(options.username);
+  if (!user) return { items: [], total: 0, hasMore: false };
+
+  return getFollowersPage(user.id, {
+    offset: options.offset ?? 0,
+    limit: FOLLOW_PAGE_SIZE,
+    viewerId: session?.user?.id,
+  });
+}
+
+export async function getMoreFollowing(options: {
+  username: string;
+  offset?: number;
+}) {
+  const session = await auth();
+  const user = await getUserByUsername(options.username);
+  if (!user) return { items: [], total: 0, hasMore: false };
+
+  return getFollowingPage(user.id, {
+    offset: options.offset ?? 0,
+    limit: FOLLOW_PAGE_SIZE,
+    viewerId: session?.user?.id,
+  });
 }

@@ -7,6 +7,7 @@ export interface NotificationView {
   title: string;
   body: string | null;
   platinumId: string | null;
+  linkUrl: string | null;
   readAt: string | null;
   createdAt: string;
 }
@@ -17,6 +18,7 @@ export interface NotifyInput {
   title: string;
   body?: string | null;
   platinumId?: string | null;
+  linkUrl?: string | null;
 }
 
 /** Best-effort owner notice; never breaks the moderation action that raised it. */
@@ -29,6 +31,7 @@ export async function notifyUser(input: NotifyInput): Promise<void> {
         title: input.title,
         body: input.body ?? null,
         platinumId: input.platinumId ?? null,
+        linkUrl: input.linkUrl ?? null,
       },
     });
   } catch (error) {
@@ -57,6 +60,7 @@ export async function notifyModerators(
         title: input.title,
         body: input.body ?? null,
         platinumId: input.platinumId ?? null,
+        linkUrl: input.linkUrl ?? null,
       })),
     });
   } catch (error) {
@@ -79,6 +83,7 @@ export async function listNotifications(
     title: row.title,
     body: row.body,
     platinumId: row.platinumId,
+    linkUrl: row.linkUrl,
     readAt: row.readAt ? row.readAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
   }));

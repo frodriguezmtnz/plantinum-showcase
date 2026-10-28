@@ -1,7 +1,13 @@
 
-import { getMonthlyRanking, getUsersByIds, type User } from '@/lib/data';
+import { redirect } from 'next/navigation';
+import {
+  getFollowingMonthlyRanking,
+  getMonthlyRanking,
+  getUsersByIds,
+  type User,
+} from '@/lib/data';
 import { auth } from '@/auth';
-import { Trophy, Award } from 'lucide-react';
+import { Trophy, Award, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -18,9 +24,26 @@ function daysUntilMonthEnd(now: Date): number {
   return lastDay - now.getDate();
 }
 
-export default async function HallOfFamePage() {
+type Props = {
+  searchParams: Promise<{ scope?: string }>;
+};
+
+export default async function HallOfFamePage({ searchParams }: Props) {
+  const { scope: rawScope } = await searchParams;
+  const scope = rawScope === 'circle' ? 'circle' : 'global';
+
   const session = await auth();
-  const rankedPlatinums = await getMonthlyRanking(10, session?.user?.id);
+  const userId = session?.user?.id;
+
+  // "My circle" is per-account; anonymous visitors sign in first.
+  if (scope === 'circle' && !userId) {
+    redirect('/login?callbackUrl=/hall-of-fame%3Fscope%3Dcircle');
+  }
+
+  const rankedPlatinums =
+    scope === 'circle'
+      ? await getFollowingMonthlyRanking(userId!, 10, userId)
+      : await getMonthlyRanking(10, userId);
   const users = await getUsersByIds(rankedPlatinums.map((p) => p.userId));
 
   const getUserById = (userId: string): User | undefined => users.find(u => u.id === userId);
@@ -77,7 +100,9 @@ export default async function HallOfFamePage() {
         <Award className="mx-auto h-14 w-14 text-dusk" />
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-2 text-balance">Monthly Hall of Fame</h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
-          The community&apos;s favorite platinum screenshots of {monthYear.toLowerCase()}.
+          {scope === 'circle'
+            ? `The favorites among the hunters you follow in ${monthYear.toLowerCase()}.`
+            : `The community's favorite platinum screenshots of ${monthYear.toLowerCase()}.`}
         </p>
         <p className="field-mark mt-3">
           {daysLeft === 0 ? (
@@ -86,13 +111,59 @@ export default async function HallOfFamePage() {
             <>The polls close in <span className="tabular font-semibold text-foreground">{daysLeft}</span> {daysLeft === 1 ? 'day' : 'days'}</>
           )}
         </p>
+        <div className="mt-5 inline-flex rounded-full border border-border/70 bg-background/40 p-0.5 text-xs">
+          <Link
+            href="/hall-of-fame"
+            aria-current={scope === 'global' ? 'page' : undefined}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+              scope === 'global'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Trophy className="h-3.5 w-3.5" aria-hidden />
+            Global
+          </Link>
+          <Link
+            href="/hall-of-fame?scope=circle"
+            aria-current={scope === 'circle' ? 'page' : undefined}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+              scope === 'circle'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Users className="h-3.5 w-3.5" aria-hidden />
+            My circle
+          </Link>
+        </div>
       </div>
 
       {rankedPlatinums.length === 0 ? (
         <div className="mx-auto max-w-2xl rounded-2xl border border-dashed border-border p-12 text-center">
-          <Trophy className="mx-auto h-10 w-10 text-muted-foreground" />
-          <h2 className="mt-4 font-headline text-xl font-bold">The podium is empty this month.</h2>
-          <p className="mt-2 text-muted-foreground">Vote on the freshest platinums or upload your own — the first champion of {monthYear} is undecided.</p>
+          {scope === 'circle' ? (
+            <>
+              <Users className="mx-auto h-10 w-10 text-muted-foreground" />
+              <h2 className="mt-4 font-headline text-xl font-bold">No votes in your circle yet.</h2>
+              <p className="mt-2 text-muted-foreground">
+                Follow hunters to build your circle, or vote on the freshest platinums so your favorites climb the board.
+              </p>
+              <Link
+                href="/explore"
+                className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
+              >
+                Explore and follow hunters
+              </Link>
+            </>
+          ) : (
+            <>
+              <Trophy className="mx-auto h-10 w-10 text-muted-foreground" />
+              <h2 className="mt-4 font-headline text-xl font-bold">The podium is empty this month.</h2>
+              <p className="mt-2 text-muted-foreground">Vote on the freshest platinums or upload your own — the first champion of {monthYear} is undecided.</p>
+            </>
+          )}
         </div>
       ) : (
         <>

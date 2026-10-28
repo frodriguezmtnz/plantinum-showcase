@@ -11,6 +11,7 @@ Esta es una aplicación web construida con Next.js donde los usuarios pueden sub
 - **Sistema de Votación:** Vota por tus platinos favoritos y ayúdalos a subir de rango.
 - **Salón de la Fama:** Una celebración mensual de los platinos más votados.
 - **Perfiles de Usuario:** Muestra toda tu colección y ve las estadísticas de otros cazadores.
+- **Seguir cazadores:** Sigue a otros usuarios, consulta sus seguidores y recibe un aviso cuando alguien te sigue.
 - **Protección de Spoilers:** Las capturas de pantalla pueden marcarse como spoilers para no arruinar la historia a otros.
 
 ## 🛠️ Stack Tecnológico

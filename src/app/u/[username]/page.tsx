@@ -1,9 +1,12 @@
 
+import Link from 'next/link';
 import { getProfileGalleryItems, getProfileSummary, getUserByUsername } from '@/lib/data';
+import { getFollowState } from '@/lib/follows';
 import { auth } from '@/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { notFound } from 'next/navigation';
-import { ThumbsUp } from 'lucide-react';
+import { ThumbsUp, UserCheck, Users } from 'lucide-react';
+import { FollowButton } from '@/components/shared/follow-button';
 import { PlatinumTrophyIcon } from '@/components/icons/platinum-trophy-icon';
 import { JsonLd } from '@/components/shared/json-ld';
 import {
@@ -71,7 +74,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
   const view = parseProfileView(rawView);
   const infinite = parseProfileInfinite(rawInfinite);
 
-  const [summary, gallery] = await Promise.all([
+  const [summary, gallery, followState] = await Promise.all([
     getProfileSummary(user.id, currentUserId),
     getProfileGalleryItems({
       userId: user.id,
@@ -79,6 +82,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
       platform,
       sort,
     }),
+    getFollowState(user.id, currentUserId),
   ]);
 
   const profileUrl = canonicalUrl(`/u/${user.username}`);
@@ -104,7 +108,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <h1 className="text-4xl font-bold font-headline">{user.username}</h1>
-        <div className="flex items-center gap-4 mt-2 text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-center gap-4 mt-2 text-muted-foreground">
           <div className="flex items-center gap-2">
             <PlatinumTrophyIcon className="w-5 h-5"/>
             <span>{summary.totalPlatinums} Platinums</span>
@@ -113,7 +117,35 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
             <ThumbsUp className="w-5 h-5 text-primary"/>
             <span>{summary.totalVotes} Total Votes</span>
           </div>
+          <Link
+            href={`/u/${user.username}/followers`}
+            className="flex items-center gap-2 transition-colors hover:text-foreground"
+          >
+            <Users className="w-5 h-5"/>
+            <span>
+              <span className="tabular font-semibold text-foreground">{followState.followers}</span>{' '}
+              Followers
+            </span>
+          </Link>
+          <Link
+            href={`/u/${user.username}/following`}
+            className="flex items-center gap-2 transition-colors hover:text-foreground"
+          >
+            <UserCheck className="w-5 h-5"/>
+            <span>
+              <span className="tabular font-semibold text-foreground">{followState.following}</span>{' '}
+              Following
+            </span>
+          </Link>
         </div>
+        {!isOwner && (
+          <div className="mt-4">
+            <FollowButton
+              username={user.username}
+              initialIsFollowing={followState.isFollowing}
+            />
+          </div>
+        )}
       </div>
 
       <ProfileStats

@@ -1,5 +1,13 @@
 import type {NextConfig} from 'next';
 
+// React/Turbopack rely on eval() for dev-only debugging features (stack
+// reconstruction, HMR). Production never uses it, so keep the stricter policy
+// there while letting `next dev` run without CSP console noise.
+const isDev = process.env.NODE_ENV !== 'production';
+const scriptSrc = isDev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'";
+
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -12,7 +20,7 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://images.unsplash.com https://picsum.photos https://i.giphy.com https://placehold.co https://i.pravatar.cc",
       "font-src 'self' data:",
