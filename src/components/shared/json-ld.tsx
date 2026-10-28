@@ -1,16 +1,13 @@
-export type JsonLdData = Record<string, unknown>;
+import { serializeJsonLd, type JsonLdData } from '@/lib/json-ld';
 
-/**
- * Renders schema.org structured data. `<` is escaped so user-provided text
- * (game names, usernames) can never close the script tag.
- */
+export type { JsonLdData } from '@/lib/json-ld';
+
+/** Renders schema.org structured data with `<` escaped. */
 export function JsonLd({ data }: { data: JsonLdData }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(data).replace(/</g, '\\u003c'),
-      }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   );
 }

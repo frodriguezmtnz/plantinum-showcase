@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { CalendarDays, ExternalLink, Gamepad2, Pencil } from 'lucide-react';
+import { CalendarDays, ExternalLink, Gamepad2 } from 'lucide-react';
+import { describePsnProfile } from '@/lib/psn';
 
 interface ProfileAboutProps {
   username: string;
@@ -23,6 +24,8 @@ export function ProfileAbout({
   createdAt,
   isOwner,
 }: ProfileAboutProps) {
+  const psn = describePsnProfile(psnProfileUrl);
+
   return (
     <section className="mx-auto max-w-2xl space-y-4">
       <div className="panel-solid rounded-2xl p-6 md:p-8">
@@ -57,7 +60,7 @@ export function ProfileAbout({
             Member since {joinedLabel(createdAt)}
           </span>
 
-          {psnProfileUrl && (
+          {psnProfileUrl && psn && (
             <a
               href={psnProfileUrl}
               target="_blank"
@@ -65,7 +68,7 @@ export function ProfileAbout({
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-popover"
             >
               <Gamepad2 className="h-4 w-4" aria-hidden />
-              PlayStation profile
+              {psn.label}
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
           )}
@@ -80,18 +83,6 @@ export function ProfileAbout({
           )}
         </div>
       </div>
-
-      {isOwner && (
-        <div className="flex justify-center">
-          <Link
-            href="/settings"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline-offset-4 hover:underline"
-          >
-            <Pencil className="h-4 w-4" aria-hidden />
-            Edit profile
-          </Link>
-        </div>
-      )}
     </section>
   );
 }

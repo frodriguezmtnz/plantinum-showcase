@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePsnProfileUrl } from '@/lib/psn';
+import { describePsnProfile, parsePsnProfileUrl } from '@/lib/psn';
 
 describe('parsePsnProfileUrl', () => {
   it('clears on empty input', () => {
@@ -32,5 +32,31 @@ describe('parsePsnProfileUrl', () => {
       ok: false,
       reason: 'invalid',
     });
+  });
+});
+
+describe('describePsnProfile', () => {
+  it('names the PSNProfiles handle from the path', () => {
+    expect(describePsnProfile('https://psnprofiles.com/Trophy_Hunter/')).toEqual(
+      { label: 'PSNProfiles profile Trophy_Hunter', kind: 'psnprofiles' },
+    );
+    expect(
+      describePsnProfile('https://www.psnprofiles.com/Trophy%20Hunter'),
+    ).toEqual({
+      label: 'PSNProfiles profile Trophy Hunter',
+      kind: 'psnprofiles',
+    });
+  });
+
+  it('uses a generic label for PlayStation', () => {
+    expect(
+      describePsnProfile('https://my.playstation.com/profile/hunter'),
+    ).toEqual({ label: 'PlayStation profile', kind: 'playstation' });
+  });
+
+  it('returns null for empty or unknown URLs', () => {
+    expect(describePsnProfile(null)).toBeNull();
+    expect(describePsnProfile('')).toBeNull();
+    expect(describePsnProfile('https://example.com/x')).toBeNull();
   });
 });

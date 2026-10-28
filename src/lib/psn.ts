@@ -41,6 +41,48 @@ export function parsePsnProfileUrl(raw: string): PsnProfileParse {
   return { ok: true, url: url.toString() };
 }
 
+export interface PsnProfileLabel {
+  label: string;
+  kind: 'psnprofiles' | 'playstation';
+}
+
+/**
+ * Human label for the About tab: PSNProfiles links carry the handle in the
+ * first path segment, while playstation.com keeps a generic label.
+ */
+export function describePsnProfile(
+  url: string | null | undefined,
+): PsnProfileLabel | null {
+  if (!url) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  if (host === 'psnprofiles.com' || host.endsWith('.psnprofiles.com')) {
+    const segment = parsed.pathname.split('/').filter(Boolean)[0];
+    const handle = segment
+      ? decodeURIComponent(segment).trim()
+      : '';
+    return {
+      label: handle
+        ? `PSNProfiles profile ${handle}`
+        : 'PSNProfiles profile',
+      kind: 'psnprofiles',
+    };
+  }
+
+  if (host === 'playstation.com' || host.endsWith('.playstation.com')) {
+    return { label: 'PlayStation profile', kind: 'playstation' };
+  }
+
+  return null;
+}
+
 export const PSN_PROFILE_HELP =
   'Only https links from psnprofiles.com or playstation.com are accepted.';
 
