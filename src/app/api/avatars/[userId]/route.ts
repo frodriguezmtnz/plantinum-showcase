@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
+import { isAvatarUserId } from "@/lib/avatar";
 import { avatarImageKey, getImage, isStorageConfigured } from "@/lib/b2";
 
 export const runtime = "nodejs";
 
-// cuid() ids are lowercase alphanumerics; reject anything else before touching
-// storage so the route cannot be used to probe arbitrary keys.
-const USER_ID_PATTERN = /^[a-z0-9]{20,40}$/;
+const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function GET(
   _request: Request,
@@ -13,17 +12,20 @@ export async function GET(
 ) {
   const { userId } = await params;
 
-  if (!USER_ID_PATTERN.test(userId)) {
-    return new NextResponse("Not found", { status: 404 });
+  if (!isAvatarUserId(userId)) {
+    return new NextResponse("Not found", { status: 404, headers: NO_STORE });
   }
 
   if (!isStorageConfigured()) {
-    return new NextResponse("Storage not configured", { status: 503 });
+    return new NextResponse("Storage not configured", {
+      status: 503,
+      headers: NO_STORE,
+    });
   }
 
   const image = await getImage(avatarImageKey(userId));
   if (!image) {
-    return new NextResponse("Not found", { status: 404 });
+    return new NextResponse("Not found", { status: 404, headers: NO_STORE });
   }
 
   return new NextResponse(image.stream, {
