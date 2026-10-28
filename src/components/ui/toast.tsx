@@ -34,6 +34,8 @@ const toastVariants = cva(
           "destructive group border-destructive bg-destructive text-destructive-foreground",
         success: "success group border-emerald-600 bg-emerald-600 text-white",
         danger: "danger group border-red-600 bg-red-600 text-white",
+        // Dark amber text keeps AA contrast on the amber surface.
+        warning: "warning group border-amber-500 bg-amber-500 text-amber-950",
       },
     },
     defaultVariants: {
@@ -79,7 +81,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-hidden focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600 group-[.success]:text-white/70 group-[.success]:hover:text-white group-[.danger]:text-white/70 group-[.danger]:hover:text-white",
+      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-hidden focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600 group-[.success]:text-white/70 group-[.success]:hover:text-white group-[.danger]:text-white/70 group-[.danger]:hover:text-white group-[.warning]:text-amber-950/70 group-[.warning]:hover:text-amber-950",
       className
     )}
     toast-close=""

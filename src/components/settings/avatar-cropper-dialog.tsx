@@ -97,7 +97,7 @@ export function AvatarCropperDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[28rem]">
         <DialogHeader>
           <DialogTitle>Crop your avatar</DialogTitle>
           <DialogDescription>

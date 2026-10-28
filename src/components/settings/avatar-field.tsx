@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { Loader2, Trash2, Upload } from 'lucide-react';
 import { removeAvatar, updateAvatar } from '@/app/settings/actions';
 import { useAuth } from '@/hooks/use-auth';
@@ -19,6 +20,7 @@ interface AvatarFieldProps {
 
 export function AvatarField({ username, initialImage }: AvatarFieldProps) {
   const { refresh } = useAuth();
+  const router = useRouter();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
@@ -93,12 +95,14 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
 
       setImage(result.image);
       void refresh();
+      router.refresh();
       closeCropper();
 
       if (result.warning) {
         toast({
           title: 'Avatar updated',
           description: result.warning,
+          variant: 'warning',
         });
         return;
       }
@@ -124,6 +128,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
       }
       setImage(result.image);
       void refresh();
+      router.refresh();
       toast({
         title: 'Avatar reset',
         description: 'The generated avatar is back.',

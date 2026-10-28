@@ -67,7 +67,7 @@ export function DeleteAccount({ username }: DeleteAccountProps) {
           Delete account
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[28rem]">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden />

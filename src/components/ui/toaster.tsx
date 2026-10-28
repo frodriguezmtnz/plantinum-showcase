@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 const STACK_OVERLAP = "-4rem"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts, dismiss } = useToast()
   const [expanded, setExpanded] = useState(false)
   const viewportRef = useRef<HTMLOListElement>(null)
 
@@ -84,8 +84,14 @@ export function Toaster() {
             }}
             className={cn(
               "transition-[margin-top] duration-200 ease-out",
-              behind && "pointer-events-none",
+              behind ? "pointer-events-none" : "cursor-pointer",
             )}
+            onClick={(event) => {
+              if (behind) return;
+              const target = event.target as HTMLElement;
+              if (target.closest("button, a")) return;
+              dismiss(id);
+            }}
           >
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
@@ -100,7 +106,11 @@ export function Toaster() {
                 aria-hidden
                 className={cn(
                   "toast-progress absolute inset-x-0 bottom-0 h-0.5 w-full origin-left",
-                  variant === "default" ? "bg-foreground/25" : "bg-white/60",
+                  variant === "default"
+                    ? "bg-foreground/25"
+                    : variant === "warning"
+                      ? "bg-amber-950/40"
+                      : "bg-white/60",
                   expanded && "[animation-play-state:paused]",
                 )}
                 style={{ animationDuration: `${TOAST_REMOVE_DELAY}ms` }}

@@ -5,6 +5,7 @@ export const FOLLOW_PAGE_SIZE = 20;
 
 export interface FollowState {
   isFollowing: boolean;
+  followsYou: boolean;
   followers: number;
   following: number;
 }
@@ -12,6 +13,8 @@ export interface FollowState {
 export interface FollowListItem extends User {
   /** Whether the viewer follows this hunter (always false for signed-out). */
   isFollowing: boolean;
+  /** Whether this hunter follows the viewer (always false for signed-out). */
+  followsYou: boolean;
 }
 
 export interface FollowPage {
@@ -25,7 +28,7 @@ export async function getFollowState(
   profileUserId: string,
   viewerId?: string,
 ): Promise<FollowState> {
-  const [followers, following, edge] = await Promise.all([
+  const [followers, following, edge, reverseEdge] = await Promise.all([
     prisma.follow.count({ where: { followingId: profileUserId } }),
     prisma.follow.count({ where: { followerId: profileUserId } }),
     viewerId && viewerId !== profileUserId
@@ -39,9 +42,25 @@ export async function getFollowState(
           select: { id: true },
         })
       : null,
+    viewerId && viewerId !== profileUserId
+      ? prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: profileUserId,
+              followingId: viewerId,
+            },
+          },
+          select: { id: true },
+        })
+      : null,
   ]);
 
-  return { isFollowing: Boolean(edge), followers, following };
+  return {
+    isFollowing: Boolean(edge),
+    followsYou: Boolean(reverseEdge),
+    followers,
+    following,
+  };
 }
 
 /** Mark each row with the viewer's own follow edge in one extra query. */
@@ -50,19 +69,33 @@ async function attachViewerFollows(
   viewerId?: string,
 ): Promise<FollowListItem[]> {
   if (!viewerId || items.length === 0) {
-    return items.map((item) => ({ ...item, isFollowing: false }));
+    return items.map((item) => ({
+      ...item,
+      isFollowing: false,
+      followsYou: false,
+    }));
   }
 
-  const edges = await prisma.follow.findMany({
-    where: {
-      followerId: viewerId,
-      followingId: { in: items.map((item) => item.id) },
-    },
-    select: { followingId: true },
-  });
-  const followed = new Set(edges.map((edge) => edge.followingId));
+  const ids = items.map((item) => item.id);
+  const [edges, reverseEdges] = await Promise.all([
+    prisma.follow.findMany({
+      where: { followerId: viewerId, followingId: { in: ids } },
+      select: { followingId: true },
+    }),
+    prisma.follow.findMany({
+      where: { followingId: viewerId, followerId: { in: ids } },
+      select: { followerId: true },
+    }),
+  ]);
 
-  return items.map((item) => ({ ...item, isFollowing: followed.has(item.id) }));
+  const followed = new Set(edges.map((edge) => edge.followingId));
+  const followsViewer = new Set(reverseEdges.map((edge) => edge.followerId));
+
+  return items.map((item) => ({
+    ...item,
+    isFollowing: followed.has(item.id),
+    followsYou: followsViewer.has(item.id),
+  }));
 }
 
 /** Hunters following `userId`, newest edge first. */

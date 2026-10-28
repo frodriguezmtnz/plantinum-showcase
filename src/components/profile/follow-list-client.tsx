@@ -167,6 +167,11 @@ export function FollowListClient({
                 >
                   @{item.username}
                 </Link>
+                {item.followsYou && (
+                  <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    Follows you
+                  </span>
+                )}
                 <FollowButton
                   username={item.username}
                   initialIsFollowing={item.isFollowing}

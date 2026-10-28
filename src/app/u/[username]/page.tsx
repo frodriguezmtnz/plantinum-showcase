@@ -25,6 +25,7 @@ import {
   type ProfileTab,
 } from '@/components/profile/profile-tabs';
 import { ProfileAbout } from '@/components/profile/profile-about';
+import { ShareProfileButton } from '@/components/profile/share-profile-button';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
 import {
   parseProfileInfinite,
@@ -178,7 +179,12 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
             </span>
           </Link>
         </div>
-        <div className="mt-4">
+        {followState.followsYou && !isOwner && (
+          <p className="mt-3 inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted-foreground">
+            Follows you
+          </p>
+        )}
+        <div className="mt-4 flex items-center gap-2">
           {isOwner ? (
             <Button asChild variant="outline">
               <Link href="/settings">
@@ -192,6 +198,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
               initialIsFollowing={followState.isFollowing}
             />
           )}
+          <ShareProfileButton username={user.username} />
         </div>
       </div>
 
