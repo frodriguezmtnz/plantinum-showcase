@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcrypt";
 import sharp from "sharp";
@@ -14,6 +15,8 @@ import {
   putImage,
 } from "@/lib/b2";
 import { imageKeyFromUrl } from "@/lib/moderation-core";
+import { triageImageHash } from "@/lib/ai-triage";
+import { BIO_MAX_LENGTH, sanitizeBio } from "@/lib/bio";
 import { parsePsnProfileUrl, PSN_PROFILE_ERROR } from "@/lib/psn";
 import {
   USERNAME_PROBLEM_MESSAGE,
@@ -29,7 +32,7 @@ export type UsernameUpdateResult =
   | { success: false; error: string };
 
 export type AvatarUpdateResult =
-  | { success: true; image: string }
+  | { success: true; image: string; warning?: string }
   | { success: false; error: string };
 
 export type PasswordUpdateResult =
@@ -43,7 +46,6 @@ export type DeleteAccountResult =
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const AVATAR_EDGE = 256;
-const BIO_MAX_LENGTH = 160;
 
 const RATE_LIMITED =
   "Too many changes at once. Please wait a moment and try again.";
@@ -72,7 +74,9 @@ export async function updateProfile(
     return { success: false, error: RATE_LIMITED };
   }
 
-  const bio = String(formData.get("bio") ?? "").trim();
+  // Strip markup before length checks: the stored value is always plain text.
+  const rawBio = String(formData.get("bio") ?? "");
+  const bio = sanitizeBio(rawBio);
   if (bio.length > BIO_MAX_LENGTH) {
     return {
       success: false,
@@ -204,6 +208,35 @@ export async function updateAvatar(
     return { success: false, error: "The file is not a valid image." };
   }
 
+  // Screen the image that will actually be published, not the raw upload.
+  // Fail-open on purpose (product decision): UNSAFE is always rejected, but a
+  // REVIEW verdict or a classifier outage keeps the upload and shows a warning.
+  let verdict: { label: string } | null = null;
+  try {
+    const hash = createHash("sha256").update(processed).digest("hex");
+    const triage = await triageImageHash({
+      hash: `avatar:${hash}`,
+      data: processed,
+      mimeType: "image/avif",
+      kind: "avatar",
+    });
+    verdict = triage.verdict;
+  } catch (error) {
+    console.warn("[settings] avatar screening failed", error);
+  }
+
+  if (verdict?.label === "UNSAFE") {
+    return {
+      success: false,
+      error: "That image cannot be used as an avatar.",
+    };
+  }
+
+  const warning =
+    !verdict || verdict.label === "REVIEW"
+      ? "We could not fully verify this avatar, so it may be reviewed later."
+      : undefined;
+
   try {
     await putImage(avatarImageKey(userId), processed);
   } catch (error) {
@@ -220,7 +253,7 @@ export async function updateAvatar(
 
   revalidateProfile(user.username);
   revalidatePath("/");
-  return { success: true, image };
+  return { success: true, image, warning };
 }
 
 /** Removes the stored object and falls back to the generated avatar. */

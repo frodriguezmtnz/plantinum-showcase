@@ -1,12 +1,16 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { Loader2, Trash2, Upload } from 'lucide-react';
 import { removeAvatar, updateAvatar } from '@/app/settings/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { AvatarCropperDialog } from '@/components/settings/avatar-cropper-dialog';
+
+const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface AvatarFieldProps {
   username: string;
@@ -17,14 +21,62 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
   const { refresh } = useAuth();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
   const [image, setImage] = useState(initialImage);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  function releaseCropSource() {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+    setCropSrc(null);
+  }
+
+  function closeCropper() {
+    setCropOpen(false);
+    releaseCropSource();
+  }
 
   function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
 
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      toast({
+        title: 'Unsupported format',
+        description: 'Use a JPG, PNG or WEBP image.',
+        variant: 'danger',
+      });
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast({
+        title: 'Image too large',
+        description: 'The image exceeds the 4 MB size limit.',
+        variant: 'danger',
+      });
+      return;
+    }
+
+    releaseCropSource();
+    const url = URL.createObjectURL(file);
+    objectUrlRef.current = url;
+    setCropSrc(url);
+    setCropOpen(true);
+  }
+
+  function handleConfirm(blob: Blob) {
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
     const formData = new FormData();
     formData.set('avatar', file);
 
@@ -38,8 +90,19 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
         });
         return;
       }
+
       setImage(result.image);
       void refresh();
+      closeCropper();
+
+      if (result.warning) {
+        toast({
+          title: 'Avatar updated',
+          description: result.warning,
+        });
+        return;
+      }
+
       toast({
         title: 'Avatar updated',
         description: 'Your new picture is live on your profile.',
@@ -99,7 +162,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
             ) : (
               <Upload className="h-4 w-4" />
             )}
-            Upload image
+            {isPending ? 'Screening…' : 'Upload image'}
           </Button>
           <Button
             type="button"
@@ -113,9 +176,20 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          JPG, PNG or WEBP · square crop, up to 4 MB.
+          JPG, PNG or WEBP · up to 4 MB · avatars are screened before they go
+          live.
         </p>
       </div>
+
+      <AvatarCropperDialog
+        imageSrc={cropSrc}
+        open={cropOpen}
+        isPending={isPending}
+        onOpenChange={(open) => {
+          if (!open) closeCropper();
+        }}
+        onConfirm={handleConfirm}
+      />
     </div>
   );
 }

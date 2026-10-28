@@ -215,8 +215,8 @@ model MonthlyResult {
   @@index([period, votes])
 }
 
-// Cached AI screening of a screenshot, keyed by its content hash so the same
-// image is only classified once. Standalone (no FK) on purpose: the verdict is
+// Cached AI screening of an image (screenshot or avatar), keyed by its content
+// hash so the same bytes are only classified once. Standalone (no FK) on purpose: the verdict is
 // about the bytes, not about one specific plate.
 model ImageVerdict {
   id         String         @id @default(cuid())
