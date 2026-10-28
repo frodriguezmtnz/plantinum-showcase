@@ -20,6 +20,7 @@ interface FollowListClientProps {
   initialItems: FollowListItem[];
   initialTotal: number;
   initialHasMore: boolean;
+  isOwner?: boolean;
 }
 
 const TABS: { kind: FollowKind; label: string }[] = [
@@ -33,6 +34,7 @@ export function FollowListClient({
   initialItems,
   initialTotal,
   initialHasMore,
+  isOwner = false,
 }: FollowListClientProps) {
   const { toast } = useToast();
   const [items, setItems] = useState(initialItems);
@@ -111,6 +113,29 @@ export function FollowListClient({
           ))}
         </div>
       </div>
+
+      {isOwner && kind === 'following' && (
+        <div className="mb-6 rounded-2xl border border-dashed border-border p-4 text-center text-sm">
+          <p className="text-muted-foreground">
+            Plates from the hunters you follow don&apos;t live on your profile —
+            they fill your feed and your monthly circle.
+          </p>
+          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+            <Link
+              href="/explore?source=following"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              See their plates in your feed →
+            </Link>
+            <Link
+              href="/hall-of-fame?scope=circle"
+              className="font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              Their monthly race →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <EmptyState

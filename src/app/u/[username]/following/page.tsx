@@ -44,6 +44,7 @@ export default async function FollowingPage({ params }: Props) {
         initialItems={page.items}
         initialTotal={page.total}
         initialHasMore={page.hasMore}
+        isOwner={session?.user?.id === user.id}
       />
     </div>
   );

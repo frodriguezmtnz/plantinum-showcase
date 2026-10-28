@@ -197,6 +197,23 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
 
       <ProfileTabs username={user.username} tab={tab} />
 
+      {isOwner && (
+        <div className="-mt-6 mb-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
+          <Link
+            href="/explore?source=following"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Following feed →
+          </Link>
+          <Link
+            href="/hall-of-fame?scope=circle"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            My circle →
+          </Link>
+        </div>
+      )}
+
       {tab === 'stats' &&
         (summary.totalPlatinums === 0 ? (
           <EmptyState
