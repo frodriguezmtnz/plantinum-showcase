@@ -68,7 +68,13 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
 
     await prisma.user.createMany({
       data: [
-        { id: u.alice, email: `it-alice-${stamp}@test.local`, username: `it_alice_${stamp}` },
+        {
+          id: u.alice,
+          email: `it-alice-${stamp}@test.local`,
+          username: `it_alice_${stamp}`,
+          bio: 'Trophy hunter',
+          psnProfileUrl: 'https://psnprofiles.com/alice',
+        },
         { id: u.bob, email: `it-bob-${stamp}@test.local`, username: `it_bob_${stamp}` },
         { id: u.carol, email: `it-carol-${stamp}@test.local`, username: `it_carol_${stamp}` },
       ],
@@ -198,6 +204,16 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     const users = await data.getUsersByIds([u.alice, u.alice, u.bob]);
     expect(users.map((x) => x.id).sort()).toEqual([u.alice, u.bob].sort());
     expect(await data.getUsersByIds([])).toEqual([]);
+  });
+
+  it('exposes the About fields on the profile lookup', async () => {
+    const profile = await data.getUserProfileByUsername(`it_alice_${stamp}`);
+    expect(profile?.bio).toBe('Trophy hunter');
+    expect(profile?.psnProfileUrl).toBe('https://psnprofiles.com/alice');
+    expect(typeof profile?.createdAt).toBe('string');
+    expect(
+      await data.getUserProfileByUsername(`it-missing-${stamp}`),
+    ).toBeUndefined();
   });
 
   it('resolves a user by username', async () => {
