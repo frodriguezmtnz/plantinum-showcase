@@ -3,7 +3,16 @@
 import { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, Crown, ExternalLink, KeyRound, Loader2 } from 'lucide-react';
+import {
+  Check,
+  CircleAlert,
+  Crown,
+  ExternalLink,
+  KeyRound,
+  Loader2,
+  Save,
+  Undo2,
+} from 'lucide-react';
 import { checkUsernameAvailability } from '@/app/register/actions';
 import {
   changePassword,
@@ -14,6 +23,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { AvatarField } from '@/components/settings/avatar-field';
 import { DeleteAccount } from '@/components/settings/delete-account';
+import { PasswordInput } from '@/components/shared/password-input';
+import { PasswordRules } from '@/components/shared/password-rules';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -39,6 +50,7 @@ import {
   BIO_PROBLEM_MESSAGE,
   bioProblem,
 } from '@/lib/bio';
+import { passwordPolicyError } from '@/lib/password';
 import { nextPlan, planConfig, uploadsRemaining } from '@/lib/plans';
 import {
   formatUsernameChangeDate,
@@ -159,6 +171,19 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, startSavingPassword] = useTransition();
+
+  const newPasswordIssue = newPassword ? passwordPolicyError(newPassword) : null;
+  const passwordsMatch = Boolean(
+    newPassword && confirmPassword && newPassword === confirmPassword,
+  );
+  const passwordDiffers = Boolean(
+    newPassword && currentPassword && newPassword !== currentPassword,
+  );
+  const canChangePassword =
+    Boolean(currentPassword) &&
+    !newPasswordIssue &&
+    passwordsMatch &&
+    passwordDiffers;
 
   // Shape and "unchanged" are derived during render; only the network probe
   // needs an effect, so no setState runs synchronously in an effect body.
@@ -435,7 +460,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
 
             <div className="space-y-2">
               <Label htmlFor="settings-psn">PlayStation profile</Label>
-              <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
+              <div className="grid gap-2 sm:grid-cols-[13rem_1fr]">
                 <Select
                   value={psnProvider}
                   onValueChange={(value) =>
@@ -495,8 +520,10 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 onClick={handleSaveProfile}
                 disabled={isSavingProfile || !canSaveProfile}
               >
-                {isSavingProfile && (
+                {isSavingProfile ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
                 )}
                 Save profile
               </Button>
@@ -511,11 +538,13 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                   }}
                   disabled={isSavingProfile}
                 >
+                  <Undo2 className="h-4 w-4" />
                   Discard changes
                 </Button>
               )}
               {isProfileDirty && (
-                <span className="text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                  <CircleAlert className="h-3.5 w-3.5" aria-hidden />
                   Unsaved changes
                 </span>
               )}
@@ -579,9 +608,8 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current</Label>
-                <Input
+                <PasswordInput
                   id="current-password"
-                  type="password"
                   value={currentPassword}
                   onChange={(event) => setCurrentPassword(event.target.value)}
                   autoComplete="current-password"
@@ -589,38 +617,42 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-password">New</Label>
-                <Input
+                <PasswordInput
                   id="new-password"
-                  type="password"
                   value={newPassword}
                   onChange={(event) => setNewPassword(event.target.value)}
                   autoComplete="new-password"
+                  aria-describedby="password-rules"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm</Label>
-                <Input
+                <PasswordInput
                   id="confirm-password"
-                  type="password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   autoComplete="new-password"
                 />
               </div>
             </div>
+
+            <PasswordRules
+              id="password-rules"
+              value={newPassword}
+              confirm={confirmPassword}
+              current={currentPassword}
+            />
+
             <Button
               type="button"
               variant="outline"
               onClick={handleChangePassword}
-              disabled={
-                isSavingPassword ||
-                !currentPassword ||
-                !newPassword ||
-                !confirmPassword
-              }
+              disabled={isSavingPassword || !canChangePassword}
             >
-              {isSavingPassword && (
+              {isSavingPassword ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <KeyRound className="h-4 w-4" />
               )}
               Update password
             </Button>

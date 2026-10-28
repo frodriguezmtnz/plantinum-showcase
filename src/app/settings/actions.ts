@@ -27,6 +27,7 @@ import {
   bioProblem,
   sanitizeBio,
 } from "@/lib/bio";
+import { passwordPolicyError } from "@/lib/password";
 import {
   buildPsnProfileUrl,
   parsePsnProfileUrl,
@@ -369,11 +370,9 @@ export async function changePassword(
     };
   }
 
-  if (next.length < 6) {
-    return {
-      success: false,
-      error: "The new password must be at least 6 characters.",
-    };
+  const passwordIssue = passwordPolicyError(next);
+  if (passwordIssue) {
+    return { success: false, error: passwordIssue };
   }
   if (next !== confirm) {
     return { success: false, error: "The new passwords do not match." };

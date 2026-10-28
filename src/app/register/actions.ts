@@ -10,6 +10,7 @@ import {
   usernameProblem,
 } from "@/lib/usernames";
 import { usernameIsTaken } from "@/lib/username-registry";
+import { passwordPolicyError } from "@/lib/password";
 import { signIn } from "@/auth";
 
 export interface RegisterState {
@@ -70,8 +71,9 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "That email address is not valid." };
   }
-  if (!password || password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
+  const passwordIssue = passwordPolicyError(password ?? "");
+  if (passwordIssue) {
+    return { error: passwordIssue };
   }
   if (password !== confirmPassword) {
     return { error: "Passwords do not match." };
