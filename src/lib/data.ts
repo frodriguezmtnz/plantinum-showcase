@@ -135,6 +135,38 @@ export async function getUserByUsername(username: string): Promise<User | undefi
   return toUserView(user);
 }
 
+export interface UserProfile {
+  user: User;
+  bio: string | null;
+  psnProfileUrl: string | null;
+  createdAt: string;
+}
+
+/** Owner view used by the profile header/tabs (adds the About-tab fields). */
+export async function getUserProfileByUsername(
+  username: string,
+): Promise<UserProfile | undefined> {
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      image: true,
+      bio: true,
+      psnProfileUrl: true,
+      createdAt: true,
+    },
+  });
+  if (!user) return undefined;
+
+  return {
+    user: toUserView(user),
+    bio: user.bio,
+    psnProfileUrl: user.psnProfileUrl,
+    createdAt: user.createdAt.toISOString(),
+  };
+}
+
 export async function getPlatinums(): Promise<Platinum[]> {
   const platinums = await prisma.platinum.findMany({ where: { ...PUBLISHED_ONLY } });
   return platinums.map((p) => toPlatinumView(p));

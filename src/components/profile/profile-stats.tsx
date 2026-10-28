@@ -1,11 +1,6 @@
 import Link from 'next/link';
 import type { ProfileSummary } from '@/lib/data';
 import { formatPeriodShortLabel } from '@/lib/period';
-import type {
-  ProfilePlatformFilter,
-  ProfileSort,
-  ProfileView,
-} from '@/lib/profile-gallery';
 import { cn } from '@/lib/utils';
 
 export type ProfilePaceFilter = 'active' | 'all';
@@ -14,10 +9,6 @@ interface ProfileStatsProps {
   summary: ProfileSummary;
   pace: ProfilePaceFilter;
   username: string;
-  platform?: ProfilePlatformFilter;
-  sort?: ProfileSort;
-  view?: ProfileView;
-  infinite?: boolean;
 }
 
 /** Activity summary for a profile: monthly pace, top voted plates, platforms. */
@@ -25,10 +16,6 @@ export function ProfileStats({
   summary,
   pace,
   username,
-  platform = 'all',
-  sort = 'newest',
-  view = 'grid',
-  infinite = false,
 }: ProfileStatsProps) {
   if (summary.totalPlatinums === 0) return null;
 
@@ -41,15 +28,8 @@ export function ProfileStats({
     (sum, platform) => sum + platform.count,
     0,
   );
-  const paceHref = (next: ProfilePaceFilter) => {
-    const params = new URLSearchParams();
-    params.set('pace', next);
-    if (platform !== 'all') params.set('platform', platform);
-    if (sort !== 'newest') params.set('sort', sort);
-    if (view !== 'grid') params.set('view', view);
-    if (infinite) params.set('infinite', 'on');
-    return `/u/${username}?${params}`;
-  };
+  const paceHref = (next: ProfilePaceFilter) =>
+    `/u/${username}?tab=stats&pace=${next}`;
 
   return (
     <section className="mb-12 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
