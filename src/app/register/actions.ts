@@ -5,6 +5,10 @@ import { headers } from "next/headers";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
+import {
+  USERNAME_PROBLEM_MESSAGE,
+  usernameProblem,
+} from "@/lib/usernames";
 import { signIn } from "@/auth";
 
 export interface RegisterState {
@@ -12,22 +16,6 @@ export interface RegisterState {
   /** Set on success; the page refreshes the client session and navigates. */
   redirectTo?: string;
 }
-
-const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
-/** Handles we never hand out (impersonation / brand / infra). */
-const RESERVED_USERNAMES = new Set([
-  "admin",
-  "administrator",
-  "support",
-  "moderator",
-  "staff",
-  "platinum",
-  "showcase",
-  "system",
-  "official",
-  "root",
-]);
 
 export type UsernameReason = "invalid" | "reserved" | "taken" | "rate-limited";
 
@@ -46,11 +34,12 @@ export async function checkUsernameAvailability(
 ): Promise<UsernameAvailability> {
   const username = (rawUsername ?? "").trim();
 
-  if (username.length < 3 || username.length > 20 || !USERNAME_PATTERN.test(username)) {
-    return { available: false, reason: "invalid" };
-  }
-  if (RESERVED_USERNAMES.has(username.toLowerCase())) {
-    return { available: false, reason: "reserved" };
+  const problem = usernameProblem(username);
+  if (problem) {
+    return {
+      available: false,
+      reason: problem === "reserved" ? "reserved" : "invalid",
+    };
   }
 
   const headerList = await headers();
@@ -75,17 +64,9 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  if (!username || username.length < 3) {
-    return { error: "Username must be at least 3 characters." };
-  }
-  if (username.length > 20) {
-    return { error: "Username must be 20 characters or fewer." };
-  }
-  if (!USERNAME_PATTERN.test(username)) {
-    return { error: "Username can only use letters, numbers, dashes and underscores." };
-  }
-  if (RESERVED_USERNAMES.has(username.toLowerCase())) {
-    return { error: "That username is reserved." };
+  const problem = usernameProblem(username ?? "");
+  if (problem) {
+    return { error: USERNAME_PROBLEM_MESSAGE[problem] };
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "That email address is not valid." };

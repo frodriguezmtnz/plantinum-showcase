@@ -74,6 +74,9 @@ model User {
   passwordHash  String?
   plan          Plan      @default(FREE)
   role          Role      @default(USER)
+  // Public profile extras, edited from /settings.
+  bio           String?
+  psnProfileUrl String?
   // Confirmed NSFW/serious moderation hits. Escalates the upload flow.
   strikes       Int       @default(0)
   createdAt     DateTime  @default(now())
