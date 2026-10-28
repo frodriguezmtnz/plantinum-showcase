@@ -14,16 +14,25 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { AvatarField } from '@/components/settings/avatar-field';
 import { DeleteAccount } from '@/components/settings/delete-account';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { BIO_MAX_LENGTH } from '@/lib/bio';
 import { nextPlan, planConfig, uploadsRemaining } from '@/lib/plans';
 import { PSN_PROFILE_HELP } from '@/lib/psn';
 import { usernameProblem } from '@/lib/usernames';
 import { cn } from '@/lib/utils';
 
-const BIO_MAX_LENGTH = 160;
 
 export interface SettingsUser {
   username: string;
@@ -89,6 +98,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
     null,
   );
   const [isSavingUsername, startSavingUsername] = useTransition();
+  const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
 
   const [bio, setBio] = useState(user.bio ?? '');
   const [psn, setPsn] = useState(user.psnProfileUrl ?? '');
@@ -152,6 +162,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       }
       setSavedUsername(result.username);
       setUsername(result.username);
+      setUsernameDialogOpen(false);
       void refresh();
       router.refresh();
       toast({
@@ -240,12 +251,23 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         <p className="mt-2 text-muted-foreground">
           Manage your identity, security and plan.
         </p>
-        <Link
-          href={`/u/${savedUsername}`}
-          className="mt-3 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
-        >
-          ← Back to your profile
-        </Link>
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+          <Link
+            href={`/u/${savedUsername}`}
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            ← Back to your profile
+          </Link>
+          <a
+            href={`/u/${savedUsername}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            View public profile
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+          </a>
+        </div>
       </header>
 
       <div className="space-y-6">
@@ -271,7 +293,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               />
               <Button
                 type="button"
-                onClick={handleSaveUsername}
+                onClick={() => setUsernameDialogOpen(true)}
                 disabled={
                   availability !== 'available' || isSavingUsername
                 }
@@ -314,7 +336,8 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 placeholder="Short line about your trophy hunting."
               />
               <p className="text-xs text-muted-foreground">
-                {bio.length}/{BIO_MAX_LENGTH} · shown in your About tab.
+                {bio.length}/{BIO_MAX_LENGTH} · shown in your About tab. Plain
+                text only — links and HTML are not allowed.
               </p>
             </div>
 
@@ -345,6 +368,37 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               Save profile
             </Button>
           </div>
+
+          <AlertDialog
+            open={usernameDialogOpen}
+            onOpenChange={(open) => !isSavingUsername && setUsernameDialogOpen(open)}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Change your username?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your profile moves from /u/{savedUsername} to /u/
+                  {trimmedUsername}. Old links — and notifications that point at
+                  your previous handle — will stop working.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isSavingUsername}>
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  type="button"
+                  onClick={handleSaveUsername}
+                  disabled={isSavingUsername}
+                >
+                  {isSavingUsername && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                  Change username
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </Section>
 
         <Section
