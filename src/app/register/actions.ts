@@ -9,6 +9,7 @@ import {
   USERNAME_PROBLEM_MESSAGE,
   usernameProblem,
 } from "@/lib/usernames";
+import { usernameIsTaken } from "@/lib/username-registry";
 import { signIn } from "@/auth";
 
 export interface RegisterState {
@@ -51,11 +52,9 @@ export async function checkUsernameAvailability(
     return { available: false, reason: "rate-limited" };
   }
 
-  const taken = await prisma.user.count({
-    where: { username: { equals: username, mode: "insensitive" } },
-  });
-
-  return taken > 0 ? { available: false, reason: "taken" } : { available: true };
+  return (await usernameIsTaken(username))
+    ? { available: false, reason: "taken" }
+    : { available: true };
 }
 
 export async function registerAction(_state: RegisterState, formData: FormData): Promise<RegisterState> {
@@ -79,19 +78,15 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   }
 
   try {
-    const existing = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username: { equals: username, mode: "insensitive" } }],
-      },
+    const emailTaken = await prisma.user.findFirst({
+      where: { email },
+      select: { id: true },
     });
-
-    if (existing) {
-      return {
-        error:
-          existing.email === email
-            ? "An account with that email already exists."
-            : "That username is already taken.",
-      };
+    if (emailTaken) {
+      return { error: "An account with that email already exists." };
+    }
+    if (await usernameIsTaken(username)) {
+      return { error: "That username is already taken." };
     }
 
     const passwordHash = await bcrypt.hash(password, 10);

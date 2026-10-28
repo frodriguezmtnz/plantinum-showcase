@@ -26,10 +26,31 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { BIO_MAX_LENGTH } from '@/lib/bio';
+import {
+  BIO_MAX_LENGTH,
+  BIO_PROBLEM_MESSAGE,
+  bioProblem,
+} from '@/lib/bio';
 import { nextPlan, planConfig, uploadsRemaining } from '@/lib/plans';
-import { PSN_PROFILE_HELP } from '@/lib/psn';
+import {
+  formatUsernameChangeDate,
+  usernameCooldownStatus,
+} from '@/lib/username-policy';
+import {
+  buildPsnProfileUrl,
+  describePsnProfile,
+  psnHandleProblem,
+  PSN_PROVIDERS,
+  type PsnProvider,
+} from '@/lib/psn';
 import { usernameProblem } from '@/lib/usernames';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +62,7 @@ export interface SettingsUser {
   bio: string | null;
   psnProfileUrl: string | null;
   plan: string;
+  usernameChangedAt: string | null;
   uploadsUsed: number;
 }
 
@@ -94,15 +116,44 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
 
   const [savedUsername, setSavedUsername] = useState(user.username);
   const [username, setUsername] = useState(user.username);
+  const [changedAt, setChangedAt] = useState(user.usernameChangedAt);
+  const cooldown = usernameCooldownStatus(changedAt);
+  const usernameLocked = cooldown.locked;
   const [probe, setProbe] = useState<{ value: string; state: Availability } | null>(
     null,
   );
   const [isSavingUsername, startSavingUsername] = useTransition();
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
 
+  const initialPsn = describePsnProfile(user.psnProfileUrl);
   const [bio, setBio] = useState(user.bio ?? '');
-  const [psn, setPsn] = useState(user.psnProfileUrl ?? '');
+  const [psnProvider, setPsnProvider] = useState<PsnProvider>(
+    initialPsn?.kind ?? 'psnprofiles',
+  );
+  const [psnHandle, setPsnHandle] = useState(initialPsn?.handle ?? '');
+  const [savedBio, setSavedBio] = useState(user.bio ?? '');
+  const [savedPsnProvider, setSavedPsnProvider] = useState<PsnProvider>(
+    initialPsn?.kind ?? 'psnprofiles',
+  );
+  const [savedPsnHandle, setSavedPsnHandle] = useState(
+    initialPsn?.handle ?? '',
+  );
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
   const [isSavingProfile, startSavingProfile] = useTransition();
+
+  const bioIssue = bioProblem(bio);
+  const psnProblem = psnHandle.trim()
+    ? psnHandleProblem(psnHandle)
+    : null;
+  const isProfileDirty =
+    bio !== savedBio ||
+    psnProvider !== savedPsnProvider ||
+    psnHandle.trim() !== savedPsnHandle;
+  const canSaveProfile = !bioIssue && !psnProblem;
+  const psnPreview =
+    psnHandle.trim() && !psnProblem
+      ? buildPsnProfileUrl(psnProvider, psnHandle.trim())
+      : null;
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -123,6 +174,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       : null;
 
   useEffect(() => {
+    if (usernameLocked) return;
     if (derivedAvailability !== null) return;
 
     let alive = true;
@@ -143,11 +195,38 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       alive = false;
       clearTimeout(handle);
     };
-  }, [trimmedUsername, derivedAvailability]);
+  }, [trimmedUsername, derivedAvailability, usernameLocked]);
 
   const availability: Availability =
     derivedAvailability ??
     (probe?.value === trimmedUsername ? probe.state : 'checking');
+
+  useEffect(() => {
+    if (!isProfileDirty) return;
+    const handler = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isProfileDirty]);
+
+  function handleNavigate(href: string) {
+    if (isProfileDirty) {
+      setPendingNav(href);
+      return;
+    }
+    router.push(href);
+  }
+
+  function discardAndLeave() {
+    setBio(savedBio);
+    setPsnProvider(savedPsnProvider);
+    setPsnHandle(savedPsnHandle);
+    const href = pendingNav;
+    setPendingNav(null);
+    if (href) router.push(href);
+  }
 
   function handleSaveUsername() {
     startSavingUsername(async () => {
@@ -162,6 +241,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       }
       setSavedUsername(result.username);
       setUsername(result.username);
+      setChangedAt(result.changedAt);
       setUsernameDialogOpen(false);
       void refresh();
       router.refresh();
@@ -176,7 +256,8 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   function handleSaveProfile() {
     const formData = new FormData();
     formData.set('bio', bio);
-    formData.set('psnProfileUrl', psn);
+    formData.set('psnProvider', psnProvider);
+    formData.set('psnHandle', psnHandle);
 
     startSavingProfile(async () => {
       const result = await updateProfile(formData);
@@ -188,6 +269,15 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         });
         return;
       }
+
+      const savedPsn = describePsnProfile(result.psnProfileUrl);
+      setBio(result.bio ?? '');
+      setSavedBio(result.bio ?? '');
+      setPsnProvider(savedPsn?.kind ?? 'psnprofiles');
+      setPsnHandle(savedPsn?.handle ?? '');
+      setSavedPsnProvider(savedPsn?.kind ?? 'psnprofiles');
+      setSavedPsnHandle(savedPsn?.handle ?? '');
+
       router.refresh();
       toast({
         title: 'Profile saved',
@@ -251,22 +341,14 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         <p className="mt-2 text-muted-foreground">
           Manage your identity, security and plan.
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
-          <Link
-            href={`/u/${savedUsername}`}
+        <div className="mt-3 text-sm">
+          <button
+            type="button"
+            onClick={() => handleNavigate(`/u/${savedUsername}`)}
             className="font-semibold text-primary underline-offset-4 hover:underline"
           >
             ← Back to your profile
-          </Link>
-          <a
-            href={`/u/${savedUsername}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground transition-colors hover:text-foreground"
-          >
-            View public profile
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-          </a>
+          </button>
         </div>
       </header>
 
@@ -290,20 +372,23 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 autoComplete="off"
                 spellCheck={false}
                 aria-describedby="settings-username-hint"
+                disabled={usernameLocked}
               />
-              <Button
-                type="button"
-                onClick={() => setUsernameDialogOpen(true)}
-                disabled={
-                  availability !== 'available' || isSavingUsername
-                }
-                className="shrink-0"
-              >
-                {isSavingUsername && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-                Save username
-              </Button>
+              {!usernameLocked && (
+                <Button
+                  type="button"
+                  onClick={() => setUsernameDialogOpen(true)}
+                  disabled={
+                    availability !== 'available' || isSavingUsername
+                  }
+                  className="shrink-0"
+                >
+                  {isSavingUsername && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                  Save username
+                </Button>
+              )}
             </div>
             <p
               id="settings-username-hint"
@@ -317,8 +402,10 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               )}
               aria-live="polite"
             >
-              {availabilityCopy[availability] ??
-                'This is also your public profile URL.'}
+              {usernameLocked && cooldown.nextAt
+                ? `You can change it again on ${formatUsernameChangeDate(cooldown.nextAt)} (once every 12 months).`
+                : (availabilityCopy[availability] ??
+                  'This is also your public profile URL.')}
             </p>
           </div>
 
@@ -337,49 +424,117 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               />
               <p className="text-xs text-muted-foreground">
                 {bio.length}/{BIO_MAX_LENGTH} · shown in your About tab. Plain
-                text only — links and HTML are not allowed.
+                text only — HTML, &lt; &gt; and javascript: are not allowed.
               </p>
+              {bioIssue && (
+                <p className="text-xs text-destructive" role="alert">
+                  {BIO_PROBLEM_MESSAGE[bioIssue]}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="settings-psn">PlayStation profile</Label>
-              <Input
-                id="settings-psn"
-                type="url"
-                value={psn}
-                onChange={(event) => setPsn(event.target.value)}
-                placeholder="https://psnprofiles.com/your-handle"
-                aria-describedby="settings-psn-hint"
-              />
+              <div className="grid gap-2 sm:grid-cols-[10rem_1fr]">
+                <Select
+                  value={psnProvider}
+                  onValueChange={(value) =>
+                    setPsnProvider(value as PsnProvider)
+                  }
+                >
+                  <SelectTrigger
+                    id="settings-psn-provider"
+                    aria-label="PlayStation profile provider"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PSN_PROVIDERS.map((provider) => (
+                      <SelectItem key={provider.value} value={provider.value}>
+                        {provider.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="settings-psn"
+                  value={psnHandle}
+                  onChange={(event) => setPsnHandle(event.target.value)}
+                  placeholder="Your PSN nickname"
+                  maxLength={16}
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-describedby="settings-psn-hint"
+                />
+              </div>
               <p
                 id="settings-psn-hint"
                 className="text-xs text-muted-foreground"
               >
-                {PSN_PROFILE_HELP}
+                {psnPreview ? (
+                  <>
+                    We will link to{' '}
+                    <span className="break-all font-medium text-foreground">
+                      {psnPreview}
+                    </span>
+                  </>
+                ) : (
+                  'Pick a provider and type the nickname; we build the profile link.'
+                )}
               </p>
+              {psnProblem === 'invalid' && (
+                <p className="text-xs text-destructive" role="alert">
+                  3–16 characters: letters, numbers, dashes or underscores.
+                </p>
+              )}
             </div>
 
-            <Button
-              type="button"
-              onClick={handleSaveProfile}
-              disabled={isSavingProfile}
-            >
-              {isSavingProfile && <Loader2 className="h-4 w-4 animate-spin" />}
-              Save profile
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile || !canSaveProfile}
+              >
+                {isSavingProfile && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                Save profile
+              </Button>
+              {isProfileDirty && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setBio(savedBio);
+                    setPsnProvider(savedPsnProvider);
+                    setPsnHandle(savedPsnHandle);
+                  }}
+                  disabled={isSavingProfile}
+                >
+                  Discard changes
+                </Button>
+              )}
+              {isProfileDirty && (
+                <span className="text-xs text-muted-foreground">
+                  Unsaved changes
+                </span>
+              )}
+            </div>
           </div>
 
+          {!usernameLocked && (
           <AlertDialog
             open={usernameDialogOpen}
             onOpenChange={(open) => !isSavingUsername && setUsernameDialogOpen(open)}
           >
-            <AlertDialogContent>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[28rem]">
               <AlertDialogHeader>
                 <AlertDialogTitle>Change your username?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Your profile moves from /u/{savedUsername} to /u/
                   {trimmedUsername}. Old links — and notifications that point at
-                  your previous handle — will stop working.
+                  your previous handle — will stop working, and the old handle is
+                  reserved forever. You can change it again in 12 months.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -399,6 +554,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          )}
         </Section>
 
         <Section
@@ -509,7 +665,14 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
 
           {upgrade && (
             <Button asChild variant="outline" className="w-fit">
-              <Link href="/pricing">
+              <Link
+                href="/pricing"
+                onClick={(event) => {
+                  if (!isProfileDirty) return;
+                  event.preventDefault();
+                  setPendingNav('/pricing');
+                }}
+              >
                 See {upgrade} plans
                 <ExternalLink className="h-4 w-4" />
               </Link>
@@ -535,6 +698,26 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           </p>
         </Section>
       </div>
+
+      <AlertDialog
+        open={pendingNav !== null}
+        onOpenChange={(open) => !open && setPendingNav(null)}
+      >
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[28rem]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your bio and PlayStation link changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <Button type="button" variant="destructive" onClick={discardAndLeave}>
+              Discard and leave
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -15,20 +15,36 @@ import {
   putImage,
 } from "@/lib/b2";
 import { imageKeyFromUrl } from "@/lib/moderation-core";
+import { usernameIsTaken, reserveUsername } from "@/lib/username-registry";
+import {
+  formatUsernameChangeDate,
+  usernameCooldownStatus,
+} from "@/lib/username-policy";
 import { triageImageHash } from "@/lib/ai-triage";
-import { BIO_MAX_LENGTH, sanitizeBio } from "@/lib/bio";
-import { parsePsnProfileUrl, PSN_PROFILE_ERROR } from "@/lib/psn";
+import {
+  BIO_MAX_LENGTH,
+  BIO_PROBLEM_MESSAGE,
+  bioProblem,
+  sanitizeBio,
+} from "@/lib/bio";
+import {
+  buildPsnProfileUrl,
+  parsePsnProfileUrl,
+  psnHandleProblem,
+  PSN_PROFILE_ERROR,
+  type PsnProvider,
+} from "@/lib/psn";
 import {
   USERNAME_PROBLEM_MESSAGE,
   usernameProblem,
 } from "@/lib/usernames";
 
 export type ProfileUpdateResult =
-  | { success: true }
+  | { success: true; bio: string | null; psnProfileUrl: string | null }
   | { success: false; error: string };
 
 export type UsernameUpdateResult =
-  | { success: true; username: string }
+  | { success: true; username: string; changedAt: string }
   | { success: false; error: string };
 
 export type AvatarUpdateResult =
@@ -74,8 +90,12 @@ export async function updateProfile(
     return { success: false, error: RATE_LIMITED };
   }
 
-  // Strip markup before length checks: the stored value is always plain text.
+  // Reject markup outright; sanitize as a second line of defence.
   const rawBio = String(formData.get("bio") ?? "");
+  const bioIssue = bioProblem(rawBio);
+  if (bioIssue) {
+    return { success: false, error: BIO_PROBLEM_MESSAGE[bioIssue] };
+  }
   const bio = sanitizeBio(rawBio);
   if (bio.length > BIO_MAX_LENGTH) {
     return {
@@ -84,22 +104,38 @@ export async function updateProfile(
     };
   }
 
-  const psn = parsePsnProfileUrl(String(formData.get("psnProfileUrl") ?? ""));
-  if (!psn.ok) {
-    return { success: false, error: PSN_PROFILE_ERROR[psn.reason] };
+  const providerRaw = String(formData.get("psnProvider") ?? "psnprofiles");
+  const provider: PsnProvider =
+    providerRaw === "playstation" ? "playstation" : "psnprofiles";
+  const handle = String(formData.get("psnHandle") ?? "").trim();
+
+  let psnProfileUrl: string | null = null;
+  if (handle) {
+    if (psnHandleProblem(handle)) {
+      return {
+        success: false,
+        error:
+          "PSN nickname must be 3–16 characters: letters, numbers, dashes or underscores.",
+      };
+    }
+    const parsed = parsePsnProfileUrl(buildPsnProfileUrl(provider, handle));
+    if (!parsed.ok) {
+      return { success: false, error: PSN_PROFILE_ERROR[parsed.reason] };
+    }
+    psnProfileUrl = parsed.url;
   }
 
   const user = await prisma.user.update({
     where: { id: userId },
     data: {
       bio: bio || null,
-      psnProfileUrl: psn.url,
+      psnProfileUrl,
     },
     select: { username: true },
   });
 
   revalidateProfile(user.username);
-  return { success: true };
+  return { success: true, bio: bio || null, psnProfileUrl };
 }
 
 /**
@@ -124,29 +160,51 @@ export async function updateUsername(
 
   const current = await prisma.user.findUnique({
     where: { id: userId },
-    select: { username: true },
+    select: { username: true, usernameChangedAt: true },
   });
   if (!current) {
     return { success: false, error: "Your account could not be found." };
   }
-  if (current.username === username) {
-    return { success: true, username };
+
+  const cooldown = usernameCooldownStatus(current.usernameChangedAt);
+  if (cooldown.locked && cooldown.nextAt) {
+    return {
+      success: false,
+      error: `You can change your username again on ${formatUsernameChangeDate(cooldown.nextAt)}.`,
+    };
   }
 
-  const taken = await prisma.user.count({
-    where: {
-      username: { equals: username, mode: "insensitive" },
-      id: { not: userId },
-    },
-  });
-  if (taken > 0) {
+  if (current.username === username) {
+    return {
+      success: true,
+      username,
+      changedAt: (current.usernameChangedAt ?? new Date()).toISOString(),
+    };
+  }
+
+  if (await usernameIsTaken(username, userId)) {
     return { success: false, error: "That username is already taken." };
   }
 
+  const changedAt = new Date();
+  const sameLower =
+    current.username?.toLowerCase() === username.toLowerCase();
+
   try {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { username, name: username },
+    await prisma.$transaction(async (tx) => {
+      // A case-only change does not free a different handle, so it is not
+      // reserved (and would otherwise collide with the user's own history).
+      if (current.username && !sameLower) {
+        await reserveUsername(current.username, userId, tx);
+      }
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          username,
+          name: username,
+          usernameChangedAt: changedAt,
+        },
+      });
     });
   } catch (error) {
     if ((error as { code?: string }).code === "P2002") {
@@ -158,7 +216,7 @@ export async function updateUsername(
 
   revalidateProfile(current.username);
   revalidateProfile(username);
-  return { success: true, username };
+  return { success: true, username, changedAt: changedAt.toISOString() };
 }
 
 /** Square AVIF avatar, one stable key per account (overwrite replaces it). */
@@ -252,7 +310,7 @@ export async function updateAvatar(
   });
 
   revalidateProfile(user.username);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true, image, warning };
 }
 
@@ -282,7 +340,7 @@ export async function removeAvatar(): Promise<AvatarUpdateResult> {
   await prisma.user.update({ where: { id: userId }, data: { image } });
 
   revalidateProfile(user?.username ?? null);
-  revalidatePath("/");
+  revalidatePath("/", "layout");
   return { success: true, image };
 }
 
@@ -377,14 +435,20 @@ export async function deleteAccount(
   }
 
   const platinumIds = user.platinums.map((plate) => plate.id);
-  if (platinumIds.length > 0) {
-    await prisma.monthlyResult.updateMany({
-      where: { platinumId: { in: platinumIds } },
-      data: { platinumId: null },
-    });
-  }
 
-  await prisma.user.delete({ where: { id: userId } });
+  await prisma.$transaction(async (tx) => {
+    // Freeing the handle forever keeps old links from resolving to a stranger.
+    if (user.username) {
+      await reserveUsername(user.username, userId, tx);
+    }
+    if (platinumIds.length > 0) {
+      await tx.monthlyResult.updateMany({
+        where: { platinumId: { in: platinumIds } },
+        data: { platinumId: null },
+      });
+    }
+    await tx.user.delete({ where: { id: userId } });
+  });
 
   // Storage cleanup after the cascade: only drop bytes no other plate shares.
   const seen = new Set<string>();

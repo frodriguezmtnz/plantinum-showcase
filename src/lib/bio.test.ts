@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeBio } from '@/lib/bio';
+import { bioProblem, sanitizeBio } from '@/lib/bio';
 
 describe('sanitizeBio', () => {
   it('strips HTML tags so stored bios are plain text', () => {
@@ -21,5 +21,13 @@ describe('sanitizeBio', () => {
 
   it('removes control characters and trims', () => {
     expect(sanitizeBio('  a\u0000b\u0007c  ')).toBe('abc');
+  });
+});
+
+describe('bioProblem', () => {
+  it('rejects angle brackets and javascript', () => {
+    expect(bioProblem('hard trophy hunter <img src=x>')).toBe('html');
+    expect(bioProblem('javascript:alert(1)')).toBe('script');
+    expect(bioProblem('hard trophy hunter')).toBeNull();
   });
 });

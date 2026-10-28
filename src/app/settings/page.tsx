@@ -26,6 +26,7 @@ export default async function SettingsPage() {
       bio: true,
       psnProfileUrl: true,
       plan: true,
+      usernameChangedAt: true,
     },
   });
 
@@ -44,6 +45,7 @@ export default async function SettingsPage() {
         bio: user.bio,
         psnProfileUrl: user.psnProfileUrl,
         plan: user.plan,
+        usernameChangedAt: user.usernameChangedAt?.toISOString() ?? null,
         uploadsUsed,
       }}
     />

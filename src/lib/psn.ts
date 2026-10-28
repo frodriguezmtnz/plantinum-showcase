@@ -1,11 +1,40 @@
 /**
  * PlayStation profile links are user-controlled content shown on a public
  * page, so they are restricted to the two official/professional hosts instead
- * of accepting arbitrary URLs.
+ * of accepting arbitrary URLs. The Settings form only asks for a nickname and
+ * the URL is built here.
  */
 
 const ALLOWED_PSN_HOSTS = ['psnprofiles.com', 'playstation.com'] as const;
 const MAX_URL_LENGTH = 300;
+
+export type PsnProvider = 'psnprofiles' | 'playstation';
+
+export const PSN_PROVIDERS: { value: PsnProvider; label: string }[] = [
+  { value: 'psnprofiles', label: 'PSNProfiles' },
+  { value: 'playstation', label: 'PlayStation' },
+];
+
+/** PSN online IDs: 3–16 letters, numbers, dashes or underscores. */
+export const PSN_HANDLE_PATTERN = /^[A-Za-z0-9_-]{3,16}$/;
+
+export type PsnHandleProblem = 'empty' | 'invalid';
+
+export function psnHandleProblem(handle: string): PsnHandleProblem | null {
+  const value = handle.trim();
+  if (!value) return 'empty';
+  return PSN_HANDLE_PATTERN.test(value) ? null : 'invalid';
+}
+
+export function buildPsnProfileUrl(
+  provider: PsnProvider,
+  handle: string,
+): string {
+  const encoded = encodeURIComponent(handle.trim());
+  return provider === 'psnprofiles'
+    ? `https://psnprofiles.com/${encoded}`
+    : `https://profile.playstation.com/${encoded}`;
+}
 
 export type PsnProfileParse =
   | { ok: true; url: string | null }
@@ -43,12 +72,19 @@ export function parsePsnProfileUrl(raw: string): PsnProfileParse {
 
 export interface PsnProfileLabel {
   label: string;
-  kind: 'psnprofiles' | 'playstation';
+  kind: PsnProvider;
+  handle: string | null;
+}
+
+function firstSegment(pathname: string): string | null {
+  const segment = pathname.split('/').filter(Boolean)[0];
+  return segment ? decodeURIComponent(segment).trim() || null : null;
 }
 
 /**
- * Human label for the About tab: PSNProfiles links carry the handle in the
- * first path segment, while playstation.com keeps a generic label.
+ * Human label for the About tab and the data needed to prefill the Settings
+ * form: PSNProfiles keeps the handle in the first path segment, PlayStation in
+ * `profile.playstation.com/<handle>` (legacy: `my.playstation.com/profile/<handle>`).
  */
 export function describePsnProfile(
   url: string | null | undefined,
@@ -63,28 +99,34 @@ export function describePsnProfile(
   }
 
   const host = parsed.hostname.toLowerCase();
+
   if (host === 'psnprofiles.com' || host.endsWith('.psnprofiles.com')) {
-    const segment = parsed.pathname.split('/').filter(Boolean)[0];
-    const handle = segment
-      ? decodeURIComponent(segment).trim()
-      : '';
+    const handle = firstSegment(parsed.pathname);
     return {
-      label: handle
-        ? `PSNProfiles profile ${handle}`
-        : 'PSNProfiles profile',
+      label: handle ? `PSNProfiles profile ${handle}` : 'PSNProfiles profile',
       kind: 'psnprofiles',
+      handle,
     };
   }
 
   if (host === 'playstation.com' || host.endsWith('.playstation.com')) {
-    return { label: 'PlayStation profile', kind: 'playstation' };
+    let handle: string | null = null;
+    if (host === 'profile.playstation.com') {
+      handle = firstSegment(parsed.pathname);
+    } else if (host === 'my.playstation.com') {
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      if (parts[0] === 'profile' && parts[1]) {
+        handle = decodeURIComponent(parts[1]).trim() || null;
+      }
+    }
+    return { label: 'PlayStation profile', kind: 'playstation', handle };
   }
 
   return null;
 }
 
 export const PSN_PROFILE_HELP =
-  'Only https links from psnprofiles.com or playstation.com are accepted.';
+  'Pick a provider and type the nickname; we build the profile link. PSNProfiles and PlayStation only.';
 
 export const PSN_PROFILE_ERROR: Record<
   Exclude<PsnProfileParse, { ok: true }>['reason'],

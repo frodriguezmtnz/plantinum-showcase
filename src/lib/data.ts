@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { sanitizeBio } from "@/lib/bio";
 import { getCurrentPeriod, shiftPeriod } from "@/lib/period";
 import {
   PROFILE_PAGE_SIZE,
@@ -161,7 +162,8 @@ export async function getUserProfileByUsername(
 
   return {
     user: toUserView(user),
-    bio: user.bio,
+    // Legacy rows may predate the write-side rejection: never render markup.
+    bio: user.bio ? sanitizeBio(user.bio) : null,
     psnProfileUrl: user.psnProfileUrl,
     createdAt: user.createdAt.toISOString(),
   };

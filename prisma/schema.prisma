@@ -77,6 +77,8 @@ model User {
   // Public profile extras, edited from /settings.
   bio           String?
   psnProfileUrl String?
+  // Handle changes are limited to once every 12 months.
+  usernameChangedAt DateTime?
   // Confirmed NSFW/serious moderation hits. Escalates the upload flow.
   strikes       Int       @default(0)
   createdAt     DateTime  @default(now())
@@ -90,6 +92,18 @@ model User {
   // One-way social graph: who this user follows and who follows them.
   following     Follow[]  @relation("Following")
   followers     Follow[]  @relation("Followers")
+}
+
+// Handles that used to belong to an account (renamed or deleted). They stay
+// reserved forever so old links never point at a different person.
+model UsernameHistory {
+  id            String   @id @default(cuid())
+  username      String
+  usernameLower String   @unique
+  userId        String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Vote {
