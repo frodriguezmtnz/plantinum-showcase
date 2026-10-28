@@ -15,6 +15,7 @@ import {
   UserPlus,
   ShieldCheck,
   Bell,
+  Settings,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { NotificationBell } from '@/components/shared/notification-bell';
@@ -169,6 +170,12 @@ export function Header() {
                       <span>Notifications</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
                   {user.role && user.role !== 'USER' && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin/reports">
@@ -250,6 +257,12 @@ export function Header() {
                           <NavLink href="/notifications" active={pathname === '/notifications'}>
                             <Bell className="mr-2 h-4 w-4" />
                             Notifications
+                          </NavLink>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <NavLink href="/settings" active={pathname === '/settings'}>
+                            <Settings className="mr-2 h-4 w-4" />
+                            Settings
                           </NavLink>
                         </SheetClose>
                         {user.role && user.role !== 'USER' && (

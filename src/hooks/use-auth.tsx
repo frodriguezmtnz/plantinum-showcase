@@ -15,7 +15,10 @@ export function useAuth() {
   useEffect(() => {
     updateRef.current = update;
   });
-  const refresh = useCallback(() => updateRef.current(), []);
+  // Passing an object makes next-auth POST to /api/auth/session, which is the
+  // only call that runs the jwt callback with trigger: "update". Without it,
+  // Settings changes (handle, avatar) would stay stale until a full re-login.
+  const refresh = useCallback(() => updateRef.current({}), []);
 
   const logout = useCallback(() => signOut({ callbackUrl: '/' }), []);
 

@@ -56,6 +56,11 @@ export function storageImageKey(hash: string): string {
   return `platinums/${hash}.avif`;
 }
 
+/** One stable key per account: replacing an avatar overwrites its object. */
+export function avatarImageKey(userId: string): string {
+  return `avatars/${userId}.avif`;
+}
+
 export async function putImage(key: string, body: Buffer): Promise<void> {
   const { client, bucket } = getClient();
   await client.send(
