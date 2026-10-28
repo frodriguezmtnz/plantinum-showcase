@@ -1160,18 +1160,36 @@ export async function toggleFollow(username: string): Promise<FollowActionResult
       isFollowing = true;
 
       // Best-effort: a failed notice must never undo the follow itself.
-      const follower = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { username: true },
-      });
-      if (follower?.username) {
-        await notifyUser({
-          userId: target.id,
-          kind: "NEW_FOLLOWER",
-          title: `@${follower.username} started following you`,
-          body: "Open their profile to see their platinum shelf.",
-          linkUrl: `/u/${follower.username}`,
+      try {
+        const follower = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { username: true },
         });
+        if (follower?.username) {
+          const linkUrl = `/u/${follower.username}`;
+          // A quick follow/unfollow/follow must not stack notices: if the
+          // same profile already left an unread one, reuse it.
+          const pending = await prisma.notification.findFirst({
+            where: {
+              userId: target.id,
+              kind: "NEW_FOLLOWER",
+              linkUrl,
+              readAt: null,
+            },
+            select: { id: true },
+          });
+          if (!pending) {
+            await notifyUser({
+              userId: target.id,
+              kind: "NEW_FOLLOWER",
+              title: `@${follower.username} started following you`,
+              body: "Open their profile to see their platinum shelf.",
+              linkUrl,
+            });
+          }
+        }
+      } catch (noticeError) {
+        console.warn("[follows] could not store follower notice", noticeError);
       }
     }
 

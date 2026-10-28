@@ -40,6 +40,17 @@ export function FollowListClient({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isPending, startTransition] = useTransition();
 
+  // A follow toggle calls router.refresh(); when the server list changes we
+  // adopt it (e.g. the unfollowed hunter leaves the "Following" page).
+  const serverKey = `${kind}|${initialTotal}|${initialItems.map((item) => item.id).join(',')}`;
+  const [syncedKey, setSyncedKey] = useState(serverKey);
+  if (syncedKey !== serverKey) {
+    setSyncedKey(serverKey);
+    setItems(initialItems);
+    setTotal(initialTotal);
+    setHasMore(initialHasMore);
+  }
+
   const EmptyIcon = kind === 'followers' ? Users : UserCheck;
 
   function loadMore() {
