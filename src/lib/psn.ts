@@ -19,6 +19,8 @@ export type PsnProvider =
 interface PsnProviderConfig {
   value: PsnProvider;
   label: string;
+  /** Local favicon committed under /public, so CSP keeps img-src 'self'. */
+  icon: string;
   hosts: readonly string[];
   build: (handle: string) => string;
   extract: (url: URL) => string | null;
@@ -52,6 +54,7 @@ function genericLabel(name: string) {
 const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   {
     value: 'psnprofiles',
+    icon: '/psn-icons/psnprofiles.png',
     label: 'PSNProfiles',
     hosts: ['psnprofiles.com'],
     build: (handle) => `https://psnprofiles.com/${encode(handle)}`,
@@ -60,6 +63,7 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
   {
     value: 'playstation',
+    icon: '/psn-icons/playstation.png',
     label: 'PlayStation',
     hosts: ['playstation.com'],
     build: (handle) => `https://profile.playstation.com/${encode(handle)}`,
@@ -77,6 +81,7 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
   {
     value: 'psntrophyleaders',
+    icon: '/psn-icons/psntrophyleaders.png',
     label: 'PSNTrophyLeaders',
     hosts: ['psntrophyleaders.com'],
     build: (handle) =>
@@ -86,6 +91,7 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
   {
     value: 'pocketpsn',
+    icon: '/psn-icons/pocketpsn.png',
     label: 'PocketPSN',
     hosts: ['pocketpsn.com'],
     build: (handle) => `https://pocketpsn.com/${encode(handle)}`,
@@ -94,6 +100,7 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
   {
     value: 'exophase',
+    icon: '/psn-icons/exophase.png',
     label: 'Exophase',
     hosts: ['exophase.com'],
     build: (handle) => `https://www.exophase.com/psn/user/${encode(handle)}/`,
@@ -102,6 +109,7 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
   {
     value: 'truetrophies',
+    icon: '/psn-icons/truetrophies.png',
     label: 'TrueTrophies',
     hosts: ['truetrophies.com'],
     build: (handle) => `https://www.truetrophies.com/gamer/${encode(handle)}`,
@@ -113,6 +121,7 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
   {
     value: 'playstationtrophies',
+    icon: '/psn-icons/playstationtrophies.png',
     label: 'PlayStationTrophies.org',
     hosts: ['playstationtrophies.org'],
     build: (handle) =>
@@ -125,10 +134,9 @@ const PSN_PROVIDER_CONFIGS: readonly PsnProviderConfig[] = [
   },
 ];
 
-export const PSN_PROVIDERS = PSN_PROVIDER_CONFIGS.map(({ value, label }) => ({
-  value,
-  label,
-}));
+export const PSN_PROVIDERS = PSN_PROVIDER_CONFIGS.map(
+  ({ value, label, icon }) => ({ value, label, icon }),
+);
 
 function configFor(provider: PsnProvider): PsnProviderConfig {
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -524,91 +525,121 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 </p>
               )}
 
-              {links.map((link, index) => {
-                const preview =
-                  link.handle.trim() && psnHandleProblem(link.handle) !== 'invalid'
-                    ? buildPsnProfileUrl(link.provider, link.handle.trim())
-                    : null;
-                const providerOptions = PSN_PROVIDERS.filter(
-                  (provider) =>
-                    provider.value === link.provider ||
-                    !usedProviders.has(provider.value),
-                );
+              {links.length > 0 && (
+                <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/70 bg-background/40">
+                  {links.map((link, index) => {
+                    const preview =
+                      link.handle.trim() &&
+                      psnHandleProblem(link.handle) !== 'invalid'
+                        ? buildPsnProfileUrl(
+                            link.provider,
+                            link.handle.trim(),
+                          )
+                        : null;
+                    const invalid =
+                      psnHandleProblem(link.handle) === 'invalid';
+                    const providerOptions = PSN_PROVIDERS.filter(
+                      (provider) =>
+                        provider.value === link.provider ||
+                        !usedProviders.has(provider.value),
+                    );
+                    const icon =
+                      PSN_PROVIDERS.find(
+                        (provider) => provider.value === link.provider,
+                      )?.icon ?? '/psn-icons/psnprofiles.png';
 
-                return (
-                  <div
-                    key={`${link.provider}-${index}`}
-                    className="space-y-1.5 rounded-xl border border-border/70 p-3"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <Select
-                        value={link.provider}
-                        onValueChange={(value) =>
-                          updateLink(index, {
-                            provider: value as PsnProvider,
-                          })
-                        }
+                    return (
+                      <li
+                        key={`${link.provider}-${index}`}
+                        className="p-2.5"
                       >
-                        <SelectTrigger
-                          className="sm:w-[13rem]"
-                          aria-label={`Profile provider ${index + 1}`}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {providerOptions.map((provider) => (
-                            <SelectItem
-                              key={provider.value}
-                              value={provider.value}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src={icon}
+                              alt=""
+                              width={18}
+                              height={18}
+                              className="h-[18px] w-[18px] shrink-0 rounded-[3px]"
+                            />
+                            <Select
+                              value={link.provider}
+                              onValueChange={(value) =>
+                                updateLink(index, {
+                                  provider: value as PsnProvider,
+                                })
+                              }
                             >
-                              {provider.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        value={link.handle}
-                        onChange={(event) =>
-                          updateLink(index, { handle: event.target.value })
-                        }
-                        placeholder="Your PSN nickname"
-                        maxLength={16}
-                        autoComplete="off"
-                        spellCheck={false}
-                        aria-label={`PSN nickname ${index + 1}`}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeLink(index)}
-                        aria-label={`Remove profile link ${index + 1}`}
-                        className="shrink-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {preview ? (
-                        <>
-                          We will link to{' '}
-                          <span className="break-all font-medium text-foreground">
-                            {preview}
-                          </span>
-                        </>
-                      ) : (
-                        'Pick a provider and type the nickname; we build the link.'
-                      )}
-                    </p>
-                    {psnHandleProblem(link.handle) === 'invalid' && (
-                      <p className="text-xs text-destructive" role="alert">
-                        3–16 characters: letters, numbers, dashes or
-                        underscores.
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+                              <SelectTrigger
+                                className="h-9 w-[12.5rem]"
+                                aria-label={`Profile provider ${index + 1}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {providerOptions.map((provider) => (
+                                  <SelectItem
+                                    key={provider.value}
+                                    value={provider.value}
+                                  >
+                                    {provider.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex min-w-[9rem] flex-1 items-center gap-1.5">
+                            <Input
+                              value={link.handle}
+                              onChange={(event) =>
+                                updateLink(index, {
+                                  handle: event.target.value,
+                                })
+                              }
+                              placeholder="Your PSN nickname"
+                              maxLength={16}
+                              autoComplete="off"
+                              spellCheck={false}
+                              aria-label={`PSN nickname ${index + 1}`}
+                              className="h-9 w-full"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeLink(index)}
+                              aria-label={`Remove profile link ${index + 1}`}
+                              className="h-9 w-9 shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        {preview ? (
+                          <p className="mt-1.5 truncate pl-6 text-xs text-muted-foreground">
+                            →{' '}
+                            <span className="font-medium text-foreground">
+                              {preview}
+                            </span>
+                          </p>
+                        ) : invalid ? (
+                          <p
+                            className="mt-1.5 pl-6 text-xs text-destructive"
+                            role="alert"
+                          >
+                            3–16 characters: letters, numbers, dashes or
+                            underscores.
+                          </p>
+                        ) : (
+                          <p className="mt-1.5 truncate pl-6 text-xs text-muted-foreground">
+                            Type the nickname; we build the link.
+                          </p>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
               <Button
                 type="button"

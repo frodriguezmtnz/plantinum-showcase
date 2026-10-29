@@ -1,5 +1,7 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { CalendarDays, ExternalLink, Gamepad2 } from 'lucide-react';
+import { CalendarDays, ExternalLink } from 'lucide-react';
+import { PSN_PROVIDERS } from '@/lib/psn';
 import type { ProfileLinkView } from '@/lib/profile-links';
 
 interface ProfileAboutProps {
@@ -58,19 +60,32 @@ export function ProfileAbout({
             Member since {joinedLabel(createdAt)}
           </span>
 
-          {links.map((link) => (
-            <a
-              key={link.provider}
-              href={link.url}
-              target="_blank"
-              rel="nofollow noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-popover"
-            >
-              <Gamepad2 className="h-4 w-4" aria-hidden />
-              {link.label}
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-            </a>
-          ))}
+          {links.map((link) => {
+            const icon = PSN_PROVIDERS.find(
+              (provider) => provider.value === link.provider,
+            )?.icon;
+            return (
+              <a
+                key={link.provider}
+                href={link.url}
+                target="_blank"
+                rel="nofollow noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-popover"
+              >
+                {icon && (
+                  <Image
+                    src={icon}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 rounded-[3px]"
+                  />
+                )}
+                {link.label}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              </a>
+            );
+          })}
 
           {links.length === 0 && isOwner && (
             <Link
