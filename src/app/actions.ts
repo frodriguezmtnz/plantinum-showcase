@@ -898,6 +898,32 @@ export async function markAllNotificationsRead(): Promise<void> {
   revalidatePath("/notifications");
 }
 
+export async function deleteNotification(
+  id: string,
+): Promise<{ removed: number }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { removed: 0 };
+
+  const result = await prisma.notification.deleteMany({
+    where: { id, userId },
+  });
+  revalidatePath("/notifications");
+  return { removed: result.count };
+}
+
+export async function clearReadNotifications(): Promise<{ removed: number }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { removed: 0 };
+
+  const result = await prisma.notification.deleteMany({
+    where: { userId, readAt: { not: null } },
+  });
+  revalidatePath("/notifications");
+  return { removed: result.count };
+}
+
 export async function getUnreadNotificationCount(): Promise<number> {
   const session = await auth();
   const userId = session?.user?.id;

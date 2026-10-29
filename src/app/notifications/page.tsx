@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { AppealPlatinumButton } from '@/components/shared/appeal-platinum-button';
 import { MarkAllReadButton } from '@/components/shared/mark-all-read-button';
+import { DeleteNotificationButton } from '@/components/shared/delete-notification-button';
+import { ClearReadNotificationsButton } from '@/components/shared/clear-read-notifications-button';
 import type { NotificationKind } from '@/generated/prisma/enums';
 
 export const metadata = {
@@ -51,6 +53,7 @@ export default async function NotificationsPage() {
     listNotifications(userId),
     isModerator(userId),
   ]);
+  const readCount = notifications.filter((item) => item.readAt).length;
 
   return (
     <div className="container max-w-2xl py-8 md:py-12">
@@ -59,7 +62,10 @@ export default async function NotificationsPage() {
           <Bell className="h-6 w-6 text-primary" aria-hidden />
           <h1 className="text-2xl font-bold font-headline">Notifications</h1>
         </div>
-        {notifications.some((item) => !item.readAt) && <MarkAllReadButton />}
+        <div className="flex flex-wrap items-center gap-2">
+          {notifications.some((item) => !item.readAt) && <MarkAllReadButton />}
+          <ClearReadNotificationsButton count={readCount} />
+        </div>
       </div>
 
       {notifications.length === 0 ? (
@@ -132,6 +138,9 @@ export default async function NotificationsPage() {
                       )}
                     </div>
                   )}
+                </div>
+                <div className="shrink-0">
+                  <DeleteNotificationButton id={item.id} />
                 </div>
               </li>
             );

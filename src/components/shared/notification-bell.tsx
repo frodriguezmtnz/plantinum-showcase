@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
 import { getUnreadNotificationCount } from '@/app/actions';
-import { NOTIFICATIONS_READ_EVENT } from '@/lib/notification-events';
+import {
+  NOTIFICATIONS_CHANGED_EVENT,
+  NOTIFICATIONS_READ_EVENT,
+} from '@/lib/notification-events';
 import { Button } from '@/components/ui/button';
 
 /** How often the bell re-reads the unread count while the tab is visible. */
@@ -40,6 +43,10 @@ export function NotificationBell({ className }: { className?: string }) {
       load();
     };
 
+    const handleChanged = () => {
+      load();
+    };
+
     // Coming back from another tab is when new notices are most likely waiting.
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') load();
@@ -52,11 +59,13 @@ export function NotificationBell({ className }: { className?: string }) {
 
     load();
     window.addEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, handleChanged);
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       alive = false;
       window.clearInterval(timer);
       window.removeEventListener(NOTIFICATIONS_READ_EVENT, handleRead);
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, handleChanged);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
