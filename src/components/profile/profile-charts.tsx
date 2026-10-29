@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { EChartsType } from 'echarts/core';
 import {
   PLATFORM_COLOR_FALLBACKS,
@@ -69,6 +69,48 @@ async function loadEcharts() {
   return core;
 }
 
+interface ChartEnvironment {
+  /** Bumped whenever the theme class changes, so the canvas re-reads tokens. */
+  theme: number;
+  reduced: boolean;
+}
+
+/** Keeps the canvas in sync with the theme and the motion preference. */
+function useChartEnvironment(): ChartEnvironment {
+  const [environment, setEnvironment] = useState<ChartEnvironment>({
+    theme: 0,
+    reduced: false,
+  });
+
+  useEffect(() => {
+    // next-themes flips `.dark` on <html>; the observer re-reads the tokens.
+    const observer = new MutationObserver(() => {
+      setEnvironment((current) => ({ ...current, theme: current.theme + 1 }));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncMotion = () =>
+      setEnvironment((current) =>
+        current.reduced === media.matches
+          ? current
+          : { ...current, reduced: media.matches },
+      );
+    syncMotion();
+    media.addEventListener('change', syncMotion);
+
+    return () => {
+      observer.disconnect();
+      media.removeEventListener('change', syncMotion);
+    };
+  }, []);
+
+  return environment;
+}
+
 function useChart(
   build: (chart: EChartsType) => void,
   deps: readonly unknown[],
@@ -110,6 +152,7 @@ interface PaceAreaProps {
 
 /** Cumulative platinums over the selected window, as a filled line. */
 export function ProfilePaceArea({ months, total }: PaceAreaProps) {
+  const environment = useChartEnvironment();
   const holder = useChart(
     (chart) => {
       const accent = tokenColor('--chart-1', '#3189c0');
@@ -124,6 +167,7 @@ export function ProfilePaceArea({ months, total }: PaceAreaProps) {
       });
 
       chart.setOption({
+        animation: !environment.reduced,
         animationDuration: 900,
         animationEasing: 'cubicOut',
         grid: { left: 4, right: 4, top: 14, bottom: 4, containLabel: true },
@@ -198,7 +242,7 @@ export function ProfilePaceArea({ months, total }: PaceAreaProps) {
         ],
       });
     },
-    [months, total],
+    [months, total, environment.theme, environment.reduced],
   );
 
   return (
@@ -217,6 +261,7 @@ interface PlatformDonutProps {
 
 /** Platform split as an animated donut with a legend the page controls. */
 export function ProfilePlatformDonut({ platforms }: PlatformDonutProps) {
+  const environment = useChartEnvironment();
   const holder = useChart(
     (chart) => {
       const colors = palette();
@@ -225,6 +270,7 @@ export function ProfilePlatformDonut({ platforms }: PlatformDonutProps) {
       const border = tokenColor('--border', '#c9d5df');
 
       chart.setOption({
+        animation: !environment.reduced,
         animationDuration: 800,
         animationEasing: 'cubicOut',
         tooltip: {
@@ -269,7 +315,7 @@ export function ProfilePlatformDonut({ platforms }: PlatformDonutProps) {
         ],
       });
     },
-    [platforms],
+    [platforms, environment.theme, environment.reduced],
   );
 
   const total = platforms.reduce((sum, platform) => sum + platform.count, 0);
