@@ -94,7 +94,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const { user, bio, psnProfileUrl, createdAt } = profile;
+  const { user, bio, links, createdAt } = profile;
   const tab: ProfileTab =
     rawTab === 'stats' ? 'stats' : rawTab === 'about' ? 'about' : 'gallery';
 
@@ -132,7 +132,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
       url: profileUrl,
       image: absoluteAssetUrl(user.avatarUrl),
       ...(bio ? { description: bio } : {}),
-      ...(psnProfileUrl ? { sameAs: [psnProfileUrl] } : {}),
+      ...(links.length > 0 ? { sameAs: links.map((link) => link.url) } : {}),
     },
   };
 
@@ -243,7 +243,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         <ProfileAbout
           username={user.username}
           bio={bio}
-          psnProfileUrl={psnProfileUrl}
+          links={links}
           createdAt={createdAt}
           isOwner={isOwner}
         />

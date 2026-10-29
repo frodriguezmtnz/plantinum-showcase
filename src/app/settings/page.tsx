@@ -4,6 +4,11 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { countUploadsInCurrentPeriod } from '@/lib/data';
 import { SettingsClient } from '@/components/settings/settings-client';
+import {
+  legacyProfileLink,
+  toProfileLinkView,
+  type ProfileLinkView,
+} from '@/lib/profile-links';
 
 export const metadata: Metadata = {
   title: 'Settings | Platinum Showcase',
@@ -25,6 +30,10 @@ export default async function SettingsPage() {
       image: true,
       bio: true,
       psnProfileUrl: true,
+      profileLinks: {
+        orderBy: { createdAt: 'asc' },
+        select: { provider: true, handle: true, url: true },
+      },
       plan: true,
       usernameChangedAt: true,
     },
@@ -36,6 +45,16 @@ export default async function SettingsPage() {
 
   const uploadsUsed = await countUploadsInCurrentPeriod(userId);
 
+  const rows = user.profileLinks
+    .map((row) => toProfileLinkView(row))
+    .filter((link): link is ProfileLinkView => link !== null);
+  const links =
+    rows.length > 0
+      ? rows
+      : [legacyProfileLink(user.psnProfileUrl)].filter(
+          (link): link is ProfileLinkView => link !== null,
+        );
+
   return (
     <SettingsClient
       user={{
@@ -43,7 +62,10 @@ export default async function SettingsPage() {
         email: user.email,
         image: user.image,
         bio: user.bio,
-        psnProfileUrl: user.psnProfileUrl,
+        initialLinks: links.map(({ provider, handle }) => ({
+          provider,
+          handle,
+        })),
         plan: user.plan,
         usernameChangedAt: user.usernameChangedAt?.toISOString() ?? null,
         uploadsUsed,

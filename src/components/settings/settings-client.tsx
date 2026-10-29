@@ -10,8 +10,12 @@ import {
   ExternalLink,
   KeyRound,
   Loader2,
+  Plus,
+  RotateCcw,
   Save,
+  Trash2,
   Undo2,
+  X,
 } from 'lucide-react';
 import { checkUsernameAvailability } from '@/app/register/actions';
 import {
@@ -58,7 +62,6 @@ import {
 } from '@/lib/username-policy';
 import {
   buildPsnProfileUrl,
-  describePsnProfile,
   psnHandleProblem,
   PSN_PROVIDERS,
   type PsnProvider,
@@ -72,7 +75,7 @@ export interface SettingsUser {
   email: string;
   image: string | null;
   bio: string | null;
-  psnProfileUrl: string | null;
+  initialLinks: { provider: PsnProvider; handle: string }[];
   plan: string;
   usernameChangedAt: string | null;
   uploadsUsed: number;
@@ -137,35 +140,51 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   const [isSavingUsername, startSavingUsername] = useTransition();
   const [usernameDialogOpen, setUsernameDialogOpen] = useState(false);
 
-  const initialPsn = describePsnProfile(user.psnProfileUrl);
   const [bio, setBio] = useState(user.bio ?? '');
-  const [psnProvider, setPsnProvider] = useState<PsnProvider>(
-    initialPsn?.kind ?? 'psnprofiles',
-  );
-  const [psnHandle, setPsnHandle] = useState(initialPsn?.handle ?? '');
+  const [links, setLinks] = useState(user.initialLinks);
   const [savedBio, setSavedBio] = useState(user.bio ?? '');
-  const [savedPsnProvider, setSavedPsnProvider] = useState<PsnProvider>(
-    initialPsn?.kind ?? 'psnprofiles',
-  );
-  const [savedPsnHandle, setSavedPsnHandle] = useState(
-    initialPsn?.handle ?? '',
-  );
+  const [savedLinks, setSavedLinks] = useState(user.initialLinks);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
   const [isSavingProfile, startSavingProfile] = useTransition();
 
+  const linksKey = (value: { provider: PsnProvider; handle: string }[]) =>
+    value
+      .map((link) => `${link.provider}:${link.handle.trim().toLowerCase()}`)
+      .sort()
+      .join('|');
+
   const bioIssue = bioProblem(bio);
-  const psnProblem = psnHandle.trim()
-    ? psnHandleProblem(psnHandle)
-    : null;
+  const linkProblem = links.some(
+    (link) =>
+      !link.handle.trim() || psnHandleProblem(link.handle) === 'invalid',
+  );
   const isProfileDirty =
-    bio !== savedBio ||
-    psnProvider !== savedPsnProvider ||
-    psnHandle.trim() !== savedPsnHandle;
-  const canSaveProfile = !bioIssue && !psnProblem;
-  const psnPreview =
-    psnHandle.trim() && !psnProblem
-      ? buildPsnProfileUrl(psnProvider, psnHandle.trim())
-      : null;
+    bio !== savedBio || linksKey(links) !== linksKey(savedLinks);
+  const canSaveProfile = !bioIssue && !linkProblem;
+
+  const usedProviders = new Set(links.map((link) => link.provider));
+  const availableProviders = PSN_PROVIDERS.filter(
+    (provider) => !usedProviders.has(provider.value),
+  );
+
+  function addLink() {
+    const next = availableProviders[0];
+    if (!next) return;
+    setLinks((current) => [...current, { provider: next.value, handle: '' }]);
+  }
+
+  function removeLink(index: number) {
+    setLinks((current) => current.filter((_, i) => i !== index));
+  }
+
+  function updateLink(
+    index: number,
+    patch: Partial<{ provider: PsnProvider; handle: string }>,
+  ) {
+    setLinks((current) =>
+      current.map((link, i) => (i === index ? { ...link, ...patch } : link)),
+    );
+  }
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -246,8 +265,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
 
   function discardAndLeave() {
     setBio(savedBio);
-    setPsnProvider(savedPsnProvider);
-    setPsnHandle(savedPsnHandle);
+    setLinks(savedLinks);
     const href = pendingNav;
     setPendingNav(null);
     if (href) router.push(href);
@@ -281,8 +299,15 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   function handleSaveProfile() {
     const formData = new FormData();
     formData.set('bio', bio);
-    formData.set('psnProvider', psnProvider);
-    formData.set('psnHandle', psnHandle);
+    formData.set(
+      'links',
+      JSON.stringify(
+        links.map((link) => ({
+          provider: link.provider,
+          handle: link.handle.trim(),
+        })),
+      ),
+    );
 
     startSavingProfile(async () => {
       const result = await updateProfile(formData);
@@ -295,18 +320,19 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         return;
       }
 
-      const savedPsn = describePsnProfile(result.psnProfileUrl);
+      const nextLinks = result.links.map(({ provider, handle }) => ({
+        provider,
+        handle,
+      }));
       setBio(result.bio ?? '');
       setSavedBio(result.bio ?? '');
-      setPsnProvider(savedPsn?.kind ?? 'psnprofiles');
-      setPsnHandle(savedPsn?.handle ?? '');
-      setSavedPsnProvider(savedPsn?.kind ?? 'psnprofiles');
-      setSavedPsnHandle(savedPsn?.handle ?? '');
+      setLinks(nextLinks);
+      setSavedLinks(nextLinks);
 
       router.refresh();
       toast({
         title: 'Profile saved',
-        description: 'Your bio and PlayStation link are up to date.',
+        description: 'Your bio and profile links are up to date.',
         variant: 'success',
       });
     });
@@ -389,16 +415,46 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           <div className="space-y-2">
             <Label htmlFor="settings-username">Username</Label>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                id="settings-username"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                maxLength={20}
-                autoComplete="off"
-                spellCheck={false}
-                aria-describedby="settings-username-hint"
-                disabled={usernameLocked}
-              />
+              <div className="relative w-full sm:flex-1">
+                <Input
+                  id="settings-username"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  maxLength={20}
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-describedby="settings-username-hint"
+                  disabled={usernameLocked}
+                  className="pr-20"
+                />
+                {!usernameLocked &&
+                  (username !== savedUsername || username.length > 0) && (
+                    <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+                      {username !== savedUsername && (
+                        <button
+                          type="button"
+                          onClick={() => setUsername(savedUsername)}
+                          aria-label="Reset username"
+                          title="Reset to your saved username"
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </button>
+                      )}
+                      {username.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setUsername('')}
+                          aria-label="Clear username"
+                          title="Clear username"
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+              </div>
               {!usernameLocked && (
                 <Button
                   type="button"
@@ -458,67 +514,119 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="settings-psn">PlayStation profile</Label>
-              <div className="grid gap-2 sm:grid-cols-[13rem_1fr]">
-                <Select
-                  value={psnProvider}
-                  onValueChange={(value) =>
-                    setPsnProvider(value as PsnProvider)
-                  }
-                >
-                  <SelectTrigger
-                    id="settings-psn-provider"
-                    aria-label="PlayStation profile provider"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PSN_PROVIDERS.map((provider) => (
-                      <SelectItem key={provider.value} value={provider.value}>
-                        {provider.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  id="settings-psn"
-                  value={psnHandle}
-                  onChange={(event) => setPsnHandle(event.target.value)}
-                  placeholder="Your PSN nickname"
-                  maxLength={16}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-describedby="settings-psn-hint"
-                />
-              </div>
-              <p
-                id="settings-psn-hint"
-                className="text-xs text-muted-foreground"
-              >
-                {psnPreview ? (
-                  <>
-                    We will link to{' '}
-                    <span className="break-all font-medium text-foreground">
-                      {psnPreview}
-                    </span>
-                  </>
-                ) : (
-                  'Pick a provider and type the nickname; we build the profile link.'
-                )}
-              </p>
-              {psnProblem === 'invalid' && (
-                <p className="text-xs text-destructive" role="alert">
-                  3–16 characters: letters, numbers, dashes or underscores.
+            <div className="space-y-3">
+              <Label>PlayStation profiles</Label>
+
+              {links.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  No profile links yet. Add one or more sites where your PSN
+                  profile lives.
                 </p>
               )}
+
+              {links.map((link, index) => {
+                const preview =
+                  link.handle.trim() && psnHandleProblem(link.handle) !== 'invalid'
+                    ? buildPsnProfileUrl(link.provider, link.handle.trim())
+                    : null;
+                const providerOptions = PSN_PROVIDERS.filter(
+                  (provider) =>
+                    provider.value === link.provider ||
+                    !usedProviders.has(provider.value),
+                );
+
+                return (
+                  <div
+                    key={`${link.provider}-${index}`}
+                    className="space-y-1.5 rounded-xl border border-border/70 p-3"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Select
+                        value={link.provider}
+                        onValueChange={(value) =>
+                          updateLink(index, {
+                            provider: value as PsnProvider,
+                          })
+                        }
+                      >
+                        <SelectTrigger
+                          className="sm:w-[13rem]"
+                          aria-label={`Profile provider ${index + 1}`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {providerOptions.map((provider) => (
+                            <SelectItem
+                              key={provider.value}
+                              value={provider.value}
+                            >
+                              {provider.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={link.handle}
+                        onChange={(event) =>
+                          updateLink(index, { handle: event.target.value })
+                        }
+                        placeholder="Your PSN nickname"
+                        maxLength={16}
+                        autoComplete="off"
+                        spellCheck={false}
+                        aria-label={`PSN nickname ${index + 1}`}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeLink(index)}
+                        aria-label={`Remove profile link ${index + 1}`}
+                        className="shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {preview ? (
+                        <>
+                          We will link to{' '}
+                          <span className="break-all font-medium text-foreground">
+                            {preview}
+                          </span>
+                        </>
+                      ) : (
+                        'Pick a provider and type the nickname; we build the link.'
+                      )}
+                    </p>
+                    {psnHandleProblem(link.handle) === 'invalid' && (
+                      <p className="text-xs text-destructive" role="alert">
+                        3–16 characters: letters, numbers, dashes or
+                        underscores.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addLink}
+                disabled={availableProviders.length === 0}
+              >
+                <Plus className="h-4 w-4" />
+                Add profile
+              </Button>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 onClick={handleSaveProfile}
-                disabled={isSavingProfile || !canSaveProfile}
+                disabled={isSavingProfile || !canSaveProfile || !isProfileDirty}
               >
                 {isSavingProfile ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -533,8 +641,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                   variant="ghost"
                   onClick={() => {
                     setBio(savedBio);
-                    setPsnProvider(savedPsnProvider);
-                    setPsnHandle(savedPsnHandle);
+                    setLinks(savedLinks);
                   }}
                   disabled={isSavingProfile}
                 >
@@ -605,7 +712,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               <KeyRound className="h-4 w-4 text-muted-foreground" aria-hidden />
               Change password
             </p>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid max-w-md gap-4">
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current</Label>
                 <PasswordInput

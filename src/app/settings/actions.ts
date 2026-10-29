@@ -29,19 +29,16 @@ import {
 } from "@/lib/bio";
 import { passwordPolicyError } from "@/lib/password";
 import {
-  buildPsnProfileUrl,
-  parsePsnProfileUrl,
-  psnHandleProblem,
-  PSN_PROFILE_ERROR,
-  type PsnProvider,
-} from "@/lib/psn";
+  parseProfileLinks,
+  type ProfileLinkInput,
+} from "@/lib/profile-links";
 import {
   USERNAME_PROBLEM_MESSAGE,
   usernameProblem,
 } from "@/lib/usernames";
 
 export type ProfileUpdateResult =
-  | { success: true; bio: string | null; psnProfileUrl: string | null }
+  | { success: true; bio: string | null; links: ProfileLinkInput[] }
   | { success: false; error: string };
 
 export type UsernameUpdateResult =
@@ -105,38 +102,42 @@ export async function updateProfile(
     };
   }
 
-  const providerRaw = String(formData.get("psnProvider") ?? "psnprofiles");
-  const provider: PsnProvider =
-    providerRaw === "playstation" ? "playstation" : "psnprofiles";
-  const handle = String(formData.get("psnHandle") ?? "").trim();
-
-  let psnProfileUrl: string | null = null;
-  if (handle) {
-    if (psnHandleProblem(handle)) {
-      return {
-        success: false,
-        error:
-          "PSN nickname must be 3–16 characters: letters, numbers, dashes or underscores.",
-      };
-    }
-    const parsed = parsePsnProfileUrl(buildPsnProfileUrl(provider, handle));
-    if (!parsed.ok) {
-      return { success: false, error: PSN_PROFILE_ERROR[parsed.reason] };
-    }
-    psnProfileUrl = parsed.url;
+  const parsedLinks = parseProfileLinks(
+    String(formData.get("links") ?? ""),
+  );
+  if (!parsedLinks.ok) {
+    return { success: false, error: parsedLinks.error };
   }
 
-  const user = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      bio: bio || null,
-      psnProfileUrl,
-    },
-    select: { username: true },
+  const user = await prisma.$transaction(async (tx) => {
+    await tx.profileLink.deleteMany({ where: { userId } });
+    if (parsedLinks.links.length > 0) {
+      await tx.profileLink.createMany({
+        data: parsedLinks.links.map((link) => ({
+          userId,
+          provider: link.provider,
+          handle: link.handle,
+          url: link.url,
+        })),
+      });
+    }
+    return tx.user.update({
+      where: { id: userId },
+      data: {
+        bio: bio || null,
+        // The normalized links are the source of truth now.
+        psnProfileUrl: null,
+      },
+      select: { username: true },
+    });
   });
 
   revalidateProfile(user.username);
-  return { success: true, bio: bio || null, psnProfileUrl };
+  return {
+    success: true,
+    bio: bio || null,
+    links: parsedLinks.links,
+  };
 }
 
 /**

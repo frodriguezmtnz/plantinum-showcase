@@ -92,6 +92,24 @@ model User {
   // One-way social graph: who this user follows and who follows them.
   following     Follow[]  @relation("Following")
   followers     Follow[]  @relation("Followers")
+  // Trophy-site profiles (one per provider), e.g. PSNProfiles + Exophase.
+  profileLinks  ProfileLink[]
+}
+
+// A trophy-site profile for a user. One row per provider: the PSN handle is
+// the same, the site showing it is what changes.
+model ProfileLink {
+  id        String   @id @default(cuid())
+  userId    String
+  provider  String
+  handle    String
+  url       String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
 }
 
 // Handles that used to belong to an account (renamed or deleted). They stay

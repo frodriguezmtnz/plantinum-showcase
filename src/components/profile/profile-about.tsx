@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { CalendarDays, ExternalLink, Gamepad2 } from 'lucide-react';
-import { describePsnProfile } from '@/lib/psn';
+import type { ProfileLinkView } from '@/lib/profile-links';
 
 interface ProfileAboutProps {
   username: string;
   bio: string | null;
-  psnProfileUrl: string | null;
+  links: ProfileLinkView[];
   createdAt: string;
   isOwner: boolean;
 }
@@ -20,12 +20,10 @@ function joinedLabel(iso: string): string {
 export function ProfileAbout({
   username,
   bio,
-  psnProfileUrl,
+  links,
   createdAt,
   isOwner,
 }: ProfileAboutProps) {
-  const psn = describePsnProfile(psnProfileUrl);
-
   return (
     <section className="mx-auto max-w-2xl space-y-4">
       <div className="panel-solid rounded-2xl p-6 md:p-8">
@@ -60,20 +58,21 @@ export function ProfileAbout({
             Member since {joinedLabel(createdAt)}
           </span>
 
-          {psnProfileUrl && psn && (
+          {links.map((link) => (
             <a
-              href={psnProfileUrl}
+              key={link.provider}
+              href={link.url}
               target="_blank"
               rel="nofollow noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-popover"
             >
               <Gamepad2 className="h-4 w-4" aria-hidden />
-              {psn.label}
+              {link.label}
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
-          )}
+          ))}
 
-          {!psnProfileUrl && isOwner && (
+          {links.length === 0 && isOwner && (
             <Link
               href="/settings"
               className="font-semibold text-primary underline-offset-4 hover:underline"

@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { sanitizeBio } from "@/lib/bio";
+import {
+  legacyProfileLink,
+  toProfileLinkView,
+  type ProfileLinkView,
+} from "@/lib/profile-links";
 import { getCurrentPeriod, shiftPeriod } from "@/lib/period";
 import {
   PROFILE_PAGE_SIZE,
@@ -139,7 +144,9 @@ export async function getUserByUsername(username: string): Promise<User | undefi
 export interface UserProfile {
   user: User;
   bio: string | null;
+  /** Legacy single link; prefer `links` and keep this for the fallback only. */
   psnProfileUrl: string | null;
+  links: ProfileLinkView[];
   createdAt: string;
 }
 
@@ -156,15 +163,32 @@ export async function getUserProfileByUsername(
       bio: true,
       psnProfileUrl: true,
       createdAt: true,
+      profileLinks: {
+        orderBy: { createdAt: "asc" },
+        select: { provider: true, handle: true, url: true },
+      },
     },
   });
   if (!user) return undefined;
+
+  const rows = user.profileLinks
+    .map((row) => toProfileLinkView(row))
+    .filter((link): link is ProfileLinkView => link !== null);
+
+  // Accounts created before ProfileLink keep working until they save again.
+  const links =
+    rows.length > 0
+      ? rows
+      : [legacyProfileLink(user.psnProfileUrl)].filter(
+          (link): link is ProfileLinkView => link !== null,
+        );
 
   return {
     user: toUserView(user),
     // Legacy rows may predate the write-side rejection: never render markup.
     bio: user.bio ? sanitizeBio(user.bio) : null,
     psnProfileUrl: user.psnProfileUrl,
+    links,
     createdAt: user.createdAt.toISOString(),
   };
 }
