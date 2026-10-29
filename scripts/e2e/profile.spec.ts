@@ -21,6 +21,14 @@ test.describe('profile', () => {
     await expect(page.getByRole('link', { name: 'E2E Plate 05', exact: true })).toBeVisible();
     await expect(page.locator('[data-platform="PS5"]:visible')).toContainText('13');
     await expect(page.locator('[data-platform="PS4"]:visible')).toContainText('1');
+
+    // The canvases carry an sr-only table so screen readers get the numbers.
+    await expect(
+      page.getByRole('table', { name: 'Cumulative platinums by month' }),
+    ).toBeAttached();
+    await expect(
+      page.getByRole('table', { name: 'Platinums by platform' }),
+    ).toBeAttached();
   });
 
   test('switches between the gallery, stats and about tabs', async ({ page }) => {

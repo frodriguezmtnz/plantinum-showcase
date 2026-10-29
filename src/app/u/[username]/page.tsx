@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import {
   getProfileGalleryItems,
+  getProfileStanding,
   getProfileSummary,
   getUserProfileByUsername,
 } from '@/lib/data';
@@ -94,7 +95,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const { user, bio, links, createdAt } = profile;
+  const { user, hasAvatar, bio, links, createdAt } = profile;
   const tab: ProfileTab =
     rawTab === 'stats' ? 'stats' : rawTab === 'about' ? 'about' : 'gallery';
 
@@ -107,7 +108,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
   const view = parseProfileView(rawView);
   const infinite = parseProfileInfinite(rawInfinite);
 
-  const [summary, followState, gallery] = await Promise.all([
+  const [summary, followState, gallery, standing] = await Promise.all([
     getProfileSummary(user.id, currentUserId),
     getFollowState(user.id, currentUserId),
     tab === 'gallery'
@@ -118,6 +119,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           sort,
         })
       : Promise.resolve(null),
+    tab === 'stats' ? getProfileStanding(user.id) : Promise.resolve(null),
   ]);
 
   const profileUrl = canonicalUrl(`/u/${user.username}`);
@@ -236,7 +238,12 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
               : {})}
           />
         ) : (
-          <ProfileStats summary={summary} pace={pace} username={user.username} />
+          <ProfileStats
+            summary={summary}
+            pace={pace}
+            username={user.username}
+            standing={standing}
+          />
         ))}
 
       {tab === 'about' && (
@@ -246,6 +253,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           links={links}
           createdAt={createdAt}
           isOwner={isOwner}
+          hasAvatar={hasAvatar}
         />
       )}
 

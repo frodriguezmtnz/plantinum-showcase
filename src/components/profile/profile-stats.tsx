@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ProfileSummary } from '@/lib/data';
+import type { ProfileStanding, ProfileSummary } from '@/lib/data';
 import { formatPeriodLabel, formatPeriodShortLabel } from '@/lib/period';
 import { cn } from '@/lib/utils';
 import { PLATFORM_COLOR_VARS } from '@/lib/chart-theme';
@@ -14,6 +14,7 @@ interface ProfileStatsProps {
   summary: ProfileSummary;
   pace: ProfilePaceFilter;
   username: string;
+  standing: ProfileStanding | null;
 }
 
 function StatTile({
@@ -43,6 +44,7 @@ export function ProfileStats({
   summary,
   pace,
   username,
+  standing,
 }: ProfileStatsProps) {
   if (summary.totalPlatinums === 0) return null;
 
@@ -77,6 +79,7 @@ export function ProfileStats({
     summary.activeMonths > 0
       ? summary.totalPlatinums / summary.activeMonths
       : 0;
+  const aheadOfPlates = standing?.aheadOfPlates ?? null;
 
   return (
     <section className="mb-12 space-y-4">
@@ -168,6 +171,23 @@ export function ProfileStats({
             {months.length > 0 ? (
               <div className="mt-3">
                 <ProfilePaceArea months={months} total={windowTotal} />
+                <table className="sr-only">
+                  <caption>Cumulative platinums by month</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Month</th>
+                      <th scope="col">Platinums</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {months.map((month) => (
+                      <tr key={month.key}>
+                        <th scope="row">{formatPeriodLabel(month.key)}</th>
+                        <td>{month.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <p className="mt-6 text-sm text-muted-foreground">
@@ -213,6 +233,23 @@ export function ProfileStats({
             ) : (
               <>
                 <ProfilePlatformDonut platforms={summary.platforms} />
+                <table className="sr-only">
+                  <caption>Platinums by platform</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Platform</th>
+                      <th scope="col">Platinums</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summary.platforms.map(({ platform, count }) => (
+                      <tr key={platform}>
+                        <th scope="row">{platform}</th>
+                        <td>{count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                 <ul className="mt-2 space-y-1.5">
                   {summary.platforms.map(({ platform, count }, index) => {
                     const percent =
@@ -251,7 +288,12 @@ export function ProfileStats({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div
+        className={cn(
+          'grid gap-4',
+          aheadOfPlates === null ? 'sm:grid-cols-3' : 'sm:grid-cols-2 lg:grid-cols-4',
+        )}
+      >
         <StatTile
           dataStat="streak"
           label="Longest streak"
@@ -270,6 +312,24 @@ export function ProfileStats({
           value={averagePerActiveMonth.toFixed(1)}
           hint={`Per active month · ${summary.activeMonths} total`}
         />
+        {aheadOfPlates !== null && standing && (
+          <StatTile
+            dataStat="standing"
+            label="Board standing"
+            value={
+              standing.hasHuntersBehind
+                ? `Ahead of ${aheadOfPlates}%`
+                : 'Just getting started'
+            }
+            hint={
+              !standing.hasHuntersBehind
+                ? `${standing.hunters} hunters on the board`
+                : standing.aheadOfVotes === null
+                  ? 'of hunters'
+                  : `of hunters · ${standing.aheadOfVotes}% by votes`
+            }
+          />
+        )}
       </div>
     </section>
   );
