@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { CalendarDays, ExternalLink } from 'lucide-react';
+import { CalendarDays, Check, Circle, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { PSN_PROVIDERS } from '@/lib/psn';
 import type { ProfileLinkView } from '@/lib/profile-links';
 
@@ -10,6 +11,7 @@ interface ProfileAboutProps {
   links: ProfileLinkView[];
   createdAt: string;
   isOwner: boolean;
+  hasAvatar: boolean;
 }
 
 function joinedLabel(iso: string): string {
@@ -25,9 +27,56 @@ export function ProfileAbout({
   links,
   createdAt,
   isOwner,
+  hasAvatar,
 }: ProfileAboutProps) {
+  const steps = [
+    { label: 'Avatar', done: hasAvatar },
+    { label: 'Bio', done: Boolean(bio?.trim()) },
+    { label: 'PSN profile', done: links.length > 0 },
+  ];
+  const missing = steps.filter((step) => !step.done).length;
+
   return (
     <section className="mx-auto max-w-2xl space-y-4">
+      {isOwner && missing > 0 && (
+        <div className="panel-solid rounded-2xl border border-dashed border-border p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="field-mark">Complete your profile</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {steps.length - missing} of {steps.length} done — the rest takes
+                a minute.
+              </p>
+            </div>
+            <Button asChild size="sm">
+              <Link href="/settings#profile">Finish in Settings</Link>
+            </Button>
+          </div>
+          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {steps.map((step) => (
+              <li
+                key={step.label}
+                className="inline-flex items-center gap-1.5"
+              >
+                {step.done ? (
+                  <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+                ) : (
+                  <Circle
+                    className="h-4 w-4 text-muted-foreground/60"
+                    aria-hidden
+                  />
+                )}
+                <span className={step.done ? '' : 'font-semibold'}>
+                  {step.label}
+                </span>
+                <span className="sr-only">
+                  {step.done ? '(done)' : '(pending)'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="panel-solid rounded-2xl p-6 md:p-8">
         <h2 className="field-mark">About @{username}</h2>
 
@@ -37,20 +86,9 @@ export function ProfileAbout({
           </p>
         ) : (
           <p className="mt-3 text-sm text-muted-foreground">
-            {isOwner ? (
-              <>
-                No bio yet.{' '}
-                <Link
-                  href="/settings"
-                  className="font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                  Add one in Settings
-                </Link>
-                .
-              </>
-            ) : (
-              'This hunter has not written a bio yet.'
-            )}
+            {isOwner
+              ? 'No bio yet.'
+              : 'This hunter has not written a bio yet.'}
           </p>
         )}
 
@@ -86,15 +124,6 @@ export function ProfileAbout({
               </a>
             );
           })}
-
-          {links.length === 0 && isOwner && (
-            <Link
-              href="/settings"
-              className="font-semibold text-primary underline-offset-4 hover:underline"
-            >
-              Add your PlayStation profile
-            </Link>
-          )}
         </div>
       </div>
     </section>
