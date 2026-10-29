@@ -61,6 +61,7 @@ async function loadEcharts() {
   core.use([
     charts.LineChart,
     charts.PieChart,
+    charts.BarChart,
     components.GridComponent,
     components.TooltipComponent,
     renderers.CanvasRenderer,
@@ -251,6 +252,100 @@ export function ProfilePaceArea({ months, total }: PaceAreaProps) {
       role="img"
       aria-label={`Cumulative platinums: ${total} across ${months.length} months`}
       className="h-44 w-full min-w-0 overflow-hidden"
+    />
+  );
+}
+
+interface PaceBarsProps {
+  months: MonthPoint[];
+}
+
+/** Monthly pace as filled bars; zero months keep their label but no bar. */
+export function ProfilePaceBars({ months }: PaceBarsProps) {
+  const environment = useChartEnvironment();
+  const holder = useChart(
+    (chart) => {
+      const accent = tokenColor('--primary', '#1a1a1a');
+      const muted = tokenColor('--muted-foreground', '#5b6770');
+      const border = tokenColor('--border', '#c9d5df');
+      const surface = tokenColor('--popover', '#ffffff');
+
+      chart.setOption({
+        animation: !environment.reduced,
+        animationDuration: 700,
+        animationEasing: 'cubicOut',
+        grid: { left: 4, right: 4, top: 20, bottom: 4, containLabel: true },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: { type: 'shadow' },
+          backgroundColor: surface,
+          borderColor: border,
+          borderWidth: 1,
+          padding: [8, 10],
+          textStyle: { color: muted, fontSize: 12 },
+          formatter: (params: unknown) => {
+            const [point] = params as {
+              axisValueLabel?: string;
+              value?: number;
+            }[];
+            const count = Number(point?.value ?? 0);
+            return `${point?.axisValueLabel ?? ''}: <strong>${count}</strong> platinum${count === 1 ? '' : 's'}`;
+          },
+        },
+        xAxis: {
+          type: 'category',
+          data: months.map((month) => formatPeriodShortLabel(month.key)),
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            color: muted,
+            fontSize: 10,
+            margin: 10,
+            interval: 0,
+          },
+        },
+        yAxis: {
+          type: 'value',
+          show: false,
+          splitLine: { show: false },
+        },
+        series: [
+          {
+            type: 'bar',
+            name: 'Platinums',
+            data: months.map((month) => month.count),
+            barMaxWidth: 42,
+            itemStyle: {
+              color: accent,
+              borderRadius: [4, 4, 0, 0],
+              opacity: 0.85,
+            },
+            label: {
+              show: true,
+              position: 'top',
+              color: muted,
+              fontSize: 10,
+              formatter: (params: { value?: number }) =>
+                Number(params.value ?? 0) > 0 ? String(params.value) : '',
+            },
+            emphasis: { itemStyle: { color: accent, opacity: 1 } },
+          },
+        ],
+      });
+    },
+    [months, environment.theme, environment.reduced],
+  );
+
+  const total = months.reduce((sum, month) => sum + month.count, 0);
+
+  return (
+    <div
+      ref={holder}
+      role="img"
+      aria-label={`Platinum pace: ${total} platinums across ${months.length} month${
+        months.length === 1 ? '' : 's'
+      }`}
+      className="h-40 w-full min-w-0 overflow-hidden"
     />
   );
 }

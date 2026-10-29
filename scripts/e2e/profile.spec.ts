@@ -53,16 +53,21 @@ test.describe('profile', () => {
     const response = await page.goto(`${PROFILE}?tab=stats`);
     test.skip(response?.status() === 404, 'E2E profile is not seeded');
 
+    // The pace bars live on a canvas; the sr-only table mirrors the months.
+    const paceRows = page
+      .getByRole('table', { name: 'Platinum pace by month' })
+      .locator('tbody tr');
+
     // The fixture creates all plates in the current month.
-    await expect(page.locator('[data-month]:visible')).toHaveCount(1);
+    await expect(paceRows).toHaveCount(1);
 
     await page.locator('a:visible', { hasText: 'Last 12 months' }).first().click();
     await page.waitForURL(/[?&]pace=all(?:&|$)/, { waitUntil: 'commit' });
-    await expect(page.locator('[data-month]:visible')).toHaveCount(12);
+    await expect(paceRows).toHaveCount(12);
 
     await page.locator('a:visible', { hasText: 'Active months' }).first().click();
     await page.waitForURL(/[?&]pace=active(?:&|$)/, { waitUntil: 'commit' });
-    await expect(page.locator('[data-month]:visible')).toHaveCount(1);
+    await expect(paceRows).toHaveCount(1);
   });
 
   test('loads 8 plates by default and loads more on demand', async ({ page }) => {

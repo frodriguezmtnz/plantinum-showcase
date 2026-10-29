@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import type { ProfileStanding, ProfileSummary } from '@/lib/data';
-import { formatPeriodLabel, formatPeriodShortLabel } from '@/lib/period';
+import { formatPeriodLabel } from '@/lib/period';
 import { cn } from '@/lib/utils';
 import { PLATFORM_COLOR_VARS } from '@/lib/chart-theme';
 import {
   ProfilePaceArea,
+  ProfilePaceBars,
   ProfilePlatformDonut,
 } from '@/components/profile/profile-charts';
 
@@ -52,7 +53,6 @@ export function ProfileStats({
     pace === 'active'
       ? summary.months.filter((month) => month.count > 0)
       : summary.months;
-  const peak = Math.max(1, ...months.map((month) => month.count));
   const platformTotal = summary.platforms.reduce(
     (sum, platform) => sum + platform.count,
     0,
@@ -61,6 +61,12 @@ export function ProfileStats({
     `/u/${username}?tab=stats&pace=${next}`;
 
   const windowTotal = months.reduce((sum, month) => sum + month.count, 0);
+  const cumulativeMonths = months.map((month, index) => ({
+    key: month.key,
+    total: months
+      .slice(0, index + 1)
+      .reduce((sum, candidate) => sum + candidate.count, 0),
+  }));
   const bestMonth = summary.months.reduce(
     (best, month) => (month.count > best.count ? month : best),
     summary.months[0]!,
@@ -113,38 +119,25 @@ export function ProfileStats({
                 No platinums in the last year.
               </p>
             ) : (
-              <div className="mt-6 flex items-end justify-center gap-1.5">
-                {months.map((month) => (
-                  <div
-                    key={month.key}
-                    data-month={month.key}
-                    className="flex min-w-0 max-w-20 flex-1 flex-col items-center gap-1"
-                  >
-                    <span className="tabular h-3 text-[10px] text-muted-foreground">
-                      {month.count || ''}
-                    </span>
-                    <div
-                      className="flex h-28 w-full items-end"
-                      title={`${formatPeriodShortLabel(month.key)}: ${month.count} platinum${month.count === 1 ? '' : 's'}`}
-                    >
-                      <div
-                        className={cn(
-                          'w-full rounded-t',
-                          month.count === 0 ? 'bg-border' : 'bg-primary/80',
-                        )}
-                        style={{
-                          height:
-                            month.count === 0
-                              ? '2px'
-                              : `${Math.max(6, (month.count / peak) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {formatPeriodShortLabel(month.key)}
-                    </span>
-                  </div>
-                ))}
+              <div className="mt-4">
+                <ProfilePaceBars months={months} />
+                <table className="sr-only">
+                  <caption>Platinum pace by month</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Month</th>
+                      <th scope="col">Platinums</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {months.map((month) => (
+                      <tr key={month.key}>
+                        <th scope="row">{formatPeriodLabel(month.key)}</th>
+                        <td>{month.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
 
@@ -180,10 +173,10 @@ export function ProfileStats({
                     </tr>
                   </thead>
                   <tbody>
-                    {months.map((month) => (
+                    {cumulativeMonths.map((month) => (
                       <tr key={month.key}>
                         <th scope="row">{formatPeriodLabel(month.key)}</th>
-                        <td>{month.count}</td>
+                        <td>{month.total}</td>
                       </tr>
                     ))}
                   </tbody>
