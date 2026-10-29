@@ -141,6 +141,9 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   const { refresh } = useAuth();
   const { toast } = useToast();
 
+  const [activeSection, setActiveSection] = useState<string>(
+    SETTINGS_SECTIONS[0].id,
+  );
   const [savedUsername, setSavedUsername] = useState(user.username);
   const [username, setUsername] = useState(user.username);
   const [changedAt, setChangedAt] = useState(user.usernameChangedAt);
@@ -266,6 +269,49 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [isProfileDirty]);
+
+  useEffect(() => {
+    const ids = SETTINGS_SECTIONS.map((section) => section.id);
+    let frame = 0;
+
+    const updateActiveSection = () => {
+      frame = 0;
+      let next: (typeof SETTINGS_SECTIONS)[number]['id'] =
+        SETTINGS_SECTIONS[0].id;
+      const atBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 2;
+
+      if (atBottom) {
+        const last = SETTINGS_SECTIONS.at(-1);
+        if (last) next = last.id;
+      } else {
+        for (const id of ids) {
+          const element = document.getElementById(id);
+          if (element && element.getBoundingClientRect().top <= 140) {
+            next = id;
+          }
+        }
+      }
+
+      setActiveSection((current) => (current === next ? current : next));
+    };
+
+    const handleScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    updateActiveSection();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('hashchange', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('hashchange', handleScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   function handleNavigate(href: string) {
     if (isProfileDirty) {
@@ -419,15 +465,25 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         aria-label="Settings sections"
         className="mb-6 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full border border-border/70 bg-background/40 p-0.5 text-xs"
       >
-        {SETTINGS_SECTIONS.map((section) => (
-          <a
-            key={section.id}
-            href={`#${section.id}`}
-            className="shrink-0 rounded-full px-3.5 py-1.5 font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {section.label}
-          </a>
-        ))}
+        {SETTINGS_SECTIONS.map((section) => {
+          const active = activeSection === section.id;
+          return (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              aria-current={active ? 'location' : undefined}
+              onClick={() => setActiveSection(section.id)}
+              className={cn(
+                'shrink-0 rounded-full px-3.5 py-1.5 font-semibold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
+                active
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {section.label}
+            </a>
+          );
+        })}
       </nav>
 
       <div className="space-y-6">
@@ -584,10 +640,10 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                     return (
                       <li
                         key={`${link.provider}-${index}`}
-                        className="p-2.5"
+                        className="p-3"
                       >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <div className="flex min-w-0 items-center gap-2 sm:flex-none">
                             <Image
                               src={icon}
                               alt=""
@@ -604,7 +660,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                               }
                             >
                               <SelectTrigger
-                                className="h-9 w-[12.5rem]"
+                                className="h-9 w-full min-w-0 sm:w-[12.5rem]"
                                 aria-label={`Profile provider ${index + 1}`}
                               >
                                 <SelectValue />
@@ -621,7 +677,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="flex min-w-[9rem] flex-1 items-center gap-1.5">
+                          <div className="flex min-w-0 items-center gap-1.5 sm:flex-1">
                             <Input
                               value={link.handle}
                               onChange={(event) =>
@@ -634,7 +690,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                               autoComplete="off"
                               spellCheck={false}
                               aria-label={`PSN nickname ${index + 1}`}
-                              className="h-9 w-full"
+                              className="h-9 w-full min-w-0"
                             />
                             <Button
                               type="button"
@@ -649,7 +705,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                           </div>
                         </div>
                         {preview ? (
-                          <p className="mt-1.5 truncate pl-6 text-xs text-muted-foreground">
+                          <p className="mt-1.5 truncate text-xs text-muted-foreground sm:pl-6">
                             →{' '}
                             <span className="font-medium text-foreground">
                               {preview}
@@ -657,14 +713,14 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                           </p>
                         ) : invalid ? (
                           <p
-                            className="mt-1.5 pl-6 text-xs text-destructive"
+                            className="mt-1.5 text-xs text-destructive sm:pl-6"
                             role="alert"
                           >
                             3–16 characters: letters, numbers, dashes or
                             underscores.
                           </p>
                         ) : (
-                          <p className="mt-1.5 truncate pl-6 text-xs text-muted-foreground">
+                          <p className="mt-1.5 truncate text-xs text-muted-foreground sm:pl-6">
                             Type the nickname; we build the link.
                           </p>
                         )}
@@ -680,6 +736,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 size="sm"
                 onClick={addLink}
                 disabled={availableProviders.length === 0}
+                className="w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4" />
                 Add profile
