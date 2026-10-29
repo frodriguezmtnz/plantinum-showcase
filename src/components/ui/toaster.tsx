@@ -81,10 +81,18 @@ export function Toaster() {
               marginTop:
                 expanded || isOldest ? undefined : STACK_OVERLAP,
               zIndex: 50 - index,
+              // Each older card is a touch smaller and sits behind, so the
+              // pile reads as separate cards instead of one solid block.
+              transform:
+                expanded || !behind ? undefined : `scale(${1 - index * 0.05})`,
+              transformOrigin: "bottom center",
+              animation: behind ? "none" : undefined,
             }}
             className={cn(
-              "transition-[margin-top] duration-200 ease-out",
-              behind ? "pointer-events-none" : "cursor-pointer",
+              "transition-[margin-top,transform] duration-200 ease-out",
+              behind
+                ? "pointer-events-none ring-1 ring-black/10 dark:ring-white/10"
+                : "cursor-pointer",
             )}
             onClick={(event) => {
               if (behind) return;
