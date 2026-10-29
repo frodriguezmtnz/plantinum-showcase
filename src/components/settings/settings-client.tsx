@@ -91,12 +91,21 @@ type Availability =
   | 'invalid'
   | 'rate-limited';
 
+const SETTINGS_SECTIONS = [
+  { id: 'profile', label: 'Profile' },
+  { id: 'account', label: 'Account' },
+  { id: 'plan', label: 'Plan' },
+  { id: 'danger', label: 'Danger zone' },
+] as const;
+
 function Section({
+  id,
   title,
   description,
   tone = 'default',
   children,
 }: {
+  id: string;
   title: string;
   description?: string;
   tone?: 'default' | 'danger';
@@ -104,8 +113,9 @@ function Section({
 }) {
   return (
     <section
+      id={id}
       className={cn(
-        'panel-solid rounded-2xl p-6 md:p-8',
+        'panel-solid scroll-mt-28 rounded-2xl p-6 md:p-8',
         tone === 'danger' && 'border-destructive/40',
       )}
     >
@@ -404,8 +414,24 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         </div>
       </header>
 
+      <nav
+        aria-label="Settings sections"
+        className="sticky top-16 z-30 mb-6 inline-flex max-w-full gap-0.5 overflow-x-auto rounded-full border border-border/70 bg-background p-0.5 text-xs shadow-sm"
+      >
+        {SETTINGS_SECTIONS.map((section) => (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className="shrink-0 rounded-full px-3.5 py-1.5 font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {section.label}
+          </a>
+        ))}
+      </nav>
+
       <div className="space-y-6">
         <Section
+          id="profile"
           title="Profile"
           description="How hunters see you on the board."
         >
@@ -725,6 +751,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         </Section>
 
         <Section
+          id="account"
           title="Account"
           description="Your sign-in details and password."
         >
@@ -798,6 +825,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         </Section>
 
         <Section
+          id="plan"
           title="Plan & billing"
           description="What your account can do today."
         >
@@ -851,6 +879,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         </Section>
 
         <Section
+          id="danger"
           title="Danger zone"
           description="This action is permanent."
           tone="danger"
