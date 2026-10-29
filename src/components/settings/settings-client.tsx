@@ -30,6 +30,7 @@ import { AvatarField } from '@/components/settings/avatar-field';
 import { DeleteAccount } from '@/components/settings/delete-account';
 import { PasswordInput } from '@/components/shared/password-input';
 import { PasswordRules } from '@/components/shared/password-rules';
+import { ProfileCompletion } from '@/components/shared/profile-completion';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -416,7 +417,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
 
       <nav
         aria-label="Settings sections"
-        className="sticky top-16 z-30 mb-6 inline-flex max-w-full gap-0.5 overflow-x-auto rounded-full border border-border/70 bg-background p-0.5 text-xs shadow-sm"
+        className="mb-6 flex w-fit max-w-full gap-0.5 overflow-x-auto rounded-full border border-border/70 bg-background/40 p-0.5 text-xs"
       >
         {SETTINGS_SECTIONS.map((section) => (
           <a
@@ -435,6 +436,12 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           title="Profile"
           description="How hunters see you on the board."
         >
+          <ProfileCompletion
+            hasAvatar={Boolean(user.image)}
+            hasBio={Boolean(savedBio.trim())}
+            hasLinks={savedLinks.length > 0}
+          />
+
           <AvatarField username={savedUsername} initialImage={user.image} />
 
           <div className="h-px bg-border" />
