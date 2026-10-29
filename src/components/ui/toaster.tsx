@@ -25,7 +25,23 @@ const STACK_SCALE_STEP = 0.03
 export function Toaster() {
   const { toasts, dismiss } = useToast()
   const [expanded, setExpanded] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const viewportRef = useRef<HTMLOListElement>(null)
+
+  // Notices should not burn their 5s while the tab is in the background: the
+  // timer and the progress bar pause together and resume on return.
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      const isHidden = document.visibilityState === "hidden"
+      setHidden(isHidden)
+      if (isHidden) pauseAllToasts()
+      else resumeAllToasts()
+    }
+
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    return () =>
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+  }, [])
 
   // Radix portals each Toast.Root into the Viewport, so React synthetic
   // enter/leave events on the Viewport never see them. Native listeners on the
@@ -60,10 +76,12 @@ export function Toaster() {
     }
   }, [])
 
+  const paused = expanded || hidden
+
   return (
-    <ToastProvider>
+    <ToastProvider swipeDirection="right" swipeThreshold={40}>
       {toasts.map(function (
-        { id, title, description, action, variant, open, ...props },
+        { id, title, description, action, variant, open, createdAt, ...props },
         index,
       ) {
         const behind = index > 0
@@ -77,6 +95,7 @@ export function Toaster() {
             key={id}
             variant={variant}
             open={open}
+            data-toast-created={createdAt}
             {...props}
             aria-hidden={behind || undefined}
             inert={behind || undefined}
@@ -123,7 +142,7 @@ export function Toaster() {
                     : variant === "warning"
                       ? "bg-amber-950/40"
                       : "bg-white/60",
-                  expanded && "[animation-play-state:paused]",
+                  paused && "[animation-play-state:paused]",
                 )}
                 style={{ animationDuration: `${TOAST_REMOVE_DELAY}ms` }}
               />

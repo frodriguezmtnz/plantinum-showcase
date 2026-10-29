@@ -7,6 +7,7 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import { findDuplicateToast } from "@/lib/toast"
 
 const TOAST_LIMIT = 3
 export const TOAST_REMOVE_DELAY = 5000
@@ -16,6 +17,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  /** When the card was created; used to collapse identical bursts. */
+  createdAt?: number
 }
 
 type ActionType = {
@@ -194,6 +197,21 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  // A triple click should not stack three identical cards.
+  const duplicate = findDuplicateToast(memoryState.toasts, props)
+  if (duplicate) {
+    return {
+      id: duplicate.id,
+      dismiss: () =>
+        dispatch({ type: "DISMISS_TOAST", toastId: duplicate.id }),
+      update: (next: ToasterToast) =>
+        dispatch({
+          type: "UPDATE_TOAST",
+          toast: { ...next, id: duplicate.id },
+        }),
+    }
+  }
+
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -209,6 +227,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      createdAt: Date.now(),
       onOpenChange: (open) => {
         if (!open) dismiss()
       },
