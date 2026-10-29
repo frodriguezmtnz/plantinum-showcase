@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 
-// How much of each older toast stays visible in the collapsed pile.
-const STACK_OVERLAP = "-4rem"
+// Space between the cards of the deck. The newest toast sits at the bottom,
+// older ones pile above, slightly narrower, so every edge stays apart.
+const STACK_GAP = "0.5rem"
+const STACK_SCALE_STEP = 0.03
 
 export function Toaster() {
   const { toasts, dismiss } = useToast()
@@ -65,8 +67,9 @@ export function Toaster() {
         index,
       ) {
         const behind = index > 0
-        // The oldest toast sits first in the DOM flow; every toast after it
-        // (including the newest) overlaps upward, so the newest ends on top.
+        // Radix portals append in mount order, so the DOM runs oldest → newest
+        // even though the state array is newest → oldest. The gap belongs to
+        // every card except the oldest, which is the one at the top of the DOM.
         const isOldest = index === toasts.length - 1
 
         return (
@@ -78,13 +81,14 @@ export function Toaster() {
             aria-hidden={behind || undefined}
             inert={behind || undefined}
             style={{
-              marginTop:
-                expanded || isOldest ? undefined : STACK_OVERLAP,
+              marginTop: isOldest ? undefined : STACK_GAP,
               zIndex: 50 - index,
-              // Each older card is a touch smaller and sits behind, so the
-              // pile reads as separate cards instead of one solid block.
+              // Older cards shrink toward their bottom edge and stay centered,
+              // which widens the gap just enough to read as a deck of cards.
               transform:
-                expanded || !behind ? undefined : `scale(${1 - index * 0.05})`,
+                expanded || !behind
+                  ? undefined
+                  : `scale(${1 - index * STACK_SCALE_STEP})`,
               transformOrigin: "bottom center",
               animation: behind ? "none" : undefined,
             }}
