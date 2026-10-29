@@ -9,6 +9,7 @@ import {
   NOTIFICATIONS_READ_EVENT,
 } from '@/lib/notification-events';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 /** How often the bell re-reads the unread count while the tab is visible. */
 const POLL_MS = 60_000;
@@ -86,8 +87,15 @@ export function NotificationBell({ className }: { className?: string }) {
       >
         <Bell className="h-5 w-5" />
         {unread > 0 && (
-          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
-            {unread > 9 ? '9+' : unread}
+          <span
+            className={cn(
+              // The badge grows sideways instead of clipping the number: three
+              // digits drop a hair in size so they still fit the pill.
+              'absolute right-1 top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-destructive px-1 font-bold leading-none text-destructive-foreground tabular-nums ring-2 ring-background',
+              unread > 99 ? 'text-[8px]' : 'text-[10px]',
+            )}
+          >
+            {unread > 999 ? '999+' : unread}
           </span>
         )}
       </Link>
