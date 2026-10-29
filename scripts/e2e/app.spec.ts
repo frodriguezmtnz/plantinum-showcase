@@ -183,6 +183,24 @@ test.describe('authenticated', () => {
       .not.toBe(before);
   });
 
+  test('notification filters are linkable and keep the URL', async ({ page }) => {
+    await login(page);
+    await page.goto('/notifications');
+
+    const filters = page.getByRole('navigation', { name: 'Notification filters' });
+    await expect(filters).toBeVisible();
+    await expect(filters.getByRole('link', { name: /^All/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    await filters.getByRole('link', { name: /^Unread/ }).click();
+    await expect(page).toHaveURL(/\/notifications\?filter=unread$/);
+    await expect(
+      filters.getByRole('link', { name: /^Unread/ }),
+    ).toHaveAttribute('aria-current', 'page');
+  });
+
   test('notification bell refetches when the tab becomes visible', async ({ page }) => {
     await login(page);
     await page.waitForTimeout(800);
