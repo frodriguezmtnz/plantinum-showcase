@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { sanitizeBio } from "@/lib/bio";
+import {
+  legacyProfileLink,
+  toProfileLinkView,
+  type ProfileLinkView,
+} from "@/lib/profile-links";
 import { getCurrentPeriod, shiftPeriod } from "@/lib/period";
+import { aheadOfPercent } from "@/lib/standing";
 import {
   PROFILE_PAGE_SIZE,
   type ProfilePlatformFilter,
@@ -133,6 +140,61 @@ export async function getUserByUsername(username: string): Promise<User | undefi
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) return undefined;
   return toUserView(user);
+}
+
+export interface UserProfile {
+  user: User;
+  /** True when the account uploaded an avatar (avatarUrl otherwise falls back). */
+  hasAvatar: boolean;
+  bio: string | null;
+  /** Legacy single link; prefer `links` and keep this for the fallback only. */
+  psnProfileUrl: string | null;
+  links: ProfileLinkView[];
+  createdAt: string;
+}
+
+/** Owner view used by the profile header/tabs (adds the About-tab fields). */
+export async function getUserProfileByUsername(
+  username: string,
+): Promise<UserProfile | undefined> {
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      username: true,
+      image: true,
+      bio: true,
+      psnProfileUrl: true,
+      createdAt: true,
+      profileLinks: {
+        orderBy: { createdAt: "asc" },
+        select: { provider: true, handle: true, url: true },
+      },
+    },
+  });
+  if (!user) return undefined;
+
+  const rows = user.profileLinks
+    .map((row) => toProfileLinkView(row))
+    .filter((link): link is ProfileLinkView => link !== null);
+
+  // Accounts created before ProfileLink keep working until they save again.
+  const links =
+    rows.length > 0
+      ? rows
+      : [legacyProfileLink(user.psnProfileUrl)].filter(
+          (link): link is ProfileLinkView => link !== null,
+        );
+
+  return {
+    user: toUserView(user),
+    hasAvatar: Boolean(user.image),
+    // Legacy rows may predate the write-side rejection: never render markup.
+    bio: user.bio ? sanitizeBio(user.bio) : null,
+    psnProfileUrl: user.psnProfileUrl,
+    links,
+    createdAt: user.createdAt.toISOString(),
+  };
 }
 
 export async function getPlatinums(): Promise<Platinum[]> {
@@ -395,6 +457,60 @@ export async function getProfileSummary(
     months,
     platforms,
     topVoted,
+  };
+}
+
+/** How this hunter compares with everyone else publishing plates. */
+export interface ProfileStanding {
+  hunters: number;
+  aheadOfPlates: number | null;
+  aheadOfVotes: number | null;
+  hasHuntersBehind: boolean;
+}
+
+/**
+ * Percentile standing over published plates only. One grouped pass over the
+ * board; the profile page asks for it on the Stats tab, next to the summary.
+ */
+export async function getProfileStanding(
+  userId: string,
+): Promise<ProfileStanding> {
+  const [row] = await prisma.$queryRaw<
+    {
+      hunters: number;
+      plates_below: number;
+      votes_below: number;
+    }[]
+  >`
+    WITH per_user AS (
+      SELECT
+        "userId" AS id,
+        count(*)::int AS plates,
+        coalesce(sum(votes), 0)::int AS votes
+      FROM "Platinum"
+      WHERE "moderationStatus" = 'PUBLISHED'
+      GROUP BY 1
+    ),
+    me AS (
+      SELECT
+        coalesce((SELECT plates FROM per_user WHERE id = ${userId}), 0)::int AS plates,
+        coalesce((SELECT votes FROM per_user WHERE id = ${userId}), 0)::int AS votes
+    )
+    SELECT
+      (SELECT count(*)::int FROM per_user) AS hunters,
+      (SELECT count(*)::int FROM per_user, me WHERE per_user.plates < me.plates) AS plates_below,
+      (SELECT count(*)::int FROM per_user, me WHERE per_user.votes < me.votes) AS votes_below
+  `;
+
+  const hunters = row?.hunters ?? 0;
+  const platesBelow = row?.plates_below ?? 0;
+  const votesBelow = row?.votes_below ?? 0;
+
+  return {
+    hunters,
+    aheadOfPlates: aheadOfPercent({ hunters, below: platesBelow }),
+    aheadOfVotes: aheadOfPercent({ hunters, below: votesBelow }),
+    hasHuntersBehind: platesBelow > 0,
   };
 }
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Github, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 
 const footerLinks = [
   { href: "/about", label: "About" },
@@ -30,18 +30,9 @@ export function Footer() {
               {link.label}
             </Link>
           ))}
-          <span className="footer-link-divider hidden sm:block" aria-hidden />
-          <a
-            href="https://github.com/frodriguezmtnz/plantinum-showcase"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="footer-link flex items-center gap-2 text-sm"
-          >
-            <Github className="h-4 w-4" /> GitHub
-          </a>
         </nav>
 
-        <div className="footer-divider w-full border-t pt-6 text-center text-sm">
+        <div className="footer-divider w-full pt-6 text-center text-sm">
           &copy; {new Date().getFullYear()} Platinum Showcase. All rights reserved.
         </div>
       </div>

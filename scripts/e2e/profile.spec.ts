@@ -4,7 +4,7 @@ const PROFILE = '/u/e2e-runner';
 
 test.describe('profile', () => {
   test('shows activity stats and the top voted plates', async ({ page }) => {
-    const response = await page.goto(PROFILE);
+    const response = await page.goto(`${PROFILE}?tab=stats`);
     test.skip(response?.status() === 404, 'E2E profile is not seeded');
 
     await expect(page.locator('#main span:visible').filter({ hasText: /^14 Platinums$/ }).first()).toBeVisible();
@@ -21,22 +21,53 @@ test.describe('profile', () => {
     await expect(page.getByRole('link', { name: 'E2E Plate 05', exact: true })).toBeVisible();
     await expect(page.locator('[data-platform="PS5"]:visible')).toContainText('13');
     await expect(page.locator('[data-platform="PS4"]:visible')).toContainText('1');
+
+    // The canvases carry an sr-only table so screen readers get the numbers.
+    await expect(
+      page.getByRole('table', { name: 'Cumulative platinums by month' }),
+    ).toBeAttached();
+    await expect(
+      page.getByRole('table', { name: 'Platinums by platform' }),
+    ).toBeAttached();
   });
 
-  test('filters the pace between active months and the full year', async ({ page }) => {
+  test('switches between the gallery, stats and about tabs', async ({ page }) => {
     const response = await page.goto(PROFILE);
     test.skip(response?.status() === 404, 'E2E profile is not seeded');
 
+    await page.locator('#main').getByRole('link', { name: 'Stats', exact: true }).click();
+    await page.waitForURL(/[?&]tab=stats/, { waitUntil: 'commit' });
+    await expect(page.getByRole('heading', { name: 'Platinum pace' })).toBeVisible();
+
+    await page.locator('#main').getByRole('link', { name: 'About', exact: true }).click();
+    await page.waitForURL(/[?&]tab=about/, { waitUntil: 'commit' });
+    await expect(page.getByRole('heading', { name: 'About @e2e-runner' })).toBeVisible();
+    await expect(page.getByText(/Member since/)).toBeVisible();
+
+    await page.locator('#main').getByRole('link', { name: 'Gallery', exact: true }).click();
+    await page.waitForURL(/\/u\/e2e-runner$/, { waitUntil: 'commit' });
+    await expect(page.locator('[data-gallery-view="grid"]:visible')).toBeVisible();
+  });
+
+  test('filters the pace between active months and the full year', async ({ page }) => {
+    const response = await page.goto(`${PROFILE}?tab=stats`);
+    test.skip(response?.status() === 404, 'E2E profile is not seeded');
+
+    // The pace bars live on a canvas; the sr-only table mirrors the months.
+    const paceRows = page
+      .getByRole('table', { name: 'Platinum pace by month' })
+      .locator('tbody tr');
+
     // The fixture creates all plates in the current month.
-    await expect(page.locator('[data-month]:visible')).toHaveCount(1);
+    await expect(paceRows).toHaveCount(1);
 
     await page.locator('a:visible', { hasText: 'Last 12 months' }).first().click();
     await page.waitForURL(/[?&]pace=all(?:&|$)/, { waitUntil: 'commit' });
-    await expect(page.locator('[data-month]:visible')).toHaveCount(12);
+    await expect(paceRows).toHaveCount(12);
 
     await page.locator('a:visible', { hasText: 'Active months' }).first().click();
     await page.waitForURL(/[?&]pace=active(?:&|$)/, { waitUntil: 'commit' });
-    await expect(page.locator('[data-month]:visible')).toHaveCount(1);
+    await expect(paceRows).toHaveCount(1);
   });
 
   test('loads 8 plates by default and loads more on demand', async ({ page }) => {

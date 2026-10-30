@@ -49,7 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.username = user.name;
@@ -57,11 +57,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // from the database so a promotion takes effect without re-login.
         token.role = user.role;
       }
+
+      // Settings calls useSession().update() after changing the handle, avatar
+      // or email. Re-read those fields so the cached session never points at a
+      // stale /u/<old-handle>. Normal requests keep hitting only the token.
+      const userId = (token.id ?? token.sub) as string | undefined;
+      if (trigger === "update" && userId) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { username: true, email: true, image: true, role: true },
+        });
+        if (fresh) {
+          token.id = userId;
+          token.username = fresh.username;
+          token.email = fresh.email;
+          token.picture = fresh.image;
+          token.role = fresh.role;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
+        session.user.id = (token.id ?? token.sub) as string;
         session.user.image = token.picture as string | undefined;
         session.user.name =
           (token.username as string | undefined) ?? session.user.name;

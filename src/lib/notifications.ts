@@ -1,4 +1,9 @@
 import { prisma } from '@/lib/prisma';
+import {
+  QUEUE_KINDS,
+  type NotificationCounts,
+  type NotificationFilter,
+} from '@/lib/notification-filters';
 import type { NotificationKind } from '@/generated/prisma/enums';
 
 export interface NotificationView {
@@ -70,10 +75,15 @@ export async function notifyModerators(
 
 export async function listNotifications(
   userId: string,
+  filter: NotificationFilter = 'all',
   limit = 30,
 ): Promise<NotificationView[]> {
   const rows = await prisma.notification.findMany({
-    where: { userId },
+    where: {
+      userId,
+      ...(filter === 'unread' ? { readAt: null } : {}),
+      ...(filter === 'moderation' ? { kind: { in: QUEUE_KINDS } } : {}),
+    },
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
@@ -93,9 +103,32 @@ export async function countUnreadNotifications(userId: string): Promise<number> 
   return prisma.notification.count({ where: { userId, readAt: null } });
 }
 
+/** Counts for the filter pills; the page also derives the "clear read" total. */
+export async function countNotifications(
+  userId: string,
+): Promise<NotificationCounts> {
+  const [all, unread, moderation] = await Promise.all([
+    prisma.notification.count({ where: { userId } }),
+    prisma.notification.count({ where: { userId, readAt: null } }),
+    prisma.notification.count({ where: { userId, kind: { in: QUEUE_KINDS } } }),
+  ]);
+  return { all, unread, moderation };
+}
+
 export async function markNotificationsRead(userId: string): Promise<void> {
   await prisma.notification.updateMany({
     where: { userId, readAt: null },
     data: { readAt: new Date() },
   });
+}
+
+export async function markNotificationRead(
+  userId: string,
+  id: string,
+): Promise<number> {
+  const result = await prisma.notification.updateMany({
+    where: { id, userId, readAt: null },
+    data: { readAt: new Date() },
+  });
+  return result.count;
 }

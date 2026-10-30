@@ -11,6 +11,8 @@ import { registerAction, checkUsernameAvailability, type RegisterState } from ".
 import { useAuth } from "@/hooks/use-auth";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
+import { PasswordRules } from "@/components/shared/password-rules";
+import { PASSWORD_MIN_LENGTH, passwordPolicyError } from "@/lib/password";
 import { cn } from "@/lib/utils";
 
 const initialState: RegisterState = {};
@@ -81,6 +83,8 @@ function UsernameHint({ status, username }: { status: UsernameStatus; username: 
 export default function RegisterPage() {
   const [state, formAction, isPending] = useActionState(registerAction, initialState);
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
   const { refresh } = useAuth();
   // Refreshing the session re-renders the provider, so guard against running
@@ -137,10 +141,15 @@ export default function RegisterPage() {
           ? checkResult.status
           : { state: 'checking' };
 
+  const passwordIssue = password ? passwordPolicyError(password) : null;
+  const passwordsMatch =
+    password.length > 0 && password === confirmPassword;
   const blocked =
     usernameStatus.state === 'invalid' ||
     usernameStatus.state === 'reserved' ||
-    usernameStatus.state === 'taken';
+    usernameStatus.state === 'taken' ||
+    Boolean(passwordIssue) ||
+    !passwordsMatch;
 
   return (
     <AuthShell
@@ -181,11 +190,33 @@ export default function RegisterPage() {
         </div>
         <div className="grid gap-2">
           <Label htmlFor="password">Password</Label>
-          <PasswordInput id="password" name="password" required minLength={6} />
+          <PasswordInput
+            id="password"
+            name="password"
+            required
+            minLength={PASSWORD_MIN_LENGTH}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            autoComplete="new-password"
+            aria-describedby="register-password-rules"
+          />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="confirmPassword">Confirm password</Label>
-          <PasswordInput id="confirmPassword" name="confirmPassword" required minLength={6} />
+          <PasswordInput
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+            minLength={PASSWORD_MIN_LENGTH}
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            autoComplete="new-password"
+          />
+          <PasswordRules
+            id="register-password-rules"
+            value={password}
+            confirm={confirmPassword}
+          />
         </div>
         <Button type="submit" className="w-full" disabled={isPending || blocked}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

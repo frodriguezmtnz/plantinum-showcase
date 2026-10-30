@@ -33,6 +33,7 @@ import { moderationStatusForVerdict } from "@/lib/ai-verdict";
 import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
 import {
   countUnreadNotifications,
+  markNotificationRead,
   markNotificationsRead,
   notifyModerators,
   notifyUser,
@@ -898,6 +899,44 @@ export async function markAllNotificationsRead(): Promise<void> {
   revalidatePath("/notifications");
 }
 
+export async function markOneNotificationRead(
+  id: string,
+): Promise<{ updated: number }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { updated: 0 };
+
+  const updated = await markNotificationRead(userId, id);
+  revalidatePath("/notifications");
+  return { updated };
+}
+
+export async function deleteNotification(
+  id: string,
+): Promise<{ removed: number }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { removed: 0 };
+
+  const result = await prisma.notification.deleteMany({
+    where: { id, userId },
+  });
+  revalidatePath("/notifications");
+  return { removed: result.count };
+}
+
+export async function clearReadNotifications(): Promise<{ removed: number }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { removed: 0 };
+
+  const result = await prisma.notification.deleteMany({
+    where: { userId, readAt: { not: null } },
+  });
+  revalidatePath("/notifications");
+  return { removed: result.count };
+}
+
 export async function getUnreadNotificationCount(): Promise<number> {
   const session = await auth();
   const userId = session?.user?.id;
@@ -1121,7 +1160,7 @@ export async function toggleFollow(username: string): Promise<FollowActionResult
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false, error: "You need to sign in to follow hunters." };
+    return { success: false, error: "You need to sign in to follow trophy hunters." };
   }
 
   const followLimit = await checkRateLimit(`follow:${userId}`, 30, 60_000);
@@ -1137,7 +1176,7 @@ export async function toggleFollow(username: string): Promise<FollowActionResult
     select: { id: true, username: true },
   });
   if (!target || !target.username) {
-    return { success: false, error: "This hunter does not exist." };
+    return { success: false, error: "This trophy hunter does not exist." };
   }
   if (target.id === userId) {
     return { success: false, error: "You can't follow yourself." };

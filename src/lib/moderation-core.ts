@@ -21,7 +21,7 @@ function safeRevalidate(path: string): void {
   }
 }
 
-function imageKeyFromUrl(imageUrl: string): string | null {
+export function imageKeyFromUrl(imageUrl: string): string | null {
   if (!imageUrl.startsWith(IMAGE_URL_PREFIX)) return null;
   const key = imageUrl.slice(IMAGE_URL_PREFIX.length);
   return STORED_KEY_PATTERN.test(key) ? key : null;

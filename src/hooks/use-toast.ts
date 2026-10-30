@@ -7,15 +7,18 @@ import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
+import { findDuplicateToast } from "@/lib/toast"
 
 const TOAST_LIMIT = 3
-const TOAST_REMOVE_DELAY = 5000
+export const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  /** When the card was created; used to collapse identical bursts. */
+  createdAt?: number
 }
 
 type ActionType = {
@@ -54,22 +57,64 @@ interface State {
   toasts: ToasterToast[]
 }
 
-const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+interface TimerState {
+  handle: ReturnType<typeof setTimeout> | null
+  startedAt: number
+  remaining: number
+}
 
-const addToRemoveQueue = (toastId: string) => {
-  if (toastTimeouts.has(toastId)) {
-    return
+const toastTimers = new Map<string, TimerState>()
+
+function scheduleRemoval(toastId: string, delay: number) {
+  const existing = toastTimers.get(toastId)
+  if (existing?.handle) clearTimeout(existing.handle)
+
+  const state: TimerState = {
+    handle: null,
+    startedAt: Date.now(),
+    remaining: delay,
   }
-
-  const timeout = setTimeout(() => {
-    toastTimeouts.delete(toastId)
+  state.handle = setTimeout(() => {
+    toastTimers.delete(toastId)
     dispatch({
       type: "REMOVE_TOAST",
       toastId: toastId,
     })
-  }, TOAST_REMOVE_DELAY)
+  }, delay)
+  toastTimers.set(toastId, state)
+}
 
-  toastTimeouts.set(toastId, timeout)
+const addToRemoveQueue = (toastId: string) => {
+  if (toastTimers.has(toastId)) {
+    return
+  }
+  scheduleRemoval(toastId, TOAST_REMOVE_DELAY)
+}
+
+/**
+ * The Toaster pauses every countdown while the stack is hovered or focused so
+ * the progress bar and the actual removal stay in sync.
+ */
+export function pauseToast(toastId: string) {
+  const timer = toastTimers.get(toastId)
+  if (!timer?.handle) return
+  clearTimeout(timer.handle)
+  timer.handle = null
+  timer.remaining = Math.max(0, timer.remaining - (Date.now() - timer.startedAt))
+}
+
+export function resumeToast(toastId: string) {
+  const timer = toastTimers.get(toastId)
+  if (!timer || timer.handle) return
+  scheduleRemoval(toastId, timer.remaining)
+}
+
+export function pauseAllToasts() {
+  for (const toastId of toastTimers.keys()) pauseToast(toastId)
+}
+
+export function resumeAllToasts() {
+  for (const toastId of toastTimers.keys()) resumeToast(toastId)
 }
 
 export const reducer = (state: State, action: Action): State => {
@@ -132,7 +177,18 @@ const listeners: Array<(state: State) => void> = []
 let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
+  const previous = memoryState.toasts
   memoryState = reducer(memoryState, action)
+
+  // Dropped toasts (limit overflow or removal) must not keep a timer alive.
+  const nextIds = new Set(memoryState.toasts.map((toast) => toast.id))
+  for (const toast of previous) {
+    if (nextIds.has(toast.id)) continue
+    const timer = toastTimers.get(toast.id)
+    if (timer?.handle) clearTimeout(timer.handle)
+    toastTimers.delete(toast.id)
+  }
+
   listeners.forEach((listener) => {
     listener(memoryState)
   })
@@ -141,6 +197,21 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  // A triple click should not stack three identical cards.
+  const duplicate = findDuplicateToast(memoryState.toasts, props)
+  if (duplicate) {
+    return {
+      id: duplicate.id,
+      dismiss: () =>
+        dispatch({ type: "DISMISS_TOAST", toastId: duplicate.id }),
+      update: (next: ToasterToast) =>
+        dispatch({
+          type: "UPDATE_TOAST",
+          toast: { ...next, id: duplicate.id },
+        }),
+    }
+  }
+
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -156,6 +227,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
+      createdAt: Date.now(),
       onOpenChange: (open) => {
         if (!open) dismiss()
       },

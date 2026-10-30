@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `Hunters ${user.username} follows | Platinum Showcase`,
-    description: `The hunters ${user.username} follows on Platinum Showcase.`,
+    title: `Trophy hunters ${user.username} follows | Platinum Showcase`,
+    description: `The trophy hunters ${user.username} follows on Platinum Showcase.`,
     alternates: { canonical: `/u/${user.username}/following` },
   };
 }
@@ -44,6 +44,7 @@ export default async function FollowingPage({ params }: Props) {
         initialItems={page.items}
         initialTotal={page.total}
         initialHasMore={page.hasMore}
+        isOwner={session?.user?.id === user.id}
       />
     </div>
   );

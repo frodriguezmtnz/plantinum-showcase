@@ -107,12 +107,18 @@ describe.skipIf(!url)('follows.ts — Postgres integration', () => {
 
   it('counts both directions and reports the viewer edge', async () => {
     const state = await follows.getFollowState(u.alice, u.carol);
-    expect(state).toEqual({ isFollowing: true, followers: 2, following: 2 });
+    expect(state).toEqual({
+      isFollowing: true,
+      followsYou: true,
+      followers: 2,
+      following: 2,
+    });
   });
 
   it('never reports a self-follow for the owner', async () => {
     const state = await follows.getFollowState(u.alice, u.alice);
     expect(state.isFollowing).toBe(false);
+    expect(state.followsYou).toBe(false);
   });
 
   it('lists followers newest first and flags the viewer edges', async () => {
@@ -120,8 +126,9 @@ describe.skipIf(!url)('follows.ts — Postgres integration', () => {
     expect(page.total).toBe(2);
     expect(page.hasMore).toBe(false);
     expect(page.items.map((item) => item.id)).toEqual([u.carol, u.bob]);
-    // Alice follows both of them, so the inline buttons read "Following".
+    // Alice follows both of them and both follow her back.
     expect(page.items.every((item) => item.isFollowing)).toBe(true);
+    expect(page.items.every((item) => item.followsYou)).toBe(true);
   });
 
   it('paginates the following list without duplicates', async () => {
@@ -133,6 +140,7 @@ describe.skipIf(!url)('follows.ts — Postgres integration', () => {
     expect(first.hasMore).toBe(true);
     expect(first.items.map((item) => item.id)).toEqual([u.carol]);
     expect(first.items[0]!.isFollowing).toBe(false);
+    expect(first.items[0]!.followsYou).toBe(false);
 
     const second = await follows.getFollowingPage(u.alice, {
       viewerId: u.bob,
