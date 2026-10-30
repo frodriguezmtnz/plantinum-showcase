@@ -310,7 +310,7 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 - **Unread badge:** soft-pink pill using `--badge-new` (12% magenta in light, 16% in dark) with `--badge-new-foreground` (34% / 62%); `text-[11px]` bold uppercase. It is the only non-selection use of magenta because it marks the unread state, and both pairs clear WCAG AA on the frost panel.
 
 ### Notifications
-- Filter pills read `Unread | All | Moderation` (Moderation only for moderators). The bare `/notifications` URL opens `Unread` while `counts.unread > 0` and falls back to `All`; explicit `?filter=all|unread|moderation` always wins. The active pill uses the standard ink fill, counts are tabular and the list keeps a 30-item cap.
+- Filter pills read `Unread | All | Moderation` (Moderation only for moderators). The bare `/notifications` URL opens `Unread` while `counts.unread > 0` and falls back to `All`; every pill carries an explicit `?filter=all|unread|moderation` so All stays reachable with unread notices pending. The active pill uses the standard ink fill and tabular counts. Unread cards wear the same soft-pink ring as the badge and expose a per-notice check action; **Mark all as read** from Unread replaces the route with All. The list loads 30 at a time and grows by 30 up to 150 through a centered **Load more** action (`scroll={false}`).
 
 ### Cards / Containers
 - **Frost card (`.panel-solid`):** 92% frost, cloud-edge border, 16px corners, `--lift`; gallery cards add a uniform 500ms mount fade (`animate-in fade-in slide-in-from-bottom-3 duration-500`) — deliberately no per-card stagger — and hover to `--bloom` (shadow only; the image scales 1.02).
