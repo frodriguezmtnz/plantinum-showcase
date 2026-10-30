@@ -242,36 +242,33 @@ test.describe('authenticated', () => {
     await expect.poll(() => posts, { timeout: 5000 }).toBeGreaterThan(0);
   });
 
-  test('session revalidates on focus after the throttle', async ({ page }) => {
+  test('session revalidates on focus and across tabs', async ({
+    page,
+    context,
+  }) => {
     await page.clock.install();
     await login(page);
     await page.waitForTimeout(1500);
 
-    let posts = 0;
+    let focusPosts = 0;
     page.on('request', (req) => {
       if (req.method() === 'POST' && req.url().includes('/api/auth/session')) {
-        posts += 1;
+        focusPosts += 1;
       }
     });
 
     await page.clock.fastForward(31_000);
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-    await expect.poll(() => posts, { timeout: 5000 }).toBeGreaterThan(0);
-  });
+    await expect.poll(() => focusPosts, { timeout: 5000 }).toBeGreaterThan(0);
 
-  test('other tabs refresh when a session change is broadcast', async ({
-    page,
-    context,
-  }) => {
-    await login(page);
     const other = await context.newPage();
     await other.goto('/');
     await other.waitForTimeout(800);
 
-    let posts = 0;
+    let tabPosts = 0;
     other.on('request', (req) => {
       if (req.method() === 'POST' && req.url().includes('/api/auth/session')) {
-        posts += 1;
+        tabPosts += 1;
       }
     });
 
@@ -280,7 +277,7 @@ test.describe('authenticated', () => {
       channel.postMessage('refresh');
     });
 
-    await expect.poll(() => posts, { timeout: 5000 }).toBeGreaterThan(0);
+    await expect.poll(() => tabPosts, { timeout: 5000 }).toBeGreaterThan(0);
     await other.close();
   });
 
