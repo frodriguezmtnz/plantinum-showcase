@@ -201,6 +201,35 @@ test.describe('authenticated', () => {
     ).toHaveAttribute('aria-current', 'page');
   });
 
+  test('All stays reachable with unread notices and the row check marks one read', async ({
+    page,
+  }) => {
+    await login(page);
+    await page.goto('/notifications');
+
+    const filters = page.getByRole('navigation', { name: 'Notification filters' });
+    await expect(filters.getByRole('link', { name: /^Unread/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    await filters.getByRole('link', { name: /^All/ }).click();
+    await expect(page).toHaveURL(/\/notifications\?filter=all$/);
+    await expect(filters.getByRole('link', { name: /^All/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    const row = page.locator('li', {
+      hasText: 'E2E Follower started following you',
+    });
+    await expect(row.getByText('New', { exact: true })).toBeVisible();
+    await row.getByRole('button', { name: 'Mark notification as read' }).click();
+
+    await expect(row.getByText('New', { exact: true })).toBeHidden();
+    await expect(filters.getByRole('link', { name: /^Unread/ })).toContainText('0');
+  });
+
   test('notification bell refetches when the tab becomes visible', async ({ page }) => {
     await login(page);
     await page.waitForTimeout(800);

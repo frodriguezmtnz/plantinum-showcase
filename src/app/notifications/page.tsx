@@ -28,8 +28,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/empty-state';
 import { AppealPlatinumButton } from '@/components/shared/appeal-platinum-button';
 import { MarkAllReadButton } from '@/components/shared/mark-all-read-button';
-import { DeleteNotificationButton } from '@/components/shared/delete-notification-button';
-import { MarkNotificationReadButton } from '@/components/shared/mark-notification-read-button';
+import { NotificationRowActions } from '@/components/shared/notification-row-actions';
 import { ClearReadNotificationsButton } from '@/components/shared/clear-read-notifications-button';
 import type { NotificationKind } from '@/generated/prisma/enums';
 import { cn } from '@/lib/utils';
@@ -134,7 +133,7 @@ export default async function NotificationsPage({
               href={notificationFilterHref(tab.value)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring',
                 active
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground',
@@ -228,10 +227,10 @@ export default async function NotificationsPage({
                     </div>
                   )}
                 </div>
-                <div className="flex shrink-0 items-center gap-0.5">
-                  {!item.readAt && <MarkNotificationReadButton id={item.id} />}
-                  <DeleteNotificationButton id={item.id} />
-                </div>
+                <NotificationRowActions
+                  id={item.id}
+                  isRead={Boolean(item.readAt)}
+                />
               </li>
             );
           })}
