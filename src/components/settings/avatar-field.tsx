@@ -48,6 +48,14 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
     releaseCropSource();
   }
 
+  async function syncSession() {
+    try {
+      await refresh();
+    } catch (error) {
+      console.warn('[avatar] could not refresh the session', error);
+    }
+  }
+
   function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -94,9 +102,9 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
       }
 
       setImage(result.image);
-      void refresh();
-      router.refresh();
       closeCropper();
+      await syncSession();
+      router.refresh();
 
       if (result.warning) {
         toast({
@@ -127,7 +135,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
         return;
       }
       setImage(result.image);
-      void refresh();
+      await syncSession();
       router.refresh();
       toast({
         title: 'Avatar reset',

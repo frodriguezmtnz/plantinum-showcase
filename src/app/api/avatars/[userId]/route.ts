@@ -7,10 +7,11 @@ export const runtime = "nodejs";
 const NO_STORE = { "Cache-Control": "no-store" };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ userId: string }> },
 ) {
   const { userId } = await params;
+  const versioned = new URL(request.url).searchParams.has("v");
 
   if (!isAvatarUserId(userId)) {
     return new NextResponse("Not found", { status: 404, headers: NO_STORE });
@@ -33,8 +34,11 @@ export async function GET(
       "Content-Type": image.contentType,
       "Content-Length": String(image.contentLength),
       // The public URL carries a ?v= stamp that changes on every upload, so a
-      // fixed key can still be cached hard.
-      "Cache-Control": "public, max-age=31536000, immutable",
+      // fixed key can still be cached hard. Legacy URLs without a stamp must
+      // revalidate or they would pin the first avatar forever.
+      "Cache-Control": versioned
+        ? "public, max-age=31536000, immutable"
+        : "private, no-store",
       "X-Robots-Tag": "noindex",
     },
   });
