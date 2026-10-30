@@ -34,6 +34,8 @@
        is alive. Selection bloom is one language everywhere. */
     --ps-pink: hsl(322 100% 44%);
     --ps-green: hsl(147 100% 32%);
+    --badge-new: hsl(322 100% 44% / 0.12);
+    --badge-new-foreground: hsl(322 100% 34%);
     /* Text step of Triangle Green, darkened to clear WCAG AA on paper. */
     --live: hsl(147 100% 24%);
     --ice: hsl(322 100% 52%);
@@ -119,6 +121,8 @@
   --color-chart-5: var(--chart-5);
   --color-ice: var(--ice);
   --color-ice-soft: var(--ice-soft);
+  --color-badge-new: var(--badge-new);
+  --color-badge-new-foreground: var(--badge-new-foreground);
   --color-mat: var(--cloud-mat);
   --color-dusk: var(--dusk-amber);
   --color-dusk-bright: var(--dusk-amber-bright);
@@ -625,6 +629,8 @@ input[type='search']::-webkit-search-decoration {
   --ring: hsl(322 100% 52%);
   --ps-pink: hsl(322 100% 52%);
   --ps-green: hsl(147 70% 55%);
+  --badge-new: hsl(322 100% 58% / 0.16);
+  --badge-new-foreground: hsl(322 100% 62%);
   --live: var(--ps-green);
   --ice: hsl(322 100% 58%);
   --bloom: 0 0 0 3px hsl(322 100% 65% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.6);

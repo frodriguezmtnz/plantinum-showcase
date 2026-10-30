@@ -16,7 +16,7 @@ import { countNotifications, listNotifications } from '@/lib/notifications';
 import {
   QUEUE_KINDS,
   notificationFilterHref,
-  parseNotificationFilter,
+  resolveNotificationFilter,
   type NotificationFilter,
 } from '@/lib/notification-filters';
 import { isModerator } from '@/lib/roles';
@@ -73,18 +73,17 @@ export default async function NotificationsPage({
   if (!userId) redirect('/login');
 
   const { filter: rawFilter } = await searchParams;
-  const filter = parseNotificationFilter(rawFilter);
-
-  const [notifications, canModerate, counts] = await Promise.all([
-    listNotifications(userId, filter),
+  const [canModerate, counts] = await Promise.all([
     isModerator(userId),
     countNotifications(userId),
   ]);
+  const filter = resolveNotificationFilter(rawFilter, counts.unread);
+  const notifications = await listNotifications(userId, filter);
   const readCount = counts.all - counts.unread;
 
   const tabs: { value: NotificationFilter; label: string; count: number }[] = [
-    { value: 'all', label: 'All', count: counts.all },
     { value: 'unread', label: 'Unread', count: counts.unread },
+    { value: 'all', label: 'All', count: counts.all },
     ...(canModerate
       ? [
           {
@@ -168,7 +167,7 @@ export default async function NotificationsPage({
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{item.title}</p>
                     {!item.readAt && (
-                      <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                      <span className="rounded-full bg-badge-new px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-badge-new-foreground">
                         New
                       </span>
                     )}

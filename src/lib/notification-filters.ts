@@ -16,6 +16,15 @@ export function parseNotificationFilter(
   return value === 'unread' || value === 'moderation' ? value : 'all';
 }
 
+/** The bare inbox opens on Unread while there is anything waiting. */
+export function resolveNotificationFilter(
+  value: string | undefined,
+  unreadCount: number,
+): NotificationFilter {
+  if (value) return parseNotificationFilter(value);
+  return unreadCount > 0 ? 'unread' : 'all';
+}
+
 export interface NotificationCounts {
   all: number;
   unread: number;

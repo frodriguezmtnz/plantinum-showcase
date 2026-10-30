@@ -185,7 +185,7 @@ test.describe('authenticated', () => {
 
   test('notification filters are linkable and keep the URL', async ({ page }) => {
     await login(page);
-    await page.goto('/notifications');
+    await page.goto('/notifications?filter=all');
 
     const filters = page.getByRole('navigation', { name: 'Notification filters' });
     await expect(filters).toBeVisible();
