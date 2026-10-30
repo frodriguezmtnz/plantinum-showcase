@@ -35,7 +35,7 @@ const howItWorksSteps: { icon: LucideIcon; title: string; description: string }[
   {
     icon: Trophy,
     title: 'Enjoy',
-    description: 'Celebrate platinum culture with hunters who care about the craft.'
+    description: 'Celebrate platinum culture with trophy hunters who care about the craft.'
   }
 ];
 

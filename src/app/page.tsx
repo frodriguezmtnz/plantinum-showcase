@@ -48,7 +48,7 @@ export default async function Home() {
     width: p.width,
     height: p.height,
     platform: p.platform,
-    username: getUserById(p.userId)?.username ?? 'a hunter',
+    username: getUserById(p.userId)?.username ?? 'a trophy hunter',
     monthlyVotes: p.votes,
     isSpoiler: p.isSpoiler,
     rank: 0,
@@ -72,7 +72,7 @@ export default async function Home() {
             </span>
             <span aria-hidden className="hidden text-border sm:inline">|</span>
             <span className="text-sm font-semibold text-live">
-              {stats.hunters.toLocaleString('en-US')} hunters
+              {stats.hunters.toLocaleString('en-US')} trophy hunters
             </span>
           </div>
         </div>
@@ -83,7 +83,7 @@ export default async function Home() {
           </h1>
           <p className="hm-sub mx-auto mt-4 max-w-xl text-base font-semibold text-secondary-foreground/80 md:text-lg">
             The community gallery for PlayStation platinums. Post the screenshot of a
-            hard-won platinum and let the hunters vote it up.
+            hard-won platinum and let trophy hunters vote it up.
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default async function Home() {
                   What is Platinum Showcase?
                 </h2>
                 <p className="mt-3 max-w-md text-muted-foreground">
-                  A community gallery where PlayStation hunters post the
+                  A community gallery where PlayStation trophy hunters post the
                   screenshot of a hard-won platinum — and the board settles
                   who wore it best.
                 </p>
@@ -135,7 +135,7 @@ export default async function Home() {
                 <Crown className="h-8 w-8 shrink-0 text-dusk" aria-hidden />
                 <div className="min-w-0">
                   <p className="font-headline text-base font-bold">
-                    {stats.platinums.toLocaleString('en-US')} plates · {stats.votes.toLocaleString('en-US')} votes · {stats.hunters.toLocaleString('en-US')} hunters
+                    {stats.platinums.toLocaleString('en-US')} plates · {stats.votes.toLocaleString('en-US')} votes · {stats.hunters.toLocaleString('en-US')} trophy hunters
                   </p>
                   <p className="truncate text-sm text-muted-foreground">
                     Every plate is a hard-won trophy.
@@ -182,7 +182,7 @@ export default async function Home() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-bold">{platinum.gameName}</span>
                         <span className="block truncate text-xs text-muted-foreground">
-                          @{getUserById(platinum.userId)?.username ?? 'a hunter'} · {platinum.platform}
+                          @{getUserById(platinum.userId)?.username ?? 'a trophy hunter'} · {platinum.platform}
                         </span>
                       </span>
                       <span className="tabular shrink-0 text-xs font-bold text-live sm:text-sm">

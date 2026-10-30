@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `Hunters ${user.username} follows | Platinum Showcase`,
-    description: `The hunters ${user.username} follows on Platinum Showcase.`,
+    title: `Trophy hunters ${user.username} follows | Platinum Showcase`,
+    description: `The trophy hunters ${user.username} follows on Platinum Showcase.`,
     alternates: { canonical: `/u/${user.username}/following` },
   };
 }

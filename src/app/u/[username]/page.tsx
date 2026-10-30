@@ -231,7 +231,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
             description={
               isOwner
                 ? 'Upload your first platinum to start building your pace, top votes and platform split.'
-                : "This hunter hasn't shared any platinums yet, so there is nothing to chart."
+                : "This trophy hunter hasn't shared any platinums yet, so there is nothing to chart."
             }
             {...(isOwner
               ? { actionLabel: 'Upload a platinum', actionHref: '/upload' }

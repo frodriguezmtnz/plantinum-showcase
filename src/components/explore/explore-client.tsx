@@ -28,7 +28,7 @@ interface ExploreClientProps {
 }
 
 const SOURCE_TABS: { value: ExploreSource; label: string; icon: typeof Globe }[] = [
-  { value: 'all', label: 'All hunters', icon: Globe },
+  { value: 'all', label: 'All trophy hunters', icon: Globe },
   { value: 'following', label: 'Following', icon: Users },
 ];
 
@@ -336,8 +336,8 @@ export function ExploreClient({
           title={hasFilters ? 'No matching plates in your feed' : 'Your feed is empty'}
           description={
             hasFilters
-              ? 'None of the hunters you follow match these filters. Widen the search.'
-              : 'Follow hunters to see their platinums here. Start from the community board.'
+              ? 'None of the trophy hunters you follow match these filters. Widen the search.'
+              : 'Follow trophy hunters to see their platinums here. Start from the community board.'
           }
           {...(hasFilters
             ? { actionLabel: 'Clear filters', onAction: handleClearFilters }

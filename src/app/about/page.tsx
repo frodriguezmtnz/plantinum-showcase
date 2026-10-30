@@ -15,7 +15,7 @@ const rules = [
   {
     icon: Heart,
     title: 'One vote each',
-    description: 'Every hunter gets a single, reversible vote per plate. Quality wins, not volume.',
+    description: 'Every trophy hunter gets a single, reversible vote per plate. Quality wins, not volume.',
   },
   {
     icon: CalendarClock,
@@ -40,7 +40,7 @@ export default async function AboutPage() {
   const statCards = [
     { label: 'Platinums on show', value: stats.platinums },
     { label: 'Votes cast', value: stats.votes },
-    { label: 'Hunters', value: stats.hunters },
+    { label: 'Trophy hunters', value: stats.hunters },
     { label: 'Games featured', value: stats.games },
   ];
 
@@ -81,7 +81,7 @@ export default async function AboutPage() {
           <h2 className="font-headline text-2xl font-bold tracking-tight">What counts here</h2>
           <p className="mt-4 text-muted-foreground">
             Only the official screenshot your console takes when the platinum unlocks. No mock-ups, no
-            re-uploads of someone else&apos;s run. Real plates, real hunters, real numbers — we don&apos;t invent
+            re-uploads of someone else&apos;s run. Real plates, real trophy hunters, real numbers — we don&apos;t invent
             anything to look bigger than we are.
           </p>
         </div>

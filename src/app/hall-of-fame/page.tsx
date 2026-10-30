@@ -101,7 +101,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-2 text-balance">Monthly Hall of Fame</h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
           {scope === 'circle'
-            ? `The favorites among the hunters you follow in ${monthYear.toLowerCase()}.`
+            ? `The favorites among the trophy hunters you follow in ${monthYear.toLowerCase()}.`
             : `The community's favorite platinum screenshots of ${monthYear.toLowerCase()}.`}
         </p>
         <p className="field-mark mt-3">
@@ -148,13 +148,13 @@ export default async function HallOfFamePage({ searchParams }: Props) {
               <Users className="mx-auto h-10 w-10 text-muted-foreground" />
               <h2 className="mt-4 font-headline text-xl font-bold">No votes in your circle yet.</h2>
               <p className="mt-2 text-muted-foreground">
-                Follow hunters to build your circle, or vote on the freshest platinums so your favorites climb the board.
+                Follow trophy hunters to build your circle, or vote on the freshest platinums so your favorites climb the board.
               </p>
               <Link
                 href="/explore"
                 className="mt-4 inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
               >
-                Explore and follow hunters
+                Explore and follow trophy hunters
               </Link>
             </>
           ) : (

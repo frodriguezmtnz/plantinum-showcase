@@ -45,7 +45,7 @@ const faqGroups: { title: string; faqs: Faq[] }[] = [
       {
         question: 'Do I need an account to take part?',
         answer:
-          'You can browse the gallery and the Hall of Fame without signing in. Uploading and voting need an account — it is what keeps one vote per hunter honest.',
+          'You can browse the gallery and the Hall of Fame without signing in. Uploading and voting need an account — it is what keeps one vote per trophy hunter honest.',
       },
     ],
   },

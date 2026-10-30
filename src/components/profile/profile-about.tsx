@@ -50,7 +50,7 @@ export function ProfileAbout({
           <p className="mt-3 text-sm text-muted-foreground">
             {isOwner
               ? 'No bio yet.'
-              : 'This hunter has not written a bio yet.'}
+              : 'This trophy hunter has not written a bio yet.'}
           </p>
         )}
 

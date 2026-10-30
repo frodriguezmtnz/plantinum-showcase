@@ -410,7 +410,7 @@ export function ProfileGalleryClient({
 description={
                 hasFilters
                   ? 'No platinums match these filters. Try another platform or sort order.'
-                  : "This hunter hasn't shared any platinum screenshots yet."
+                  : "This trophy hunter hasn't shared any platinum screenshots yet."
               }
           {...(hasFilters
             ? { actionLabel: 'Clear filters', onAction: handleClearFilters }

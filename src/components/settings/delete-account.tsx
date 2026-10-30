@@ -53,7 +53,7 @@ export function DeleteAccount({ username }: DeleteAccountProps) {
 
       toast({
         title: 'Account deleted',
-        description: 'Your plates and account are gone. Take care, hunter.',
+        description: 'Your plates and account are gone. Take care, trophy hunter.',
         variant: 'success',
       });
       logout();

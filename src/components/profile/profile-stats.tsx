@@ -316,10 +316,10 @@ export function ProfileStats({
             }
             hint={
               !standing.hasHuntersBehind
-                ? `${standing.hunters} hunters on the board`
+                ? `${standing.hunters} trophy hunters on the board`
                 : standing.aheadOfVotes === null
-                  ? 'of hunters'
-                  : `of hunters · ${standing.aheadOfVotes}% by votes`
+                  ? 'of trophy hunters'
+                  : `of trophy hunters · ${standing.aheadOfVotes}% by votes`
             }
           />
         )}

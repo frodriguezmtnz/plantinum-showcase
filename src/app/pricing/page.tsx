@@ -37,7 +37,7 @@ const plans = [
     name: 'PRO',
     price: '7€',
     priceNote: '/month',
-    tagline: 'For hunters with more than a monthly highlight.',
+    tagline: 'For trophy hunters with more than a monthly highlight.',
     perks: [
       uploadsPerMonth(PLANS.PRO.monthlyUploadLimit),
       PLANS.PRO.watermark ? WATERMARK_PERK : NO_WATERMARK_PERK,

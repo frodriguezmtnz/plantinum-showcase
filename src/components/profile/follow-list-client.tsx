@@ -92,7 +92,7 @@ export function FollowListClient({
           {kind === 'followers' ? 'Followers' : 'Following'}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {total} {total === 1 ? 'hunter' : 'hunters'}
+          {total} {total === 1 ? 'trophy hunter' : 'trophy hunters'}
         </p>
 
         <div className="mt-4 inline-flex rounded-full border border-border/70 bg-background/40 p-0.5 text-xs">
@@ -117,7 +117,7 @@ export function FollowListClient({
       {isOwner && kind === 'following' && (
         <div className="mb-6 rounded-2xl border border-dashed border-border p-4 text-center text-sm">
           <p className="text-muted-foreground">
-            Plates from the hunters you follow don&apos;t live on your profile —
+            Plates from the trophy hunters you follow don&apos;t live on your profile —
             they fill your feed and your monthly circle.
           </p>
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
@@ -143,8 +143,8 @@ export function FollowListClient({
           title={kind === 'followers' ? 'No followers yet' : 'Not following anyone yet'}
           description={
             kind === 'followers'
-              ? 'When hunters follow this profile they will show up here.'
-              : 'When this hunter follows someone they will show up here.'
+              ? 'When trophy hunters follow this profile they will show up here.'
+              : 'When this trophy hunter follows someone they will show up here.'
           }
         />
       ) : (

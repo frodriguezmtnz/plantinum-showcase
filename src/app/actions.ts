@@ -1147,7 +1147,7 @@ export async function toggleFollow(username: string): Promise<FollowActionResult
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
-    return { success: false, error: "You need to sign in to follow hunters." };
+    return { success: false, error: "You need to sign in to follow trophy hunters." };
   }
 
   const followLimit = await checkRateLimit(`follow:${userId}`, 30, 60_000);
@@ -1163,7 +1163,7 @@ export async function toggleFollow(username: string): Promise<FollowActionResult
     select: { id: true, username: true },
   });
   if (!target || !target.username) {
-    return { success: false, error: "This hunter does not exist." };
+    return { success: false, error: "This trophy hunter does not exist." };
   }
   if (target.id === userId) {
     return { success: false, error: "You can't follow yourself." };
