@@ -14,8 +14,12 @@ import {
 import { auth } from '@/auth';
 import { countNotifications, listNotifications } from '@/lib/notifications';
 import {
+  NOTIFICATION_MAX_LIMIT,
+  NOTIFICATION_PAGE_SIZE,
   QUEUE_KINDS,
   notificationFilterHref,
+  notificationLoadMoreHref,
+  parseNotificationLimit,
   resolveNotificationFilter,
   type NotificationFilter,
 } from '@/lib/notification-filters';
@@ -25,6 +29,7 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { AppealPlatinumButton } from '@/components/shared/appeal-platinum-button';
 import { MarkAllReadButton } from '@/components/shared/mark-all-read-button';
 import { DeleteNotificationButton } from '@/components/shared/delete-notification-button';
+import { MarkNotificationReadButton } from '@/components/shared/mark-notification-read-button';
 import { ClearReadNotificationsButton } from '@/components/shared/clear-read-notifications-button';
 import type { NotificationKind } from '@/generated/prisma/enums';
 import { cn } from '@/lib/utils';
@@ -66,20 +71,29 @@ const EMPTY_STATES: Record<
 export default async function NotificationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; limit?: string }>;
 }) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) redirect('/login');
 
-  const { filter: rawFilter } = await searchParams;
+  const { filter: rawFilter, limit: rawLimit } = await searchParams;
+  const limit = parseNotificationLimit(rawLimit);
   const [canModerate, counts] = await Promise.all([
     isModerator(userId),
     countNotifications(userId),
   ]);
   const filter = resolveNotificationFilter(rawFilter, counts.unread);
-  const notifications = await listNotifications(userId, filter);
+  const notifications = await listNotifications(userId, filter, limit);
   const readCount = counts.all - counts.unread;
+  const total =
+    filter === 'all'
+      ? counts.all
+      : filter === 'unread'
+        ? counts.unread
+        : counts.moderation;
+  const canLoadMore =
+    notifications.length < total && limit < NOTIFICATION_MAX_LIMIT;
 
   const tabs: { value: NotificationFilter; label: string; count: number }[] = [
     { value: 'unread', label: 'Unread', count: counts.unread },
@@ -103,7 +117,7 @@ export default async function NotificationsPage({
           <h1 className="text-2xl font-bold font-headline">Notifications</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {counts.unread > 0 && <MarkAllReadButton />}
+          {counts.unread > 0 && <MarkAllReadButton filter={filter} />}
           <ClearReadNotificationsButton count={readCount} />
         </div>
       </div>
@@ -151,6 +165,7 @@ export default async function NotificationsPage({
           }
         />
       ) : (
+        <>
         <ul className="space-y-3">
           {notifications.map((item) => {
             const Icon = KIND_ICON[item.kind];
@@ -159,7 +174,9 @@ export default async function NotificationsPage({
               <li
                 key={item.id}
                 className={`panel-solid flex gap-3 rounded-xl p-4 ${
-                  item.readAt ? '' : 'ring-1 ring-primary/30'
+                  item.readAt
+                    ? ''
+                    : 'ring-1 ring-badge-new-foreground/30'
                 }`}
               >
                 <Icon className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -211,13 +228,30 @@ export default async function NotificationsPage({
                     </div>
                   )}
                 </div>
-                <div className="shrink-0">
+                <div className="flex shrink-0 items-center gap-0.5">
+                  {!item.readAt && <MarkNotificationReadButton id={item.id} />}
                   <DeleteNotificationButton id={item.id} />
                 </div>
               </li>
             );
           })}
         </ul>
+        {canLoadMore && (
+          <div className="mt-6 flex justify-center">
+            <Button asChild variant="outline">
+              <Link
+                href={notificationLoadMoreHref(
+                  filter,
+                  limit + NOTIFICATION_PAGE_SIZE,
+                )}
+                scroll={false}
+              >
+                Load more
+              </Link>
+            </Button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

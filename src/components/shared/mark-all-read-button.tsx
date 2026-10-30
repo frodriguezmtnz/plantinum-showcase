@@ -5,10 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { markAllNotificationsRead } from '@/app/actions';
 import { NOTIFICATIONS_READ_EVENT } from '@/lib/notification-events';
+import {
+  notificationFilterHref,
+  type NotificationFilter,
+} from '@/lib/notification-filters';
 import { Button } from '@/components/ui/button';
 
 /** Marks every notice read, then tells the header bell to drop its badge. */
-export function MarkAllReadButton() {
+export function MarkAllReadButton({ filter }: { filter: NotificationFilter }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -23,7 +27,12 @@ export function MarkAllReadButton() {
           try {
             await markAllNotificationsRead();
             window.dispatchEvent(new Event(NOTIFICATIONS_READ_EVENT));
-          } finally {
+            if (filter === 'unread') {
+              router.replace(notificationFilterHref('all'));
+            } else {
+              router.refresh();
+            }
+          } catch {
             router.refresh();
           }
         });

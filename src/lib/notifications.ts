@@ -121,3 +121,14 @@ export async function markNotificationsRead(userId: string): Promise<void> {
     data: { readAt: new Date() },
   });
 }
+
+export async function markNotificationRead(
+  userId: string,
+  id: string,
+): Promise<number> {
+  const result = await prisma.notification.updateMany({
+    where: { id, userId, readAt: null },
+    data: { readAt: new Date() },
+  });
+  return result.count;
+}

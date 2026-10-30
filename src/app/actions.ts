@@ -33,6 +33,7 @@ import { moderationStatusForVerdict } from "@/lib/ai-verdict";
 import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
 import {
   countUnreadNotifications,
+  markNotificationRead,
   markNotificationsRead,
   notifyModerators,
   notifyUser,
@@ -896,6 +897,18 @@ export async function markAllNotificationsRead(): Promise<void> {
   if (!userId) return;
   await markNotificationsRead(userId);
   revalidatePath("/notifications");
+}
+
+export async function markOneNotificationRead(
+  id: string,
+): Promise<{ updated: number }> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return { updated: 0 };
+
+  const updated = await markNotificationRead(userId, id);
+  revalidatePath("/notifications");
+  return { updated };
 }
 
 export async function deleteNotification(
