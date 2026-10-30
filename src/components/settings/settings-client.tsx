@@ -5,12 +5,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  CalendarClock,
   Check,
   CircleAlert,
   Crown,
   ExternalLink,
   KeyRound,
+  Link2,
   Loader2,
+  Lock,
   Plus,
   RotateCcw,
   Save,
@@ -60,6 +63,7 @@ import { passwordPolicyError } from '@/lib/password';
 import { nextPlan, planConfig, uploadsRemaining } from '@/lib/plans';
 import {
   formatUsernameChangeDate,
+  nextUsernameChangeAt,
   usernameCooldownStatus,
 } from '@/lib/username-policy';
 import {
@@ -98,6 +102,14 @@ const SETTINGS_SECTIONS = [
   { id: 'plan', label: 'Plan' },
   { id: 'danger', label: 'Danger zone' },
 ] as const;
+
+function HandleChip({ value }: { value: string }) {
+  return (
+    <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.8125em] text-foreground">
+      /u/{value}
+    </code>
+  );
+}
 
 function Section({
   id,
@@ -223,6 +235,8 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   // needs an effect, so no setState runs synchronously in an effect body.
   const trimmedUsername = username.trim();
   const sameUsername = trimmedUsername === savedUsername;
+  const isCaseOnlyChange =
+    trimmedUsername.toLowerCase() === savedUsername.toLowerCase();
   const usernameIssue = sameUsername ? null : usernameProblem(trimmedUsername);
   const derivedAvailability: Availability | null = sameUsername
     ? 'same'
@@ -344,7 +358,11 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       setUsername(result.username);
       setChangedAt(result.changedAt);
       setUsernameDialogOpen(false);
-      void refresh();
+      try {
+        await refresh();
+      } catch (error) {
+        console.warn('[settings] could not refresh the session', error);
+      }
       router.refresh();
       toast({
         title: 'Username updated',
@@ -490,7 +508,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
         <Section
           id="profile"
           title="Profile"
-          description="How hunters see you on the board."
+          description="How trophy hunters see you on the board."
         >
           <ProfileCompletion
             hasAvatar={Boolean(user.image)}
@@ -784,16 +802,69 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
             open={usernameDialogOpen}
             onOpenChange={(open) => !isSavingUsername && setUsernameDialogOpen(open)}
           >
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-[28rem]">
+            <AlertDialogContent className="max-h-[85vh] w-[calc(100%-2rem)] max-w-[28rem] overflow-y-auto">
               <AlertDialogHeader>
-                <AlertDialogTitle>Change your username?</AlertDialogTitle>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <CircleAlert
+                    className="h-5 w-5 text-destructive"
+                    aria-hidden
+                  />
+                  Change your username?
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  Your profile moves from /u/{savedUsername} to /u/
-                  {trimmedUsername}. Old links — and notifications that point at
-                  your previous handle — will stop working, and the old handle is
-                  reserved forever. You can change it again in 12 months.
+                  Your profile moves from <HandleChip value={savedUsername} /> to{' '}
+                  <HandleChip value={trimmedUsername} /> immediately.
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
+              <ul className="space-y-3 text-sm">
+                <li className="flex gap-2">
+                  <Link2
+                    className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                    aria-hidden
+                  />
+                  <span>
+                    <strong className="font-semibold text-foreground">
+                      Old links stop working.
+                    </strong>{' '}
+                    Shared profiles, mentions and existing notifications that
+                    point at <HandleChip value={savedUsername} /> will return
+                    404.
+                  </span>
+                </li>
+                {!isCaseOnlyChange && (
+                  <li className="flex gap-2">
+                    <Lock
+                      className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <span>
+                      <strong className="font-semibold text-foreground">
+                        Your old handle stays reserved.
+                      </strong>{' '}
+                      Nobody can claim <HandleChip value={savedUsername} />{' '}
+                      again, including you.
+                    </span>
+                  </li>
+                )}
+                <li className="flex gap-2">
+                  <CalendarClock
+                    className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+                    aria-hidden
+                  />
+                  <span>
+                    <strong className="font-semibold text-foreground">
+                      One change every 12 months.
+                    </strong>{' '}
+                    You can change it again on{' '}
+                    <span className="font-semibold text-foreground">
+                      {formatUsernameChangeDate(nextUsernameChangeAt(new Date()))}
+                    </span>
+                    .
+                  </span>
+                </li>
+              </ul>
+
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={isSavingUsername}>
                   Cancel
