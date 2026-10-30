@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   notificationFilterHref,
+  notificationLoadMoreHref,
+  NOTIFICATION_MAX_LIMIT,
+  NOTIFICATION_PAGE_SIZE,
   parseNotificationFilter,
+  parseNotificationLimit,
   resolveNotificationFilter,
   QUEUE_KINDS,
 } from '@/lib/notification-filters';
@@ -37,11 +41,31 @@ describe('resolveNotificationFilter', () => {
 });
 
 describe('notificationFilterHref', () => {
-  it('keeps "all" on the bare URL', () => {
-    expect(notificationFilterHref('all')).toBe('/notifications');
+  it('makes every filter explicit so All is always reachable', () => {
+    expect(notificationFilterHref('all')).toBe('/notifications?filter=all');
     expect(notificationFilterHref('unread')).toBe('/notifications?filter=unread');
     expect(notificationFilterHref('moderation')).toBe(
       '/notifications?filter=moderation',
+    );
+  });
+});
+
+describe('parseNotificationLimit', () => {
+  it('starts at one page and grows from there', () => {
+    expect(parseNotificationLimit(undefined)).toBe(NOTIFICATION_PAGE_SIZE);
+    expect(parseNotificationLimit('0')).toBe(NOTIFICATION_PAGE_SIZE);
+    expect(parseNotificationLimit('60')).toBe(60);
+  });
+
+  it('caps runaway limits', () => {
+    expect(parseNotificationLimit('9999')).toBe(NOTIFICATION_MAX_LIMIT);
+  });
+});
+
+describe('notificationLoadMoreHref', () => {
+  it('preserves the filter and the next limit', () => {
+    expect(notificationLoadMoreHref('unread', 60)).toBe(
+      '/notifications?filter=unread&limit=60',
     );
   });
 });

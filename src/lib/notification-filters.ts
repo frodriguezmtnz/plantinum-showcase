@@ -31,7 +31,28 @@ export interface NotificationCounts {
   moderation: number;
 }
 
-/** "All" lives on the bare URL; the other filters are linkable/searchable. */
+export const NOTIFICATION_PAGE_SIZE = 30;
+export const NOTIFICATION_MAX_LIMIT = 150;
+
+export function parseNotificationLimit(value: string | undefined): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed) || parsed < NOTIFICATION_PAGE_SIZE) {
+    return NOTIFICATION_PAGE_SIZE;
+  }
+  return Math.min(parsed, NOTIFICATION_MAX_LIMIT);
+}
+
+/** Every tab is explicit so "All" survives the unread-first default. */
 export function notificationFilterHref(filter: NotificationFilter): string {
-  return filter === 'all' ? '/notifications' : `/notifications?filter=${filter}`;
+  return `/notifications?filter=${filter}`;
+}
+
+export function notificationLoadMoreHref(
+  filter: NotificationFilter,
+  limit: number,
+): string {
+  return `/notifications?${new URLSearchParams({
+    filter,
+    limit: String(limit),
+  }).toString()}`;
 }
