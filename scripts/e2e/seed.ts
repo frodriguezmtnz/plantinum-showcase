@@ -54,7 +54,18 @@ async function main() {
     ],
   });
 
-  console.log(`Seeded ${email} with 14 published platinums.`);
+  await prisma.notification.deleteMany({ where: { userId: user.id } });
+  await prisma.notification.create({
+    data: {
+      userId: user.id,
+      kind: "NEW_FOLLOWER",
+      title: "E2E Follower started following you",
+      body: "Open their profile to see their platinum shelf.",
+      linkUrl: "/u/e2e-runner",
+    },
+  });
+
+  console.log(`Seeded ${email} with 14 platinums and one unread notification.`);
 }
 
 main().finally(() => prisma.$disconnect());
