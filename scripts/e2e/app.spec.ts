@@ -242,6 +242,45 @@ test.describe('authenticated', () => {
     await expect.poll(() => posts, { timeout: 5000 }).toBeGreaterThan(0);
   });
 
+  test('session revalidates on focus and across tabs', async ({
+    page,
+    context,
+  }) => {
+    await page.clock.install();
+    await login(page);
+    await page.waitForTimeout(1500);
+
+    let focusPosts = 0;
+    page.on('request', (req) => {
+      if (req.method() === 'POST' && req.url().includes('/api/auth/session')) {
+        focusPosts += 1;
+      }
+    });
+
+    await page.clock.fastForward(31_000);
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect.poll(() => focusPosts, { timeout: 5000 }).toBeGreaterThan(0);
+
+    const other = await context.newPage();
+    await other.goto('/');
+    await other.waitForTimeout(800);
+
+    let tabPosts = 0;
+    other.on('request', (req) => {
+      if (req.method() === 'POST' && req.url().includes('/api/auth/session')) {
+        tabPosts += 1;
+      }
+    });
+
+    await page.evaluate(() => {
+      const channel = new BroadcastChannel('platinum-showcase:session');
+      channel.postMessage('refresh');
+    });
+
+    await expect.poll(() => tabPosts, { timeout: 5000 }).toBeGreaterThan(0);
+    await other.close();
+  });
+
   test('notification bell polls once a minute', async ({ page }) => {
     // Install the fake clock before the app boots so the interval can be
     // fast-forwarded instead of making the suite wait a real minute.

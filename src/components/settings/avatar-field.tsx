@@ -6,6 +6,7 @@ import { Loader2, Trash2, Upload } from 'lucide-react';
 import { removeAvatar, updateAvatar } from '@/app/settings/actions';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { announceSessionRefresh } from '@/lib/session-events';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { AvatarCropperDialog } from '@/components/settings/avatar-cropper-dialog';
@@ -53,6 +54,8 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
       await refresh();
     } catch (error) {
       console.warn('[avatar] could not refresh the session', error);
+    } finally {
+      announceSessionRefresh();
     }
   }
 
