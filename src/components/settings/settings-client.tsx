@@ -28,6 +28,7 @@ import {
   updateUsername,
 } from '@/app/settings/actions';
 import { useAuth } from '@/hooks/use-auth';
+import { announceSessionRefresh } from '@/lib/session-events';
 import { useToast } from '@/hooks/use-toast';
 import { AvatarField } from '@/components/settings/avatar-field';
 import { DeleteAccount } from '@/components/settings/delete-account';
@@ -363,6 +364,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       } catch (error) {
         console.warn('[settings] could not refresh the session', error);
       }
+      announceSessionRefresh();
       router.refresh();
       toast({
         title: 'Username updated',

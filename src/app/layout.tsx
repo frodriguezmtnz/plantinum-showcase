@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { SiteChrome } from '@/components/layout/site-chrome';
 import { JsonLd } from '@/components/shared/json-ld';
+import { SessionRefresh } from '@/components/shared/session-refresh';
 import { cn } from '@/lib/utils';
 import { getSiteUrl } from '@/lib/site';
 import { SessionProvider } from 'next-auth/react';
@@ -89,6 +90,7 @@ export default function RootLayout({
       )}>
         <JsonLd data={websiteJsonLd} />
         <SessionProvider>
+          <SessionRefresh />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <div className="sky-field" aria-hidden />
             <SiteChrome header={<Header />} footer={<Footer />}>
