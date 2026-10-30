@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
-import { Github, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 
 const footerLinks = [
   { href: "/about", label: "About" },
