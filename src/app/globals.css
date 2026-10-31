@@ -497,13 +497,9 @@ input[type='search']::-webkit-search-decoration {
   justify-content: center;
 }
 
-.vote-heart[data-tone='onSolid'] {
-  --vote-burst: var(--destructive-foreground);
-}
-
 /* Night Console: the alert-red sits on navy, where it darkens to grey. The
    burst borrows a brighter step of the same family so it still reads red. */
-.dark .vote-heart[data-tone='destructive'] {
+.dark .vote-heart {
   --vote-burst: hsl(4 100% 58%);
 }
 

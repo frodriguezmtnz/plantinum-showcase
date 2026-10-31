@@ -105,7 +105,14 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
   return (
     <div className="flex items-center gap-2">
       <Button
-        className={cn("min-w-0 flex-1 rounded-full px-4 transition-all", hasVoted && "bg-destructive text-destructive-foreground hover:brightness-110")}
+        className={cn(
+          "min-w-0 flex-1 rounded-full px-4 transition-all hover:shadow-lift",
+          // The burst plays while the vote is in flight; the base disabled
+          // opacity would wash it out to grey. Only the owner stays dimmed.
+          !isOwner && "disabled:opacity-100",
+          hasVoted &&
+            "bg-destructive/10 text-destructive ring-1 ring-destructive/30 hover:bg-destructive/15",
+        )}
         size="lg"
         onClick={toggleVote}
         disabled={isPending || isOwner}
@@ -125,7 +132,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
         }
         aria-pressed={hasVoted}
       >
-        <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} size="lg" tone="onSolid" />
+        <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} size="lg" />
         {isOwner
           ? 'Yours'
           : hasVoted

@@ -135,7 +135,13 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
               <Button
                 variant="ghost"
                 size="sm"
-                className={cn("max-sm:h-11 transition-colors", hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
+                className={cn(
+                  "max-sm:h-11 transition-colors",
+                  // Same reason as the detail CTA: never dim the heart while
+                  // the vote is in flight, or the burst plays at half opacity.
+                  !isOwner && "disabled:opacity-100",
+                  hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive",
+                )}
                 onClick={handleVoteClick}
                 disabled={isPending || isOwner}
                 title={
