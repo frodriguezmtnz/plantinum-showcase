@@ -50,6 +50,7 @@ export function VoteHeart({
         />
         {burst && (
           <span className="vote-heart-burst" aria-hidden="true">
+            <span className="vote-heart-flash" />
             <span className="vote-heart-ring" />
             {Array.from({ length: SPARK_COUNT }, (_, i) => (
               <span

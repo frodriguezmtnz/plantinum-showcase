@@ -487,9 +487,10 @@ input[type='search']::-webkit-search-decoration {
    the opening frames grey. */
 .vote-heart {
   --vote-burst: var(--destructive);
-  --vote-ring: 18px;
-  --vote-spread: 15px;
-  --vote-spark: 4px;
+  --vote-ring: 20px;
+  --vote-spread: 17px;
+  --vote-spark: 5px;
+  --vote-flash: 20px;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -500,10 +501,17 @@ input[type='search']::-webkit-search-decoration {
   --vote-burst: var(--destructive-foreground);
 }
 
+/* Night Console: the alert-red sits on navy, where it darkens to grey. The
+   burst borrows a brighter step of the same family so it still reads red. */
+.dark .vote-heart[data-tone='destructive'] {
+  --vote-burst: hsl(4 100% 58%);
+}
+
 .vote-heart--lg {
-  --vote-ring: 24px;
-  --vote-spread: 21px;
-  --vote-spark: 5px;
+  --vote-ring: 26px;
+  --vote-spread: 23px;
+  --vote-spark: 6px;
+  --vote-flash: 30px;
 }
 
 .vote-heart-icon {
@@ -513,13 +521,28 @@ input[type='search']::-webkit-search-decoration {
 }
 
 .vote-heart-icon--pop {
-  animation: vote-pop 480ms var(--ease-bloom);
+  animation: vote-pop 520ms var(--ease-bloom);
 }
 
 .vote-heart-burst {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+/* A filled halo behind the heart: the "red expands" read at phone size. */
+.vote-heart-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vote-flash);
+  height: var(--vote-flash);
+  margin: calc(var(--vote-flash) / -2) 0 0 calc(var(--vote-flash) / -2);
+  border-radius: 9999px;
+  background: var(--vote-burst);
+  box-shadow: 0 0 12px var(--vote-burst);
+  opacity: 0;
+  animation: vote-flash 520ms var(--ease-bloom) forwards;
 }
 
 .vote-heart-ring {
@@ -529,10 +552,10 @@ input[type='search']::-webkit-search-decoration {
   width: var(--vote-ring);
   height: var(--vote-ring);
   margin: calc(var(--vote-ring) / -2) 0 0 calc(var(--vote-ring) / -2);
-  border: 1.5px solid var(--vote-burst);
+  border: 2px solid var(--vote-burst);
   border-radius: 9999px;
   opacity: 0;
-  animation: vote-ring 480ms var(--ease-bloom) forwards;
+  animation: vote-ring 520ms var(--ease-bloom) forwards;
 }
 
 .vote-heart-spark {
@@ -544,10 +567,11 @@ input[type='search']::-webkit-search-decoration {
   margin: calc(var(--vote-spark) / -2) 0 0 calc(var(--vote-spark) / -2);
   border-radius: 9999px;
   background: var(--vote-burst);
+  box-shadow: 0 0 6px var(--vote-burst);
   opacity: 0;
-  transform: rotate(calc(var(--i) * 45deg)) translateX(0) scale(0.5);
-  animation: vote-spark 460ms var(--ease-bloom) forwards;
-  animation-delay: calc(var(--i) * 14ms);
+  transform: rotate(calc(var(--i) * 45deg)) translateX(2px) scale(0.45);
+  animation: vote-spark 500ms var(--ease-bloom) forwards;
+  animation-delay: calc(var(--i) * 8ms);
 }
 
 @keyframes vote-pop {
@@ -565,26 +589,38 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-@keyframes vote-ring {
+@keyframes vote-flash {
   0% {
-    opacity: 0.55;
+    opacity: 0.38;
     transform: scale(0.35);
-  }
-  70% {
-    opacity: 0.18;
   }
   100% {
     opacity: 0;
-    transform: scale(1.45);
+    transform: scale(1.6);
   }
 }
 
+@keyframes vote-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  75% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* Full opacity from the first frame: a fade-in read as grey at phone size. */
 @keyframes vote-spark {
   0% {
-    opacity: 0;
-    transform: rotate(calc(var(--i) * 45deg)) translateX(2px) scale(0.5);
+    opacity: 1;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(2px) scale(0.45);
   }
-  20% {
+  70% {
     opacity: 1;
   }
   100% {
