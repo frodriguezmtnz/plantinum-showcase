@@ -13,6 +13,8 @@ export function SessionRefresh() {
   const { status, update } = useSession();
   const updateRef = useRef(update);
   const inFlight = useRef(false);
+  const pendingForce = useRef(false);
+  const refreshRef = useRef<(force: boolean) => void>(() => {});
   const lastRefresh = useRef(0);
 
   useEffect(() => {
@@ -21,7 +23,14 @@ export function SessionRefresh() {
 
   const refresh = useCallback(
     (force: boolean) => {
-      if (status !== 'authenticated' || inFlight.current) return;
+      if (status !== 'authenticated') return;
+
+      if (inFlight.current) {
+        // A broadcast must not be lost because a routine focus refresh is
+        // already running; replay it once that one settles.
+        if (force) pendingForce.current = true;
+        return;
+      }
 
       const now = Date.now();
       if (!force && now - lastRefresh.current < MIN_REFRESH_MS) return;
@@ -38,10 +47,18 @@ export function SessionRefresh() {
           // frozen until a full reload. Only on a broadcast — a routine focus
           // refresh should not refetch the page tree.
           if (force) router.refresh();
+          if (pendingForce.current) {
+            pendingForce.current = false;
+            refreshRef.current(true);
+          }
         });
     },
     [router, status],
   );
+
+  useEffect(() => {
+    refreshRef.current = refresh;
+  });
 
   useEffect(() => {
     if (status !== 'authenticated') return;
