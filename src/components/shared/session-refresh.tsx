@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { SESSION_REFRESH_CHANNEL } from '@/lib/session-events';
 
@@ -8,6 +9,7 @@ const MIN_REFRESH_MS = 30_000;
 
 /** Re-reads the JWT after focus or another tab announces an identity change. */
 export function SessionRefresh() {
+  const router = useRouter();
   const { status, update } = useSession();
   const updateRef = useRef(update);
   const inFlight = useRef(false);
@@ -31,9 +33,14 @@ export function SessionRefresh() {
         .catch(() => undefined)
         .finally(() => {
           inFlight.current = false;
+          // The session cookie is fresh now, so re-run the server components:
+          // props read at render time (avatar, bio, plan) would otherwise stay
+          // frozen until a full reload. Only on a broadcast — a routine focus
+          // refresh should not refetch the page tree.
+          if (force) router.refresh();
         });
     },
-    [status],
+    [router, status],
   );
 
   useEffect(() => {
