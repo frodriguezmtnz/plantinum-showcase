@@ -1,18 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { STORAGE_STATE } from './storage-state';
 
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
 const hasCredentials = Boolean(EMAIL && PASSWORD);
-const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:9002';
 const TARGET = 'E2E Vote Target';
-
-async function login(page: Page) {
-  await page.goto('/login');
-  await page.fill('#email', EMAIL!);
-  await page.fill('#password', PASSWORD!);
-  await page.locator('form button[type=submit]').click();
-  await page.waitForURL(baseURL + '/');
-}
 
 function cardFor(page: Page, name: string): Locator {
   return page.locator('[class*="panel-solid"]', { hasText: name }).first();
@@ -38,11 +30,11 @@ async function expectCount(button: Locator, value: number) {
 
 test.describe('vote heart', () => {
   test.skip(!hasCredentials, 'Set E2E_EMAIL and E2E_PASSWORD to run these specs');
+  test.use({ storageState: STORAGE_STATE });
 
   test('a like fires one alert-red burst, never on retract, and never under reduced motion', async ({
     page,
   }) => {
-    await login(page);
     await page.goto('/explore');
 
     const card = cardFor(page, TARGET);
