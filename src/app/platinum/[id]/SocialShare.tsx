@@ -125,7 +125,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
         }
         aria-pressed={hasVoted}
       >
-        <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} size="lg" />
+        <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} size="lg" tone="onSolid" />
         {isOwner
           ? 'Yours'
           : hasVoted

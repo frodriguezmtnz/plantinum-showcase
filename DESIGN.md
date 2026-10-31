@@ -329,7 +329,7 @@ Base radius is 10px (`--radius: 0.625rem`); derived steps: 6 / 8 / **10** / 14 /
 - Inputs take the hairline border and 8px radius; caret is ink-black; text selection is magenta at 0.22 over ink-black; scrollbars are thin, ink thumbs (58% → 44% on hover) on transparent tracks. Global fallback focus: 2px ice outline, 2px offset.
 
 ### Vote Control
-- Ghost button + heart; unvoted muted-ink, hover/voted alert-red (filled heart at scale 1.1). A successful like fires the one action micro-animation in the system: a 480ms beat — a 1→1.28→0.96→1 heart pop, a ring expanding to 1.45× while it fades, and eight sparks radiating 15px (21px on the detail CTA) in `currentColor`, so the card's alert-red and the filled button's white share one implementation. It fires only on the like: never on mount, retract or a failed-vote rollback, and never under `prefers-reduced-motion` or `?motion=off`, which keep the color/fill change alone. Tabular count beside it, announced through `aria-live`.
+- Ghost button + heart; unvoted muted-ink, hover/voted alert-red (filled heart at scale 1.1). A successful like fires the one action micro-animation in the system: a 480ms beat — a 1→1.28→0.96→1 heart pop, a ring expanding to 1.45× while it fades, and eight sparks radiating 15px (21px on the detail CTA) in the reserved alert-red — white on the filled detail button — pinned rather than inherited, because the button's own color transition would otherwise paint the opening frames grey. It fires only on the like: never on mount, retract or a failed-vote rollback, and never under `prefers-reduced-motion` or `?motion=off`, which keep the color/fill change alone. Tabular count beside it, announced through `aria-live`.
 
 ## Do's and Don'ts
 

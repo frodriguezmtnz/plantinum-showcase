@@ -482,9 +482,11 @@ input[type='search']::-webkit-search-decoration {
 
 /* Vote heart: the one action micro-animation in the system. A single beat —
    pop, expanding ring and eight sparks — fires once per like, never on mount
-   or retract. Everything inherits `currentColor`, so the card's alert-red and
-   the filled button's white need no second palette. */
+   or retract. The burst pins its tone instead of inheriting `currentColor`:
+   the button interpolates muted-ink → alert-red over 200ms, which would paint
+   the opening frames grey. */
 .vote-heart {
+  --vote-burst: var(--destructive);
   --vote-ring: 18px;
   --vote-spread: 15px;
   --vote-spark: 4px;
@@ -492,6 +494,10 @@ input[type='search']::-webkit-search-decoration {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.vote-heart[data-tone='onSolid'] {
+  --vote-burst: var(--destructive-foreground);
 }
 
 .vote-heart--lg {
@@ -523,7 +529,7 @@ input[type='search']::-webkit-search-decoration {
   width: var(--vote-ring);
   height: var(--vote-ring);
   margin: calc(var(--vote-ring) / -2) 0 0 calc(var(--vote-ring) / -2);
-  border: 1.5px solid currentColor;
+  border: 1.5px solid var(--vote-burst);
   border-radius: 9999px;
   opacity: 0;
   animation: vote-ring 480ms var(--ease-bloom) forwards;
@@ -537,7 +543,7 @@ input[type='search']::-webkit-search-decoration {
   height: var(--vote-spark);
   margin: calc(var(--vote-spark) / -2) 0 0 calc(var(--vote-spark) / -2);
   border-radius: 9999px;
-  background: currentColor;
+  background: var(--vote-burst);
   opacity: 0;
   transform: rotate(calc(var(--i) * 45deg)) translateX(0) scale(0.5);
   animation: vote-spark 460ms var(--ease-bloom) forwards;

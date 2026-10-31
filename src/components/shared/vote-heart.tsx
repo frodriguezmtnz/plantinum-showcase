@@ -11,19 +11,31 @@ interface VoteHeartProps {
   /** Increments once per like; 0 keeps the heart still (mount, unlike). */
   burstSeq: number;
   size?: 'sm' | 'lg';
+  /** The detail CTA turns alert-red, so its heart and burst are white. */
+  tone?: 'destructive' | 'onSolid';
   className?: string;
 }
 
 /**
  * The vote heart and its one-shot like burst. The pop, ring and sparks run in
- * pure CSS (globals.css) and inherit `currentColor`, so the same component
- * reads destructive-red on the card and white on the filled detail button.
+ * pure CSS (globals.css). The burst uses an explicit tone instead of
+ * `currentColor`: the button transitions its color from muted-ink to
+ * alert-red over 200ms, which would paint the first frames of the burst grey.
  */
-export function VoteHeart({ hasVoted, burstSeq, size = 'sm', className }: VoteHeartProps) {
+export function VoteHeart({
+  hasVoted,
+  burstSeq,
+  size = 'sm',
+  tone = 'destructive',
+  className,
+}: VoteHeartProps) {
   const burst = burstSeq > 0;
 
   return (
-    <span className={cn('vote-heart', size === 'lg' && 'vote-heart--lg', className)}>
+    <span
+      data-tone={tone}
+      className={cn('vote-heart', size === 'lg' && 'vote-heart--lg', className)}
+    >
       <span
         key={burstSeq}
         className={cn('vote-heart-icon', burst && 'vote-heart-icon--pop')}
@@ -31,8 +43,9 @@ export function VoteHeart({ hasVoted, burstSeq, size = 'sm', className }: VoteHe
         <Heart
           aria-hidden="true"
           className={cn(
-            'vote-heart-svg transition-[color,fill,transform] duration-200',
-            hasVoted ? 'fill-current scale-110' : 'fill-none',
+            'vote-heart-svg transition-transform duration-200',
+            hasVoted && 'scale-110',
+            hasVoted ? (tone === 'onSolid' ? 'fill-white' : 'fill-destructive') : 'fill-none',
           )}
         />
         {burst && (
