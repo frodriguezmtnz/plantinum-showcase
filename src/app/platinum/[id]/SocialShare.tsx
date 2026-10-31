@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from '@/hooks/use-toast';
 import type { Platinum, User } from '@/lib/data';
-import { Facebook, Heart, Instagram, Link2, Share2 } from 'lucide-react';
+import { Facebook, Instagram, Link2, Share2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useVotePlatinum } from '@/hooks/use-vote-platinum';
+import { VoteHeart } from '@/components/shared/vote-heart';
 
 interface SocialShareProps {
   platinum: Platinum;
@@ -33,7 +34,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
     () => typeof navigator !== 'undefined' && !!navigator.share,
     () => false,
   );
-  const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
+  const { hasVoted, votes, burstSeq, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
     ownerId: platinum.userId,
     initialVotes: platinum.votes,
@@ -104,7 +105,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
   return (
     <div className="flex items-center gap-2">
       <Button
-        className={cn("min-w-0 flex-1 rounded-full px-4 vote-button transition-all", hasVoted && "bg-destructive text-destructive-foreground hover:brightness-110")}
+        className={cn("min-w-0 flex-1 rounded-full px-4 transition-all", hasVoted && "bg-destructive text-destructive-foreground hover:brightness-110")}
         size="lg"
         onClick={toggleVote}
         disabled={isPending || isOwner}
@@ -120,14 +121,15 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
             ? 'You can\u2019t vote for your own platinum'
             : hasVoted
               ? `Remove vote (${votes})`
-              : 'Vote for this platinum'
+              : `Vote for this platinum (${votes})`
         }
+        aria-pressed={hasVoted}
       >
-        <Heart className={cn("transition-all", hasVoted && "fill-white scale-110")} />
+        <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} size="lg" />
         {isOwner
           ? 'Yours'
           : hasVoted
-            ? <span className="tabular">{votes}</span>
+            ? <span className="tabular" aria-live="polite">{votes}</span>
             : 'Vote'}
       </Button>
       <Popover open={open} onOpenChange={setOpen}>

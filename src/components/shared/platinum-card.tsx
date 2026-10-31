@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Platinum, User } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Heart, Quote } from 'lucide-react';
+import { Eye, Quote } from 'lucide-react';
 import { cn, isStoredImage } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { EditPlatinumDialog } from '@/components/shared/edit-platinum-dialog';
 import { ModerationRibbon } from '@/components/shared/moderation-ribbon';
 import { displayImageUrl, isPlateUnderModeration, withPixelFlag } from '@/lib/image-display';
 import { useVotePlatinum } from '@/hooks/use-vote-platinum';
+import { VoteHeart } from '@/components/shared/vote-heart';
 
 interface PlatinumCardProps {
   platinum: Platinum;
@@ -30,7 +31,7 @@ interface PlatinumCardProps {
 
 export function PlatinumCard({ platinum, user, showComment = false, canDelete = false, canEdit = false, cover = false, layout = 'grid', priority = false }: PlatinumCardProps) {
   const [isSpoilerVisible, setSpoilerVisible] = useState(false);
-  const { hasVoted, votes, isPending, isOwner, toggleVote } = useVotePlatinum({
+  const { hasVoted, votes, burstSeq, isPending, isOwner, toggleVote } = useVotePlatinum({
     platinumId: platinum.id,
     ownerId: platinum.userId,
     initialVotes: platinum.votes,
@@ -134,7 +135,7 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
               <Button
                 variant="ghost"
                 size="sm"
-                className={cn("vote-button max-sm:h-11 transition-colors", hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
+                className={cn("max-sm:h-11 transition-colors", hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
                 onClick={handleVoteClick}
                 disabled={isPending || isOwner}
                 title={
@@ -144,10 +145,11 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
                       ? 'Click to undo your vote'
                       : 'Vote for this platinum'
                 }
-                aria-label={hasVoted ? 'Remove vote' : 'Vote for platinum'}
+                aria-label={hasVoted ? `Remove vote (${votes})` : `Vote for platinum (${votes})`}
+                aria-pressed={hasVoted}
               >
-                  <Heart className={cn("mr-2 transition-all", hasVoted && "fill-destructive scale-110")} />
-                  <span className="tabular">{votes}</span>
+                  <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} className="mr-2" />
+                  <span className="tabular" aria-live="polite">{votes}</span>
               </Button>
               {canEdit && <EditPlatinumDialog platinum={platinum} />}
               {canDelete && <DeletePlatinumButton platinumId={platinum.id} />}

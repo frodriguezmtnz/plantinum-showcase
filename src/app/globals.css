@@ -480,19 +480,110 @@ input[type='search']::-webkit-search-decoration {
   outline-offset: 2px;
 }
 
-.vote-button:active svg {
-  animation: vote-animation 0.5s ease-out;
+/* Vote heart: the one action micro-animation in the system. A single beat —
+   pop, expanding ring and eight sparks — fires once per like, never on mount
+   or retract. Everything inherits `currentColor`, so the card's alert-red and
+   the filled button's white need no second palette. */
+.vote-heart {
+  --vote-ring: 18px;
+  --vote-spread: 15px;
+  --vote-spark: 4px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes vote-animation {
+.vote-heart--lg {
+  --vote-ring: 24px;
+  --vote-spread: 21px;
+  --vote-spark: 5px;
+}
+
+.vote-heart-icon {
+  position: relative;
+  display: inline-flex;
+  transform-origin: center;
+}
+
+.vote-heart-icon--pop {
+  animation: vote-pop 480ms var(--ease-bloom);
+}
+
+.vote-heart-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.vote-heart-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vote-ring);
+  height: var(--vote-ring);
+  margin: calc(var(--vote-ring) / -2) 0 0 calc(var(--vote-ring) / -2);
+  border: 1.5px solid currentColor;
+  border-radius: 9999px;
+  opacity: 0;
+  animation: vote-ring 480ms var(--ease-bloom) forwards;
+}
+
+.vote-heart-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vote-spark);
+  height: var(--vote-spark);
+  margin: calc(var(--vote-spark) / -2) 0 0 calc(var(--vote-spark) / -2);
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  transform: rotate(calc(var(--i) * 45deg)) translateX(0) scale(0.5);
+  animation: vote-spark 460ms var(--ease-bloom) forwards;
+  animation-delay: calc(var(--i) * 14ms);
+}
+
+@keyframes vote-pop {
   0% {
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.5);
+  30% {
+    transform: scale(1.28);
+  }
+  60% {
+    transform: scale(0.96);
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes vote-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.35);
+  }
+  70% {
+    opacity: 0.18;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes vote-spark {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(2px) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(var(--vote-spread)) scale(1);
   }
 }
 
@@ -528,6 +619,14 @@ input[type='search']::-webkit-search-decoration {
   .animate-pulse,
   .animate-in {
     animation: none;
+  }
+
+  .vote-heart-icon--pop {
+    animation: none;
+  }
+
+  .vote-heart-burst {
+    display: none;
   }
 
   .sky-field {
