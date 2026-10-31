@@ -513,7 +513,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           description="How trophy hunters see you on the board."
         >
           <ProfileCompletion
-            hasAvatar={Boolean(sessionUser ? sessionUser.image : user.image)}
+            hasAvatar={Boolean(sessionUser?.image ?? user.image)}
             hasBio={Boolean(savedBio.trim())}
             hasLinks={savedLinks.length > 0}
           />

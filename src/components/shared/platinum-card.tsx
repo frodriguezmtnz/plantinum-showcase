@@ -148,8 +148,8 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
                   isOwner
                     ? "You can't vote for your own platinum"
                     : hasVoted
-                      ? 'Click to undo your vote'
-                      : 'Vote for this platinum'
+                      ? `Voted \u00b7 click to undo (${votes})`
+                      : `Vote for this platinum (${votes})`
                 }
                 aria-label={hasVoted ? `Remove vote (${votes})` : `Vote for platinum (${votes})`}
                 aria-pressed={hasVoted}

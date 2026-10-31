@@ -29,8 +29,10 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
   // The session is the live source: another tab can change the avatar and
   // announce it, while these server props stay frozen until a reload. Keep a
   // local override only for the instant between our upload and the session
-  // catching up (the sentinel also covers an explicit remove → null).
-  const liveImage = sessionUser ? (sessionUser.image ?? null) : initialImage;
+  // catching up (the sentinel also covers an explicit remove → null). Fall
+  // back to the server prop when the token predates the avatar, so a stale
+  // session never hides an image the database already has.
+  const liveImage = sessionUser?.image ?? initialImage;
   const [override, setOverride] = useState<{ image: string | null } | null>(null);
   const [syncedLive, setSyncedLive] = useState(liveImage);
 
