@@ -480,19 +480,148 @@ input[type='search']::-webkit-search-decoration {
   outline-offset: 2px;
 }
 
-.vote-button:active svg {
-  animation: vote-animation 0.5s ease-out;
+/* Vote heart: the one action micro-animation in the system. A single beat —
+   pop, expanding ring and eight sparks — fires once per like, never on mount
+   or retract. The burst pins its tone instead of inheriting `currentColor`:
+   the button interpolates muted-ink → alert-red over 200ms, which would paint
+   the opening frames grey. */
+.vote-heart {
+  --vote-burst: var(--destructive);
+  --vote-ring: 20px;
+  --vote-spread: 17px;
+  --vote-spark: 5px;
+  --vote-flash: 20px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@keyframes vote-animation {
+/* Night Console: the alert-red sits on navy, where it darkens to grey. The
+   burst borrows a brighter step of the same family so it still reads red. */
+.dark .vote-heart {
+  --vote-burst: hsl(4 100% 58%);
+}
+
+.vote-heart--lg {
+  --vote-ring: 26px;
+  --vote-spread: 23px;
+  --vote-spark: 6px;
+  --vote-flash: 30px;
+}
+
+.vote-heart-icon {
+  position: relative;
+  display: inline-flex;
+  transform-origin: center;
+}
+
+.vote-heart-icon--pop {
+  animation: vote-pop 520ms var(--ease-bloom);
+}
+
+.vote-heart-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* A filled halo behind the heart: the "red expands" read at phone size. */
+.vote-heart-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vote-flash);
+  height: var(--vote-flash);
+  margin: calc(var(--vote-flash) / -2) 0 0 calc(var(--vote-flash) / -2);
+  border-radius: 9999px;
+  background: var(--vote-burst);
+  box-shadow: 0 0 12px var(--vote-burst);
+  opacity: 0;
+  animation: vote-flash 520ms var(--ease-bloom) forwards;
+}
+
+.vote-heart-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vote-ring);
+  height: var(--vote-ring);
+  margin: calc(var(--vote-ring) / -2) 0 0 calc(var(--vote-ring) / -2);
+  border: 2px solid var(--vote-burst);
+  border-radius: 9999px;
+  opacity: 0;
+  animation: vote-ring 520ms var(--ease-bloom) forwards;
+}
+
+.vote-heart-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vote-spark);
+  height: var(--vote-spark);
+  margin: calc(var(--vote-spark) / -2) 0 0 calc(var(--vote-spark) / -2);
+  border-radius: 9999px;
+  background: var(--vote-burst);
+  box-shadow: 0 0 6px var(--vote-burst);
+  opacity: 0;
+  transform: rotate(calc(var(--i) * 45deg)) translateX(2px) scale(0.45);
+  animation: vote-spark 500ms var(--ease-bloom) forwards;
+  animation-delay: calc(var(--i) * 8ms);
+}
+
+@keyframes vote-pop {
   0% {
     transform: scale(1);
   }
-  50% {
-    transform: scale(1.5);
+  30% {
+    transform: scale(1.28);
+  }
+  60% {
+    transform: scale(0.96);
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes vote-flash {
+  0% {
+    opacity: 0.38;
+    transform: scale(0.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes vote-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.3);
+  }
+  75% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+/* Full opacity from the first frame: a fade-in read as grey at phone size. */
+@keyframes vote-spark {
+  0% {
+    opacity: 1;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(2px) scale(0.45);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--i) * 45deg)) translateX(var(--vote-spread)) scale(1);
   }
 }
 
@@ -528,6 +657,14 @@ input[type='search']::-webkit-search-decoration {
   .animate-pulse,
   .animate-in {
     animation: none;
+  }
+
+  .vote-heart-icon--pop {
+    animation: none;
+  }
+
+  .vote-heart-burst {
+    display: none;
   }
 
   .sky-field {

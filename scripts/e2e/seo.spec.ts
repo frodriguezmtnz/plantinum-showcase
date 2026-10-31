@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { STORAGE_STATE } from './storage-state';
 
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:9002';
 const EMAIL = process.env.E2E_EMAIL;
@@ -17,14 +18,6 @@ async function structuredData(page: Page): Promise<Record<string, unknown>[]> {
       }
     }),
   );
-}
-
-async function login(page: Page) {
-  await page.goto('/login');
-  await page.fill('#email', EMAIL!);
-  await page.fill('#password', PASSWORD!);
-  await page.locator('form button[type=submit]').click();
-  await page.waitForURL(baseURL + '/');
 }
 
 test.describe('seo', () => {
@@ -89,14 +82,17 @@ test.describe('seo', () => {
     expect(await sitemap.text()).toContain(`${baseURL}/u/e2e-runner`);
   });
 
-  test('private pages stay out of search results', async ({ page }) => {
-    test.skip(!hasCredentials, 'Set E2E_EMAIL and E2E_PASSWORD to run this spec');
-    await login(page);
+  test.describe('private pages', () => {
+    test.use({ storageState: STORAGE_STATE });
 
-    for (const path of ['/upload', '/notifications']) {
-      await page.goto(path);
-      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i);
-    }
+    test('stay out of search results', async ({ page }) => {
+      test.skip(!hasCredentials, 'Set E2E_EMAIL and E2E_PASSWORD to run this spec');
+
+      for (const path of ['/upload', '/notifications']) {
+        await page.goto(path);
+        await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i);
+      }
+    });
   });
 
   test('sitemap lists the static routes', async ({ request }) => {

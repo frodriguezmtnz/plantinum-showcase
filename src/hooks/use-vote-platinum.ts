@@ -14,6 +14,14 @@ interface UseVotePlatinumOptions {
   initialHasVoted: boolean;
 }
 
+/** One beat of motion is the whole budget; skipping it keeps captures and
+ * reduced-motion users with the color change only. */
+function motionAllowed() {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  return new URLSearchParams(window.location.search).get('motion') !== 'off';
+}
+
 export function useVotePlatinum({
   platinumId,
   ownerId,
@@ -31,6 +39,7 @@ export function useVotePlatinum({
     votes: initialVotes,
     monthlyVotes: initialMonthlyVotes,
   });
+  const [burstSeq, setBurstSeq] = useState(0);
 
   const [syncedProps, setSyncedProps] = useState({
     initialHasVoted,
@@ -69,6 +78,12 @@ export function useVotePlatinum({
       votes: s.votes + delta,
       monthlyVotes: s.monthlyVotes + delta,
     }));
+
+    // Fire the burst only for a like, never for a retract, a mount or a
+    // rollback. Keyed remount restarts the one-shot CSS animation.
+    if (nextHasVoted && motionAllowed()) {
+      setBurstSeq((n) => n + 1);
+    }
 
     startTransition(async () => {
       const result = await toggleVoteForPlatinum(platinumId);
@@ -110,6 +125,7 @@ export function useVotePlatinum({
     hasVoted: state.hasVoted,
     votes: state.votes,
     monthlyVotes: state.monthlyVotes,
+    burstSeq,
     isPending,
     isOwner,
     toggleVote,
