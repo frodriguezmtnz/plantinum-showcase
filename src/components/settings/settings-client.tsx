@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  Bell,
   CalendarClock,
   Check,
   CircleAlert,
@@ -24,6 +25,7 @@ import {
 import { checkUsernameAvailability } from '@/app/register/actions';
 import {
   changePassword,
+  updateNotificationPreferences,
   updateProfile,
   updateUsername,
 } from '@/app/settings/actions';
@@ -55,6 +57,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   BIO_MAX_LENGTH,
   BIO_PROBLEM_MESSAGE,
@@ -85,6 +88,7 @@ export interface SettingsUser {
   initialLinks: { provider: PsnProvider; handle: string }[];
   plan: string;
   usernameChangedAt: string | null;
+  notifyFollowedUploads: boolean;
   uploadsUsed: number;
 }
 
@@ -100,6 +104,7 @@ type Availability =
 const SETTINGS_SECTIONS = [
   { id: 'profile', label: 'Profile' },
   { id: 'account', label: 'Account' },
+  { id: 'notifications', label: 'Notifications' },
   { id: 'plan', label: 'Plan' },
   { id: 'danger', label: 'Danger zone' },
 ] as const;
@@ -174,6 +179,35 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   const [savedLinks, setSavedLinks] = useState(user.initialLinks);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
   const [isSavingProfile, startSavingProfile] = useTransition();
+
+  const [notifyFollowedUploads, setNotifyFollowedUploads] = useState(
+    user.notifyFollowedUploads,
+  );
+  const [isSavingNotifications, startSavingNotifications] = useTransition();
+
+  function handleNotifyToggle(next: boolean) {
+    const previous = notifyFollowedUploads;
+    setNotifyFollowedUploads(next);
+    startSavingNotifications(async () => {
+      const result = await updateNotificationPreferences(next);
+      if (!result.success) {
+        setNotifyFollowedUploads(previous);
+        toast({
+          title: 'Preference not saved',
+          description: result.error,
+          variant: 'danger',
+        });
+        return;
+      }
+      toast({
+        title: 'Notifications updated',
+        description: next
+          ? 'You will hear about new platinums from hunters you follow.'
+          : 'New platinum alerts from hunters you follow are off.',
+        variant: 'success',
+      });
+    });
+  }
 
   const linksKey = (value: { provider: PsnProvider; handle: string }[]) =>
     value
@@ -958,6 +992,35 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               )}
               Update password
             </Button>
+          </div>
+        </Section>
+
+        <Section
+          id="notifications"
+          title="Notifications"
+          description="What lands in your bell."
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label
+                htmlFor="notify-followed-uploads"
+                className="flex items-center gap-2 text-sm font-semibold"
+              >
+                <Bell className="h-4 w-4 text-muted-foreground" aria-hidden />
+                New platinums from hunters you follow
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Get an in-app notice when someone you follow publishes a
+                platinum. Several uploads in a day arrive as one notice.
+              </p>
+            </div>
+            <Switch
+              id="notify-followed-uploads"
+              checked={notifyFollowedUploads}
+              onCheckedChange={handleNotifyToggle}
+              disabled={isSavingNotifications}
+              aria-label="Notify me about new platinums from hunters I follow"
+            />
           </div>
         </Section>
 

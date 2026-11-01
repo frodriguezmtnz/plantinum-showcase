@@ -140,6 +140,27 @@ export async function updateProfile(
   };
 }
 
+export async function updateNotificationPreferences(
+  notifyFollowedUploads: boolean,
+): Promise<{ success: true } | { success: false; error: string }> {
+  const userId = await requireUserId();
+  if (!userId) return { success: false, error: "You need to sign in first." };
+
+  if (
+    !(await checkRateLimit(`settings-notifications:${userId}`, 20, 3_600_000))
+      .ok
+  ) {
+    return { success: false, error: RATE_LIMITED };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { notifyFollowedUploads },
+  });
+  revalidatePath("/settings");
+  return { success: true };
+}
+
 /**
  * Handle changes are rare and touch the public URL, so they are throttled and
  * checked case-insensitively. The client refreshes the session afterwards.
