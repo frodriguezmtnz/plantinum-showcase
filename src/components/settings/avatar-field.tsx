@@ -20,12 +20,28 @@ interface AvatarFieldProps {
 }
 
 export function AvatarField({ username, initialImage }: AvatarFieldProps) {
-  const { refresh } = useAuth();
+  const { user: sessionUser, refresh } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
-  const [image, setImage] = useState(initialImage);
+
+  // The session is the live source: another tab can change the avatar and
+  // announce it, while these server props stay frozen until a reload. Keep a
+  // local override only for the instant between our upload and the session
+  // catching up (the sentinel also covers an explicit remove → null). Fall
+  // back to the server prop when the token predates the avatar, so a stale
+  // session never hides an image the database already has.
+  const liveImage = sessionUser?.image ?? initialImage;
+  const [override, setOverride] = useState<{ image: string | null } | null>(null);
+  const [syncedLive, setSyncedLive] = useState(liveImage);
+
+  if (liveImage !== syncedLive) {
+    setSyncedLive(liveImage);
+    setOverride(null);
+  }
+
+  const image = override ? override.image : liveImage;
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropOpen, setCropOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -104,7 +120,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
         return;
       }
 
-      setImage(result.image);
+      setOverride({ image: result.image });
       closeCropper();
       await syncSession();
       router.refresh();
@@ -137,7 +153,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
         });
         return;
       }
-      setImage(result.image);
+      setOverride({ image: result.image });
       await syncSession();
       router.refresh();
       toast({

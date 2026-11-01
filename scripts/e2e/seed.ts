@@ -15,6 +15,11 @@ const email = process.env.E2E_EMAIL ?? "e2e@platinum-showcase.test";
 const password = process.env.E2E_PASSWORD ?? "PwTest12345!";
 const username = process.env.E2E_USERNAME ?? "e2e-runner";
 
+// A second hunter owns the only plate the fixture account may vote on; the
+// vote specs need a target that is neither the voter nor their own upload.
+const neighborEmail = process.env.E2E_NEIGHBOR_EMAIL ?? "e2e-neighbor@platinum-showcase.test";
+const neighborUsername = process.env.E2E_NEIGHBOR_USERNAME ?? "e2e-neighbor";
+
 async function main() {
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -54,6 +59,33 @@ async function main() {
     ],
   });
 
+  // The vote target lives with a different owner so the fixture account can
+  // like it (self-votes are blocked) and the undo path can be exercised.
+  const neighbor = await prisma.user.upsert({
+    where: { email: neighborEmail },
+    update: { name: neighborUsername, username: neighborUsername },
+    create: {
+      email: neighborEmail,
+      name: neighborUsername,
+      username: neighborUsername,
+      passwordHash,
+    },
+    select: { id: true },
+  });
+
+  await prisma.platinum.deleteMany({ where: { userId: neighbor.id } });
+  await prisma.platinum.create({
+    data: {
+      ...base,
+      userId: neighbor.id,
+      hash: "e2e-vote-target",
+      gameName: "E2E Vote Target",
+      platform: "PS5",
+      isSpoiler: false,
+      votes: 0,
+    },
+  });
+
   await prisma.notification.deleteMany({ where: { userId: user.id } });
   await prisma.notification.create({
     data: {
@@ -65,7 +97,9 @@ async function main() {
     },
   });
 
-  console.log(`Seeded ${email} with 14 platinums and one unread notification.`);
+  console.log(
+    `Seeded ${email} with 14 platinums and one unread notification, plus the ${neighborUsername} vote target.`,
+  );
 }
 
 main().finally(() => prisma.$disconnect());

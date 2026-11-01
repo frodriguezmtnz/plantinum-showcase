@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { STORAGE_STATE } from './storage-state';
 
 const EMAIL = process.env.E2E_EMAIL;
 const PASSWORD = process.env.E2E_PASSWORD;
@@ -120,31 +121,35 @@ test.describe('public pages', () => {
 
 test.describe('authenticated', () => {
   test.skip(!hasCredentials, 'Set E2E_EMAIL and E2E_PASSWORD to run these specs');
+  test.use({ storageState: STORAGE_STATE });
 
-  test('sign-in does not loop on session refreshes', async ({ page }) => {
-    let sessionRequests = 0;
-    let rscRequests = 0;
-    page.on('request', (req) => {
-      if (req.url().includes('/api/auth/session')) sessionRequests += 1;
-      if (req.url().includes('_rsc=')) rscRequests += 1;
+  test.describe('logged out', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test('sign-in does not loop on session refreshes', async ({ page }) => {
+      let sessionRequests = 0;
+      let rscRequests = 0;
+      page.on('request', (req) => {
+        if (req.url().includes('/api/auth/session')) sessionRequests += 1;
+        if (req.url().includes('_rsc=')) rscRequests += 1;
+      });
+
+      await login(page);
+      // Let the router's link prefetches finish, then watch for the loop: an
+      // endless session refresh keeps firing requests forever, a healthy page
+      // settles.
+      await page.waitForTimeout(4000);
+      const sessionsAfterSettle = sessionRequests;
+      const rscAfterSettle = rscRequests;
+      await page.waitForTimeout(3000);
+
+      expect(sessionRequests - sessionsAfterSettle).toBeLessThan(3);
+      expect(rscRequests - rscAfterSettle).toBeLessThan(3);
+      await expect(page.locator('header button[aria-label^="Account menu"]')).toHaveCount(1);
     });
-
-    await login(page);
-    // Let the router's link prefetches finish, then watch for the loop: an
-    // endless session refresh keeps firing requests forever, a healthy page
-    // settles.
-    await page.waitForTimeout(4000);
-    const sessionsAfterSettle = sessionRequests;
-    const rscAfterSettle = rscRequests;
-    await page.waitForTimeout(3000);
-
-    expect(sessionRequests - sessionsAfterSettle).toBeLessThan(3);
-    expect(rscRequests - rscAfterSettle).toBeLessThan(3);
-    await expect(page.locator('header button[aria-label^="Account menu"]')).toHaveCount(1);
   });
 
   test('date picker shows one month/year label and arrows above the grid', async ({ page }) => {
-    await login(page);
     await page.goto('/upload');
     await page.locator('button:has-text("Pick a date")').first().click();
 
@@ -184,7 +189,6 @@ test.describe('authenticated', () => {
   });
 
   test('notification filters are linkable and keep the URL', async ({ page }) => {
-    await login(page);
     await page.goto('/notifications?filter=all');
 
     const filters = page.getByRole('navigation', { name: 'Notification filters' });
@@ -204,7 +208,6 @@ test.describe('authenticated', () => {
   test('All stays reachable with unread notices and the row check marks one read', async ({
     page,
   }) => {
-    await login(page);
     await page.goto('/notifications');
 
     const filters = page.getByRole('navigation', { name: 'Notification filters' });
@@ -231,7 +234,7 @@ test.describe('authenticated', () => {
   });
 
   test('notification bell refetches when the tab becomes visible', async ({ page }) => {
-    await login(page);
+    await page.goto('/');
     await page.waitForTimeout(800);
 
     let posts = 0;
@@ -247,7 +250,7 @@ test.describe('authenticated', () => {
     context,
   }) => {
     await page.clock.install();
-    await login(page);
+    await page.goto('/');
     await page.waitForTimeout(1500);
 
     let focusPosts = 0;
@@ -285,7 +288,7 @@ test.describe('authenticated', () => {
     // Install the fake clock before the app boots so the interval can be
     // fast-forwarded instead of making the suite wait a real minute.
     await page.clock.install();
-    await login(page);
+    await page.goto('/');
     await page.waitForTimeout(1500);
 
     let posts = 0;

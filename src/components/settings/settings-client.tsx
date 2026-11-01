@@ -151,7 +151,7 @@ function Section({
 
 export function SettingsClient({ user }: { user: SettingsUser }) {
   const router = useRouter();
-  const { refresh } = useAuth();
+  const { user: sessionUser, refresh } = useAuth();
   const { toast } = useToast();
 
   const [activeSection, setActiveSection] = useState<string>(
@@ -513,7 +513,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           description="How trophy hunters see you on the board."
         >
           <ProfileCompletion
-            hasAvatar={Boolean(user.image)}
+            hasAvatar={Boolean(sessionUser?.image ?? user.image)}
             hasBio={Boolean(savedBio.trim())}
             hasLinks={savedLinks.length > 0}
           />
