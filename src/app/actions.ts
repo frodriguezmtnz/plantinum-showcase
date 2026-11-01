@@ -33,11 +33,14 @@ import { moderationStatusForVerdict } from "@/lib/ai-verdict";
 import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
 import {
   countUnreadNotifications,
+  listNotifications,
   markNotificationRead,
   markNotificationsRead,
+  notifyFollowersAboutPublishedPlate,
   notifyModerators,
   notifyUser,
 } from "@/lib/notifications";
+import { parseNotificationFilter } from "@/lib/notification-filters";
 import {
   FOLLOW_PAGE_SIZE,
   getFollowersPage,
@@ -148,7 +151,10 @@ async function screenPlatinumUpload(
       );
     }
 
-    if (status === "PUBLISHED") return;
+    if (status === "PUBLISHED") {
+      await notifyFollowersAboutPublishedPlate(platinumId);
+      return;
+    }
 
     // The moderator queue also gets an in-app notice, mirroring the chat ping.
     await notifyModerators({
@@ -942,6 +948,23 @@ export async function getUnreadNotificationCount(): Promise<number> {
   const userId = session?.user?.id;
   if (!userId) return 0;
   return countUnreadNotifications(userId);
+}
+
+/** Appends one cursor page; the client keeps what it already rendered. */
+export async function loadMoreNotifications(filter: string, cursor: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId || !cursor) return { items: [], nextCursor: null };
+
+  // The cursor must be one of this owner's rows: Prisma needs the anchor to
+  // exist, and a foreign id must never influence another inbox.
+  const anchor = await prisma.notification.findFirst({
+    where: { id: cursor, userId },
+    select: { id: true },
+  });
+  if (!anchor) return { items: [], nextCursor: null };
+
+  return listNotifications(userId, parseNotificationFilter(filter), { cursor });
 }
 
 export async function getMorePlatinums(options: {
