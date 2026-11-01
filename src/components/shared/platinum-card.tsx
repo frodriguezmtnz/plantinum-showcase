@@ -140,7 +140,7 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
                   // Same reason as the detail CTA: never dim the heart while
                   // the vote is in flight, or the burst plays at half opacity.
                   !isOwner && "disabled:opacity-100",
-                  hasVoted ? "text-destructive" : "text-muted-foreground hover:text-destructive",
+                  hasVoted ? "text-[var(--vote-red)]" : "text-muted-foreground hover:text-[var(--vote-red)]",
                 )}
                 onClick={handleVoteClick}
                 disabled={isPending || isOwner}
@@ -155,7 +155,7 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
                 aria-pressed={hasVoted}
               >
                   <VoteHeart hasVoted={hasVoted} burstSeq={burstSeq} className="mr-2" />
-                  <span className="tabular" aria-live="polite">{votes}</span>
+                  <span className="tabular">{votes}</span>
               </Button>
               {canEdit && <EditPlatinumDialog platinum={platinum} />}
               {canDelete && <DeletePlatinumButton platinumId={platinum.id} />}

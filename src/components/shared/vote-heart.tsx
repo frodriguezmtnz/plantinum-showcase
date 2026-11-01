@@ -34,7 +34,7 @@ export function VoteHeart({ hasVoted, burstSeq, size = 'sm', className }: VoteHe
           className={cn(
             'vote-heart-svg transition-transform duration-200',
             hasVoted && 'scale-110',
-            hasVoted ? 'fill-destructive' : 'fill-none',
+            hasVoted ? 'fill-[var(--vote-red)]' : 'fill-none',
           )}
         />
         {burst && (

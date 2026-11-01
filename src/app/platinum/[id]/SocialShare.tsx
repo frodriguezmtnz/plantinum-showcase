@@ -111,7 +111,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
           // opacity would wash it out to grey. Only the owner stays dimmed.
           !isOwner && "disabled:opacity-100",
           hasVoted &&
-            "bg-destructive/10 text-destructive ring-1 ring-destructive/30 hover:bg-destructive/15",
+            "bg-destructive/10 text-[var(--vote-red)] ring-1 ring-destructive/30 hover:bg-destructive/15",
         )}
         size="lg"
         onClick={toggleVote}
@@ -136,7 +136,7 @@ export function SocialShare({ platinum, user }: SocialShareProps) {
         {isOwner
           ? 'Yours'
           : hasVoted
-            ? <span className="tabular" aria-live="polite">{votes}</span>
+            ? <span className="tabular">{votes}</span>
             : 'Vote'}
       </Button>
       <Popover open={open} onOpenChange={setOpen}>
