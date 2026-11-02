@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { repointNotificationLinks } from "@/lib/notifications";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
 import {
@@ -219,6 +220,9 @@ export async function updateUsername(
       // reserved (and would otherwise collide with the user's own history).
       if (current.username && !sameLower) {
         await reserveUsername(current.username, userId, tx);
+      }
+      if (current.username && current.username !== username) {
+        await repointNotificationLinks(current.username, username, tx);
       }
       await tx.user.update({
         where: { id: userId },

@@ -5,11 +5,16 @@ const url = process.env.TEST_DATABASE_URL;
 describe.skipIf(!url)('notifications.ts — Postgres integration', () => {
   let prisma: (typeof import('@/lib/prisma'))['prisma'];
   let notifications: typeof import('@/lib/notifications');
+  let registry: typeof import('@/lib/username-registry');
 
   const stamp = Date.now();
   const u = {
     alice: `it-notif-${stamp}-alice`,
     bob: `it-notif-${stamp}-bob`,
+  };
+  const handle = {
+    old: `it_notif_old_${stamp}`,
+    next: `it_notif_next_${stamp}`,
   };
   const n: Record<'aliceOwn' | 'aliceWrong' | 'aliceIdem' | 'bobOwn', string> = {
     aliceOwn: '',
@@ -22,6 +27,7 @@ describe.skipIf(!url)('notifications.ts — Postgres integration', () => {
     process.env.DATABASE_URL = url;
     prisma = (await import('@/lib/prisma')).prisma;
     notifications = await import('@/lib/notifications');
+    registry = await import('@/lib/username-registry');
 
     await prisma.user.createMany({
       data: [
@@ -52,11 +58,38 @@ describe.skipIf(!url)('notifications.ts — Postgres integration', () => {
     n.aliceWrong = rows[1]!.id;
     n.aliceIdem = rows[2]!.id;
     n.bobOwn = rows[3]!.id;
+
+    await prisma.usernameHistory.create({
+      data: {
+        username: handle.old,
+        usernameLower: handle.old.toLowerCase(),
+        userId: u.alice,
+      },
+    });
+    await prisma.notification.createMany({
+      data: [
+        {
+          userId: u.alice,
+          kind: 'FOLLOWED_PLATE',
+          title: 'Points at old',
+          linkUrl: `/u/${handle.old}`,
+        },
+        {
+          userId: u.bob,
+          kind: 'NEW_FOLLOWER',
+          title: 'Also points at old',
+          linkUrl: `/u/${handle.old}`,
+        },
+      ],
+    });
   });
 
   afterAll(async () => {
     await prisma.notification.deleteMany({
       where: { userId: { in: [u.alice, u.bob] } },
+    });
+    await prisma.usernameHistory.deleteMany({
+      where: { usernameLower: handle.old.toLowerCase() },
     });
     await prisma.user.deleteMany({ where: { id: { in: [u.alice, u.bob] } } });
     await prisma.$disconnect();
@@ -100,5 +133,34 @@ describe.skipIf(!url)('notifications.ts — Postgres integration', () => {
     });
 
     expect(second?.readAt).toEqual(first?.readAt);
+  });
+
+  it('repoints every notice that links to a renamed handle', async () => {
+    const updated = await notifications.repointNotificationLinks(
+      handle.old,
+      handle.next,
+    );
+    expect(updated).toBe(2);
+
+    const rows = await prisma.notification.findMany({
+      where: { title: { in: ['Points at old', 'Also points at old'] } },
+      select: { userId: true, linkUrl: true },
+    });
+    expect(rows).toHaveLength(2);
+    expect(
+      rows.every((row) => row.linkUrl === `/u/${handle.next}`),
+    ).toBe(true);
+    // The repair is inbox-agnostic: both owners were updated.
+    expect(new Set(rows.map((row) => row.userId))).toEqual(
+      new Set([u.alice, u.bob]),
+    );
+  });
+
+  it('detects a released handle case-insensitively', async () => {
+    expect(await registry.wasUsernameReleased(handle.old)).toBe(true);
+    expect(await registry.wasUsernameReleased(handle.old.toUpperCase())).toBe(
+      true,
+    );
+    expect(await registry.wasUsernameReleased(`nobody_${stamp}`)).toBe(false);
   });
 });

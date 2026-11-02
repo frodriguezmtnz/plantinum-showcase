@@ -863,9 +863,9 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                     <strong className="font-semibold text-foreground">
                       Old links stop working.
                     </strong>{' '}
-                    Shared profiles, mentions and existing notifications that
-                    point at <HandleChip value={savedUsername} /> will return
-                    404.
+                    Links people saved to <HandleChip value={savedUsername} />{' '}
+                    will show that the profile moved. In-app notifications are
+                    updated automatically.
                   </span>
                 </li>
                 {!isCaseOnlyChange && (

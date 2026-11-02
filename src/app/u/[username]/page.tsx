@@ -28,6 +28,8 @@ import {
 import { ProfileAbout } from '@/components/profile/profile-about';
 import { ShareProfileButton } from '@/components/profile/share-profile-button';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
+import { wasUsernameReleased } from '@/lib/username-registry';
+import { ReleasedHandleNotice } from '@/components/profile/released-handle-notice';
 import {
   parseProfileInfinite,
   parseProfilePlatform,
@@ -57,6 +59,7 @@ type Props = {
 // generateMetadata and the page render in the same request; cache() keeps the
 // profile lookup to one query.
 const loadProfile = cache(getUserProfileByUsername);
+const loadReleasedHandle = cache(wasUsernameReleased);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
@@ -64,7 +67,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!profile) {
     return {
-      title: 'User Not Found',
+      title: (await loadReleasedHandle(username))
+        ? 'Profile moved | Platinum Showcase'
+        : 'User Not Found',
+      robots: { index: false, follow: false },
     };
   }
 
@@ -92,6 +98,9 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
 
   const profile = await loadProfile(username);
   if (!profile) {
+    if (await loadReleasedHandle(username)) {
+      return <ReleasedHandleNotice username={username} />;
+    }
     notFound();
   }
 
