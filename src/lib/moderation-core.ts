@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { deleteImage } from '@/lib/b2';
-import { notifyUser } from '@/lib/notifications';
+import { notifyFollowersAboutPublishedPlate, notifyUser } from '@/lib/notifications';
 import { strikesAfterRestore } from '@/lib/moderation-policy';
 
 const IMAGE_URL_PREFIX = '/api/images/';
@@ -245,6 +245,7 @@ export async function applyPlatinumModeration(
       imageUrl: true,
       hash: true,
       userId: true,
+      moderationStatus: true,
       user: { select: { username: true } },
     },
   });
@@ -282,6 +283,11 @@ export async function applyPlatinumModeration(
       where: { id: platinumId },
       data: { moderationStatus: 'PUBLISHED' },
     });
+    // A human approving a first-time upload is a real publication; restoring a
+    // plate that was only hidden must not ping followers again.
+    if (platinum.moderationStatus === 'UNDER_REVIEW') {
+      await notifyFollowersAboutPublishedPlate(platinumId);
+    }
     await recordRestore(platinum);
   }
 

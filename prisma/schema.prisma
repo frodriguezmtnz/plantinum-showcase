@@ -45,7 +45,8 @@ enum ReportStatus {
 // Owner-facing messages raised by the moderation flow (a plate that stops
 // being public, or a manual review that needs their attention), plus the
 // moderator-facing queue items (appeals, flags and user reports) and the
-// social notice fired when someone starts following you.
+// social notices: someone started following you, or a hunter you follow
+// published a platinum.
 enum NotificationKind {
   PLATE_HIDDEN
   PLATE_UNDER_REVIEW
@@ -54,6 +55,7 @@ enum NotificationKind {
   PLATE_FLAGGED
   REPORT_RECEIVED
   NEW_FOLLOWER
+  FOLLOWED_PLATE
 }
 
 // Screening verdict for a content-addressed screenshot. SAFE keeps the plate
@@ -79,6 +81,8 @@ model User {
   psnProfileUrl String?
   // Handle changes are limited to once every 12 months.
   usernameChangedAt DateTime?
+  // Opt-out for the "a hunter you follow posted a platinum" notices.
+  notifyFollowedUploads Boolean @default(true)
   // Confirmed NSFW/serious moderation hits. Escalates the upload flow.
   strikes       Int       @default(0)
   createdAt     DateTime  @default(now())
@@ -288,6 +292,8 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Cursor pagination walks (createdAt desc, id desc) for one owner.
+  @@index([userId, createdAt, id])
   @@index([userId, readAt])
 }
 

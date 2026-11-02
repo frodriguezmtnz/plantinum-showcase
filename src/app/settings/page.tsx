@@ -36,6 +36,7 @@ export default async function SettingsPage() {
       },
       plan: true,
       usernameChangedAt: true,
+      notifyFollowedUploads: true,
     },
   });
 
@@ -68,6 +69,7 @@ export default async function SettingsPage() {
         })),
         plan: user.plan,
         usernameChangedAt: user.usernameChangedAt?.toISOString() ?? null,
+        notifyFollowedUploads: user.notifyFollowedUploads,
         uploadsUsed,
       }}
     />
