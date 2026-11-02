@@ -28,6 +28,13 @@ async function expectCount(button: Locator, value: number) {
     .toBe(value);
 }
 
+/** Hydration can swap the server HTML: retry until the card stays mounted. */
+async function scrollIntoView(locator: Locator) {
+  await expect(async () => {
+    await locator.scrollIntoViewIfNeeded();
+  }).toPass({ timeout: 10_000 });
+}
+
 test.describe('vote heart', () => {
   test.skip(!hasCredentials, 'Set E2E_EMAIL and E2E_PASSWORD to run these specs');
   test.use({ storageState: STORAGE_STATE });
@@ -41,7 +48,7 @@ test.describe('vote heart', () => {
     test.skip((await card.count()) === 0, 'Seed the E2E vote target first (scripts/e2e/seed.ts)');
 
     const button = card.locator('button[aria-pressed]').first();
-    await button.scrollIntoViewIfNeeded();
+    await scrollIntoView(button);
     await ensureUnvoted(button);
 
     const before = voteCount(await button.getAttribute('aria-label'));
