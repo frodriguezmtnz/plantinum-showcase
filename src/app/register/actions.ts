@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { AuthError } from "next-auth";
 import { headers } from "next/headers";
 import bcrypt from "bcrypt";
@@ -11,6 +12,8 @@ import {
 } from "@/lib/usernames";
 import { usernameIsTaken } from "@/lib/username-registry";
 import { passwordPolicyError } from "@/lib/password";
+import { registrationEmailProblem } from "@/lib/email/address";
+import { requestEmailVerification } from "@/lib/email/verification";
 import { signIn } from "@/auth";
 
 export interface RegisterState {
@@ -60,7 +63,7 @@ export async function checkUsernameAvailability(
 
 export async function registerAction(_state: RegisterState, formData: FormData): Promise<RegisterState> {
   const username = (formData.get("username") as string)?.trim();
-  const email = (formData.get("email") as string)?.trim().toLowerCase();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
@@ -68,9 +71,21 @@ export async function registerAction(_state: RegisterState, formData: FormData):
   if (problem) {
     return { error: USERNAME_PROBLEM_MESSAGE[problem] };
   }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "That email address is not valid." };
+
+  const headerList = await headers();
+  const ip =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "local";
+  if (!(await checkRateLimit(`register:${ip}`, 5, 3_600_000)).ok) {
+    return { error: "Too many sign-up attempts. Please wait a bit and try again." };
   }
+
+  const emailProblem = await registrationEmailProblem(email);
+  if (emailProblem) {
+    return { error: emailProblem };
+  }
+
   const passwordIssue = passwordPolicyError(password ?? "");
   if (passwordIssue) {
     return { error: passwordIssue };
@@ -93,7 +108,7 @@ export async function registerAction(_state: RegisterState, formData: FormData):
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    await prisma.user.create({
+    const created = await prisma.user.create({
       data: {
         username,
         name: username,
@@ -101,6 +116,17 @@ export async function registerAction(_state: RegisterState, formData: FormData):
         passwordHash,
         image: `https://i.pravatar.cc/150?u=${encodeURIComponent(username)}`,
       },
+      select: { id: true },
+    });
+
+    // Keep sign-up fast: the message is best-effort and the UI exposes a
+    // resend path from Settings and /upload.
+    after(async () => {
+      try {
+        await requestEmailVerification(created.id);
+      } catch (error) {
+        console.error("[register] verification email failed", error);
+      }
     });
 
     // `redirect: false` keeps navigation on the client so the page can refresh

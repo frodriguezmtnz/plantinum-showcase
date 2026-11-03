@@ -44,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           image: user.image,
           role: user.role,
+          emailConfirmed: Boolean(user.emailVerified),
         };
       },
     }),
@@ -56,6 +57,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Cached for UI hints only — authorization always re-reads the role
         // from the database so a promotion takes effect without re-login.
         token.role = user.role;
+        token.emailConfirmed = Boolean(user.emailConfirmed);
       }
 
       // Settings calls useSession().update() after changing the handle, avatar
@@ -65,7 +67,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (trigger === "update" && userId) {
         const fresh = await prisma.user.findUnique({
           where: { id: userId },
-          select: { username: true, email: true, image: true, role: true },
+          select: {
+            username: true,
+            email: true,
+            image: true,
+            role: true,
+            emailVerified: true,
+          },
         });
         if (fresh) {
           token.id = userId;
@@ -73,6 +81,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.email = fresh.email;
           token.picture = fresh.image;
           token.role = fresh.role;
+          token.emailConfirmed = Boolean(fresh.emailVerified);
         }
       }
 
@@ -85,6 +94,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.name =
           (token.username as string | undefined) ?? session.user.name;
         session.user.role = (token.role as Role | undefined) ?? "USER";
+        session.user.emailConfirmed = Boolean(token.emailConfirmed);
       }
       return session;
     },

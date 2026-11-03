@@ -39,6 +39,7 @@ jobs:
       AUTH_SECRET: ci-only-secret
       AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_SITE_URL: http://localhost:9002
+      EMAIL_TRANSPORT: console
 
     steps:
       - uses: actions/checkout@v7
@@ -103,6 +104,7 @@ jobs:
       AUTH_SECRET: ci-only-secret
       AUTH_TRUST_HOST: "true"
       NEXT_PUBLIC_SITE_URL: http://localhost:9002
+      EMAIL_TRANSPORT: console
       E2E_EMAIL: e2e@platinum-showcase.test
       E2E_PASSWORD: PwTest12345!
       PW_CHANNEL: chromium

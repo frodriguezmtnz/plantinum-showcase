@@ -2,11 +2,15 @@
 
 import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { after } from "next/server";
 import bcrypt from "bcrypt";
 import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { repointNotificationLinks } from "@/lib/notifications";
+import { requestEmailVerification } from "@/lib/email/verification";
+import { sendPasswordChangedNotice } from "@/lib/email/password-reset";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-signature";
 import {
@@ -160,6 +164,43 @@ export async function updateNotificationPreferences(
   });
   revalidatePath("/settings");
   return { success: true };
+}
+
+export type ResendVerificationResult =
+  | { success: true; alreadyVerified?: boolean }
+  | { success: false; error: string };
+
+export async function resendVerificationEmail(): Promise<ResendVerificationResult> {
+  const userId = await requireUserId();
+  if (!userId) return { success: false, error: "You need to sign in first." };
+
+  const headerList = await headers();
+  const ip =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "local";
+  const perUser = await checkRateLimit(
+    `verify-resend:${userId}`,
+    3,
+    3_600_000,
+  );
+  const perIp = await checkRateLimit(
+    `verify-resend-ip:${ip}`,
+    10,
+    3_600_000,
+  );
+  if (!perUser.ok || !perIp.ok) {
+    return { success: false, error: RATE_LIMITED };
+  }
+
+  const result = await requestEmailVerification(userId);
+  if (result.sent) return { success: true };
+  if (result.reason === "verified") return { success: true, alreadyVerified: true };
+
+  return {
+    success: false,
+    error: "We could not send the email right now. Try again in a few minutes.",
+  };
 }
 
 /**
@@ -387,7 +428,7 @@ export async function changePassword(
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { passwordHash: true },
+    select: { passwordHash: true, email: true, username: true },
   });
   if (!user?.passwordHash) {
     return {
@@ -417,6 +458,19 @@ export async function changePassword(
 
   const passwordHash = await bcrypt.hash(next, 10);
   await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+
+  after(async () => {
+    try {
+      await sendPasswordChangedNotice({
+        userId,
+        email: user.email,
+        username: user.username,
+      });
+    } catch (error) {
+      console.error("[settings] could not send the security notice", error);
+    }
+  });
+
   return { success: true };
 }
 

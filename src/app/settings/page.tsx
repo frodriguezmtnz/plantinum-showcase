@@ -27,6 +27,7 @@ export default async function SettingsPage() {
     select: {
       username: true,
       email: true,
+      emailVerified: true,
       image: true,
       bio: true,
       psnProfileUrl: true,
@@ -61,6 +62,7 @@ export default async function SettingsPage() {
       user={{
         username: user.username,
         email: user.email,
+        emailVerified: Boolean(user.emailVerified),
         image: user.image,
         bio: user.bio,
         initialLinks: links.map(({ provider, handle }) => ({

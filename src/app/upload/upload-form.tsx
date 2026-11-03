@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2, Rocket } from "lucide-react"
+import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2, Rocket, MailWarning } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -35,6 +35,7 @@ import { uploadPlatinum, getUploadQuota } from "@/app/actions"
 import { pixelateImage } from "@/lib/pixelate-client"
 import { platinumMetaSchema, watermarkPositionSchema } from "@/lib/schemas"
 import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-position"
+import { ResendVerificationButton } from "@/components/settings/resend-verification-button"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -80,7 +81,7 @@ interface SubmittedPlate {
   blocked: boolean;
 }
 
-export function UploadForm() {
+export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
   const { toast } = useToast()
   const [preview, setPreview] = useState<string | null>(null);
   const [pixelPreview, setPixelPreview] = useState<string | null>(null);
@@ -296,6 +297,21 @@ export function UploadForm() {
 
   return (
     <div className="container max-w-2xl py-8 md:py-12">
+      {!emailVerified && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+          <MailWarning className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-foreground">
+              Verify your email to upload
+            </p>
+            <p className="text-muted-foreground">
+              We sent a confirmation link to your inbox. Check it (and spam) or
+              resend it below.
+            </p>
+          </div>
+          <ResendVerificationButton />
+        </div>
+      )}
        <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Upload a Platinum</CardTitle>
@@ -644,7 +660,7 @@ export function UploadForm() {
                   type="submit"
                   className="w-full"
                   size="lg"
-                  disabled={form.formState.isSubmitting || !isValid}
+                  disabled={form.formState.isSubmitting || !isValid || !emailVerified}
                 >
                   <UploadCloud className="mr-2" />
                   {submitLabel}

@@ -75,10 +75,46 @@ test.describe('public pages', () => {
     expect(await link.evaluate((el) => getComputedStyle(el, '::after').transform)).not.toBe(underlineBefore);
   });
 
-  test('login page has no dead forgot-password link', async ({ page }) => {
+  test('login page links to a working forgot-password page', async ({ page }) => {
     await page.goto('/login');
     await expect(page.locator('form button[type=submit]')).toBeVisible();
-    await expect(page.getByText(/forgot your password/i)).toHaveCount(0);
+
+    const link = page.getByRole('link', { name: /forgot your password/i });
+    await expect(link).toBeVisible();
+    await link.click();
+
+    await expect(page).toHaveURL(/\/forgot-password$/);
+    await expect(page.locator('#email')).toBeVisible();
+    await expect(page.locator('form button[type=submit]')).toBeVisible();
+  });
+
+  test('forgot password returns a generic confirmation', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await page.fill('#email', process.env.E2E_EMAIL ?? 'e2e@platinum-showcase.test');
+    await page.locator('form button[type=submit]').click();
+
+    await expect(
+      page.getByText(/if that email belongs to an account/i),
+    ).toBeVisible({ timeout: 20_000 });
+  });
+
+  test('registration rejects disposable email domains', async ({ page }) => {
+    await page.goto('/register');
+
+    const username = `e2e_disp_${Date.now().toString().slice(-8)}`;
+    await page.fill('#username', username);
+    await expect(page.getByText(new RegExp(`${username} is available`, 'i'))).toBeVisible({
+      timeout: 20_000,
+    });
+
+    await page.fill('#email', `someone@mailinator.com`);
+    await page.fill('#password', 'PwTest12345!Abc');
+    await page.fill('#confirmPassword', 'PwTest12345!Abc');
+    await page.locator('form button[type=submit]').click();
+
+    await expect(
+      page.getByText(/permanent email address/i),
+    ).toBeVisible({ timeout: 20_000 });
   });
 
   test('spoiler cards hide the image until revealed', async ({ page }) => {
