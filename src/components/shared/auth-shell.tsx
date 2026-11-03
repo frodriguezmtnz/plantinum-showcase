@@ -9,6 +9,7 @@ interface AuthShellProps {
   children: ReactNode;
   footer?: ReactNode;
   error?: string;
+  notice?: string;
 }
 
 const HIGHLIGHTS = [
@@ -17,7 +18,7 @@ const HIGHLIGHTS = [
   { icon: Users, text: 'Show off your profile and climb the monthly ranking.' },
 ];
 
-export function AuthShell({ title, description, children, footer, error }: AuthShellProps) {
+export function AuthShell({ title, description, children, footer, error, notice }: AuthShellProps) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
@@ -63,6 +64,12 @@ export function AuthShell({ title, description, children, footer, error }: AuthS
           {error && (
             <div className="mt-4 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
+            </div>
+          )}
+
+          {notice && (
+            <div className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+              {notice}
             </div>
           )}
 
