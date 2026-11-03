@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
+    "brand": "node scripts/build-brand-assets.mjs",
     "snapshots": "tsx scripts/backfill-snapshots.ts",
     "set-role": "tsx scripts/set-role.ts",
     "telegram:test": "tsx scripts/telegram-test-notice.ts",

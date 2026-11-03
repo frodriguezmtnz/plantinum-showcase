@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="410 300 1700 580" width="1700" height="580">
+  <!--
+    Placeholder for the hero trophy skyline until the studio render is dropped
+    at design/source/trophies/hero-group.png. Four cups, feet on y=880, read as
+    a skyline at ~9% opacity; details are irrelevant at that weight. The viewBox
+    is trimmed to the art so the layer's top edge is the rim, not empty sky.
+  -->
+  <defs>
+    <g id="cup">
+      <rect x="-12" y="-36" width="444" height="48" rx="24"/>
+      <path d="M0 0 H420 V62 C420 244 332 386 210 386 C88 386 0 244 0 62 Z"/>
+      <path d="M18 66 C-64 84 -64 220 12 232" fill="none" stroke-width="36" stroke-linecap="round"/>
+      <path d="M402 66 C484 84 484 220 408 232" fill="none" stroke-width="36" stroke-linecap="round"/>
+      <path d="M180 386 H240 L232 472 H188 Z"/>
+      <rect x="150" y="466" width="120" height="30" rx="14"/>
+      <rect x="110" y="494" width="200" height="38" rx="18"/>
+      <path d="M72 530 H348 L334 588 H86 Z"/>
+    </g>
+  </defs>
+  <g fill="#192838" stroke="#192838">
+    <use href="#cup" transform="translate(450 880) scale(0.60) translate(-210 -588) rotate(-2)"/>
+    <use href="#cup" transform="translate(890 880) scale(0.74) translate(-210 -588)"/>
+    <use href="#cup" transform="translate(1390 880) scale(0.92) translate(-210 -588)"/>
+    <use href="#cup" transform="translate(1890 880) scale(0.80) translate(-210 -588) rotate(1.5)"/>
+  </g>
+</svg>
