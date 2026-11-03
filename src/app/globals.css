@@ -322,6 +322,51 @@ input[type='search']::-webkit-search-decoration {
   -webkit-mask-image: linear-gradient(180deg, var(--paper) 0, hsl(0 0% 99% / 0.55) calc(var(--grid-fade) * 0.6), transparent var(--grid-fade));
 }
 
+/* The trophy stage: a ghosted skyline of the cups standing behind the race row.
+   Anchored inside .hm-row so it shares the plates' baseline; multiply turns the
+   dark render into a pale duotone on the paper field and the mask dissolves it
+   upward, so it frames the plates without competing with them. */
+.hero-skyline {
+  position: absolute;
+  left: 50%;
+  bottom: 0.25rem;
+  translate: -50% 0;
+  width: min(1150px, 100%);
+  height: clamp(200px, 30vh, 300px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero-skyline-art {
+  object-fit: contain;
+  object-position: bottom center;
+  opacity: var(--skyline-opacity, 0.09);
+  filter: saturate(0.55);
+  mix-blend-mode: multiply;
+  mask-image: linear-gradient(to top, #000 0%, #000 22%, transparent 88%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 22%, transparent 88%);
+}
+
+@media (max-width: 639px) {
+  .hero-skyline {
+    height: clamp(150px, 26vh, 230px);
+    bottom: 0;
+  }
+
+  .hero-skyline-art {
+    object-fit: cover;
+    opacity: var(--skyline-opacity, 0.08);
+  }
+}
+
+/* On the night ground multiply would sink into the paper; screen lets only the
+   metal highlights ghost through. */
+.dark .hero-skyline-art {
+  opacity: var(--skyline-opacity, 0.06);
+  filter: saturate(0.4) contrast(1.15);
+  mix-blend-mode: screen;
+}
+
 /* The field steps back only for hover-capable pointer devices: on touch,
    tapping a plate focuses it but a full-screen blur is pure GPU cost. */
 @media (hover: hover) and (min-width: 640px) {
