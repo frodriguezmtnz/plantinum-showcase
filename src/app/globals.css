@@ -709,10 +709,11 @@ input[type='search']::-webkit-search-decoration {
   animation-delay: 1.2s;
 }
 
-/* Released handle: a drifting profile card, a dashed ghost left behind and a
-   drawn X. Every keyframe keeps the element visible, so a headless capture
-   (which freezes time) still shows the whole illustration. */
-@keyframes moved-float {
+/* Ambient illustration motion shared by the moved-handle and 404 drawings:
+   a floating prop, a pulsing halo/ghost and drifting specks. Every keyframe
+   keeps the element visible, so a headless capture (which freezes time) still
+   shows the whole illustration. */
+@keyframes ambient-float {
   0%,
   100% {
     transform: translateY(0);
@@ -722,7 +723,7 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-@keyframes moved-halo {
+@keyframes ambient-halo {
   0%,
   100% {
     transform: scale(0.97);
@@ -734,7 +735,7 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-@keyframes moved-ghost {
+@keyframes ambient-ghost {
   0%,
   100% {
     opacity: 0.55;
@@ -744,7 +745,7 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-@keyframes moved-breathe {
+@keyframes ambient-breathe {
   0%,
   100% {
     transform: scale(1);
@@ -754,7 +755,7 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-@keyframes moved-drift {
+@keyframes ambient-drift {
   0%,
   100% {
     transform: translateY(0);
@@ -766,51 +767,51 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-.moved-card,
-.moved-halo,
-.moved-ghost,
-.moved-x {
+.ambient-float,
+.ambient-halo,
+.ambient-ghost,
+.ambient-breathe {
   transform-box: fill-box;
   transform-origin: center;
 }
 
-.moved-card {
-  animation: moved-float 6s ease-in-out infinite;
+.ambient-float {
+  animation: ambient-float 6s ease-in-out infinite;
 }
 
-.moved-halo {
-  animation: moved-halo 6s ease-in-out infinite;
+.ambient-halo {
+  animation: ambient-halo 6s ease-in-out infinite;
 }
 
-.moved-ghost {
-  animation: moved-ghost 6s ease-in-out infinite;
+.ambient-ghost {
+  animation: ambient-ghost 6s ease-in-out infinite;
 }
 
-.moved-x {
-  animation: moved-breathe 4s ease-in-out infinite;
+.ambient-breathe {
+  animation: ambient-breathe 4s ease-in-out infinite;
 }
 
-.moved-dot-1 {
-  animation: moved-drift 5s ease-in-out infinite;
+.ambient-drift {
+  animation: ambient-drift 5s ease-in-out infinite;
 }
 
-.moved-dot-2 {
-  animation: moved-drift 5s ease-in-out 0.9s infinite;
+.ambient-drift--late {
+  animation-delay: 0.9s;
 }
 
-.moved-dot-3 {
-  animation: moved-drift 5s ease-in-out 1.8s infinite;
+.ambient-drift--later {
+  animation-delay: 1.8s;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cta-trophy,
   .cta-trophy-icon,
   .cta-spark,
-  .moved-card,
-  .moved-halo,
-  .moved-ghost,
-  .moved-x,
-  .moved-dot {
+  .ambient-float,
+  .ambient-halo,
+  .ambient-ghost,
+  .ambient-breathe,
+  .ambient-drift {
     animation: none;
   }
 }

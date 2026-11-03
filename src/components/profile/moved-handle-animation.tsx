@@ -1,14 +1,14 @@
 /**
  * Small server-rendered illustration for released handles: a profile card that
  * drifts, a dashed "ghost" left behind and a drawn X. Pure SVG + CSS (see
- * `moved-*` keyframes in globals.css), so the page still ships zero JS and the
- * reduced-motion override leaves every element visible.
+ * `ambient-*` keyframes in globals.css), so the page still ships zero JS and
+ * the reduced-motion override leaves every element visible.
  */
 export function MovedHandleAnimation({ className }: { className?: string }) {
   return (
     <div
-      className={`moved-illustration mx-auto mb-4 h-48 w-48 text-muted-foreground ${
-        className ?? ''
+      className={`mx-auto mb-4 text-muted-foreground ${
+        className ?? 'h-48 w-48'
       }`}
     >
       <svg
@@ -19,7 +19,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
         className="h-full w-full"
       >
         <circle
-          className="moved-halo text-primary"
+          className="ambient-halo text-primary"
           cx="80"
           cy="80"
           r="62"
@@ -30,7 +30,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
         />
 
         <rect
-          className="moved-ghost"
+          className="ambient-ghost"
           x="42"
           y="31"
           width="76"
@@ -41,7 +41,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
           strokeDasharray="7 8"
         />
 
-        <g className="moved-card">
+        <g className="ambient-float">
           <rect
             x="42"
             y="31"
@@ -70,7 +70,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
             fillOpacity="0.28"
           />
           <g
-            className="moved-x text-primary"
+            className="ambient-breathe text-primary"
             stroke="currentColor"
             strokeWidth="2.8"
             strokeLinecap="round"
@@ -81,7 +81,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
         </g>
 
         <circle
-          className="moved-dot moved-dot-1 text-primary"
+          className="ambient-drift text-primary"
           cx="132"
           cy="48"
           r="2.6"
@@ -89,7 +89,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
           fillOpacity="0.55"
         />
         <circle
-          className="moved-dot moved-dot-2 text-primary"
+          className="ambient-drift ambient-drift--late text-primary"
           cx="28"
           cy="106"
           r="2"
@@ -97,7 +97,7 @@ export function MovedHandleAnimation({ className }: { className?: string }) {
           fillOpacity="0.4"
         />
         <circle
-          className="moved-dot moved-dot-3"
+          className="ambient-drift ambient-drift--later"
           cx="124"
           cy="116"
           r="1.6"
