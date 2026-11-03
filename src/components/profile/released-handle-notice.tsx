@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MovedHandleAnimation } from '@/components/profile/moved-handle-animation';
 
 /**
  * Shown when a profile URL belongs to a released handle. We do not reveal the
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 export function ReleasedHandleNotice({ username }: { username: string }) {
   return (
     <div className="container flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
-      <UserX className="mb-6 h-16 w-16 text-muted-foreground" aria-hidden />
+      <MovedHandleAnimation />
       <p className="field-mark">Profile moved</p>
       <h1 className="mt-2 font-headline text-3xl font-bold tracking-tight md:text-4xl">
         This trophy hunter changed their handle

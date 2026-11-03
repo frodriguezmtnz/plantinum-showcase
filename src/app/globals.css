@@ -709,10 +709,108 @@ input[type='search']::-webkit-search-decoration {
   animation-delay: 1.2s;
 }
 
+/* Released handle: a drifting profile card, a dashed ghost left behind and a
+   drawn X. Every keyframe keeps the element visible, so a headless capture
+   (which freezes time) still shows the whole illustration. */
+@keyframes moved-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes moved-halo {
+  0%,
+  100% {
+    transform: scale(0.97);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.95;
+  }
+}
+
+@keyframes moved-ghost {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes moved-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes moved-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.moved-card,
+.moved-halo,
+.moved-ghost,
+.moved-x {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.moved-card {
+  animation: moved-float 6s ease-in-out infinite;
+}
+
+.moved-halo {
+  animation: moved-halo 6s ease-in-out infinite;
+}
+
+.moved-ghost {
+  animation: moved-ghost 6s ease-in-out infinite;
+}
+
+.moved-x {
+  animation: moved-breathe 4s ease-in-out infinite;
+}
+
+.moved-dot-1 {
+  animation: moved-drift 5s ease-in-out infinite;
+}
+
+.moved-dot-2 {
+  animation: moved-drift 5s ease-in-out 0.9s infinite;
+}
+
+.moved-dot-3 {
+  animation: moved-drift 5s ease-in-out 1.8s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cta-trophy,
   .cta-trophy-icon,
-  .cta-spark {
+  .cta-spark,
+  .moved-card,
+  .moved-halo,
+  .moved-ghost,
+  .moved-x,
+  .moved-dot {
     animation: none;
   }
 }
