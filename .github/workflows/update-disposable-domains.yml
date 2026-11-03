@@ -1,0 +1,58 @@
+name: Update disposable email domains
+
+on:
+  schedule:
+    # Mondays at 04:00 UTC.
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-disposable-domains
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Download the latest blocklist
+        run: node scripts/update-disposable-domains.mjs
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests for the matcher
+        run: pnpm exec vitest run src/lib/email/domains.test.ts
+
+      - name: Open a PR only when the snapshot changed
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/update-disposable-domains
+          delete-branch: true
+          title: 'chore(email): actualizar dominios de email desechables'
+          commit-message: 'chore(email): actualizar dominios de email desechables'
+          labels: enhancement
+          add-paths: |
+            src/lib/email/disposable-domains.json
+            src/lib/email/disposable-domains.meta.json
+          body: |
+            Actualización automática del snapshot de
+            `disposable-email-domains/disposable-email-domains` (CC0 1.0).
+
+            - Revisa el diff de `disposable-domains.json`.
+            - El matcher (sufijos padres, punycode y allowlist) ya está cubierto por `src/lib/email/domains.test.ts`.
+            - El commit del upstream queda registrado en `disposable-domains.meta.json`.
