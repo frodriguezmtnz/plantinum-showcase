@@ -34,7 +34,15 @@ export function HomeMotion({ children }: { children: ReactNode }) {
       mm.add('(prefers-reduced-motion: no-preference)', () => {
         const boot = gsap.timeline({ defaults: { ease: 'power3.out' } });
         boot
-          .from('.hm-strip', { y: -30, autoAlpha: 0, duration: 0.6 })
+          .from('.hm-skyline', {
+            autoAlpha: 0,
+            scale: 1.04,
+            transformOrigin: '50% 100%',
+            duration: 1.4,
+            ease: 'power2.out',
+            clearProps: 'opacity,visibility,transform',
+          })
+          .from('.hm-strip', { y: -30, autoAlpha: 0, duration: 0.6 }, '-=1.1')
           .from('.hm-title', { yPercent: 130, duration: 1.15, ease: 'power4.out' }, '-=0.2')
           .from('.hm-sub', { y: 18, autoAlpha: 0, duration: 0.65 }, '-=0.6')
           .from(
