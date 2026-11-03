@@ -6,6 +6,7 @@ import {
   type NotificationFilter,
 } from '@/lib/notification-filters';
 import type { NotificationKind } from '@/generated/prisma/enums';
+import type { Prisma } from '@/generated/prisma/client';
 
 export interface NotificationView {
   id: string;
@@ -277,4 +278,23 @@ export async function notifyFollowersAboutPublishedPlate(
   } catch (error) {
     console.warn('[notifications] could not notify followers', error);
   }
+}
+
+/**
+ * A handle owns its profile URL, so a rename repoints every notice that links
+ * to it (followers' activity rows and other users' follower notices alike)
+ * without touching the inboxes that received them. The handle also shows up in
+ * the title, so it is swapped in place.
+ */
+export async function repointNotificationLinks(
+  oldUsername: string,
+  newUsername: string,
+  db: Pick<Prisma.TransactionClient, '$executeRaw'> = prisma,
+): Promise<number> {
+  return db.$executeRaw`
+    UPDATE "Notification"
+    SET "linkUrl" = ${`/u/${newUsername}`},
+        "title" = replace("title", ${`@${oldUsername}`}, ${`@${newUsername}`})
+    WHERE "linkUrl" = ${`/u/${oldUsername}`}
+  `;
 }

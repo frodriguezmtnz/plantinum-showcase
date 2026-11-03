@@ -709,10 +709,109 @@ input[type='search']::-webkit-search-decoration {
   animation-delay: 1.2s;
 }
 
+/* Ambient illustration motion shared by the moved-handle and 404 drawings:
+   a floating prop, a pulsing halo/ghost and drifting specks. Every keyframe
+   keeps the element visible, so a headless capture (which freezes time) still
+   shows the whole illustration. */
+@keyframes ambient-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes ambient-halo {
+  0%,
+  100% {
+    transform: scale(0.97);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 0.95;
+  }
+}
+
+@keyframes ambient-ghost {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes ambient-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.ambient-float,
+.ambient-halo,
+.ambient-ghost,
+.ambient-breathe {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ambient-float {
+  animation: ambient-float 6s ease-in-out infinite;
+}
+
+.ambient-halo {
+  animation: ambient-halo 6s ease-in-out infinite;
+}
+
+.ambient-ghost {
+  animation: ambient-ghost 6s ease-in-out infinite;
+}
+
+.ambient-breathe {
+  animation: ambient-breathe 4s ease-in-out infinite;
+}
+
+.ambient-drift {
+  animation: ambient-drift 5s ease-in-out infinite;
+}
+
+.ambient-drift--late {
+  animation-delay: 0.9s;
+}
+
+.ambient-drift--later {
+  animation-delay: 1.8s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cta-trophy,
   .cta-trophy-icon,
-  .cta-spark {
+  .cta-spark,
+  .ambient-float,
+  .ambient-halo,
+  .ambient-ghost,
+  .ambient-breathe,
+  .ambient-drift {
     animation: none;
   }
 }

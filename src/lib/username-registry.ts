@@ -39,3 +39,15 @@ export async function reserveUsername(
     update: {},
   });
 }
+
+/** True when a handle was used by an account that renamed or was deleted. */
+export async function wasUsernameReleased(username: string): Promise<boolean> {
+  const usernameLower = username.toLowerCase();
+  if (!usernameLower) return false;
+
+  const row = await prisma.usernameHistory.findUnique({
+    where: { usernameLower },
+    select: { id: true },
+  });
+  return Boolean(row);
+}
