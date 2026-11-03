@@ -19,6 +19,13 @@ enum Role {
   ADMIN
 }
 
+// One-shot tokens for the email flows. Only the SHA-256 hash is stored; the raw
+// token only travels in the email link.
+enum EmailTokenKind {
+  PASSWORD_RESET
+  EMAIL_VERIFY
+}
+
 // PUBLISHED is the happy path; UNDER_REVIEW keeps a plate off the public lists
 // while a moderator decides; HIDDEN means it was taken down.
 enum ModerationStatus {
@@ -98,6 +105,8 @@ model User {
   followers     Follow[]  @relation("Followers")
   // Trophy-site profiles (one per provider), e.g. PSNProfiles + Exophase.
   profileLinks  ProfileLink[]
+  // One-shot password reset / email verification tokens.
+  emailTokens   EmailToken[]
 }
 
 // A trophy-site profile for a user. One row per provider: the PSN handle is
@@ -126,6 +135,23 @@ model UsernameHistory {
   createdAt     DateTime @default(now())
 
   @@index([userId])
+}
+
+// One active token per (user, kind): requesting a fresh link replaces the
+// previous one, and consuming it marks it used so a replay fails.
+model EmailToken {
+  id        String         @id @default(cuid())
+  userId    String
+  kind      EmailTokenKind
+  tokenHash String         @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@index([expiresAt])
 }
 
 model Vote {

@@ -16,6 +16,8 @@
     "icons": "node scripts/generate-icons.mjs",
     "snapshots": "tsx scripts/backfill-snapshots.ts",
     "set-role": "tsx scripts/set-role.ts",
+    "update:disposable-domains": "node scripts/update-disposable-domains.mjs",
+    "db:wipe": "tsx scripts/wipe-dev-data.ts",
     "telegram:test": "tsx scripts/telegram-test-notice.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -62,6 +64,7 @@
     "next": "^16.4.3",
     "next-auth": "5.0.0-beta.32",
     "next-themes": "^0.4.6",
+    "nodemailer": "^10.3.1",
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-day-picker": "^10.0.2",
@@ -91,6 +94,11 @@
     "vitest": "^5.0.5"
   },
   "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "nodemailer": "^10"
+      }
+    },
     "overrides": {
       "sharp": "0.35.5",
       "fast-uri": "^3.1.9",

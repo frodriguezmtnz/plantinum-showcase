@@ -33,6 +33,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Keep the mailer out of the bundle: nodemailer loads optional transports and
+  // is only used from server actions.
+  serverExternalPackages: ['nodemailer'],
   // Next dev blocks HMR/fonts from a different host; quick cloudflared tunnels
   // rotate their hostname, so allow the whole family during development.
   allowedDevOrigins: ['*.trycloudflare.com'],
