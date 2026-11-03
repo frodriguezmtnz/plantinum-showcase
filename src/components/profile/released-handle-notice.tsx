@@ -15,9 +15,10 @@ export function ReleasedHandleNotice({ username }: { username: string }) {
         This trophy hunter changed their handle
       </h1>
       <p className="mt-3 max-w-md text-muted-foreground">
-        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground">
-          /u/{username}
-        </code>{' '}
+        The user{' '}
+        <strong className="font-semibold text-foreground">
+          &quot;{username}&quot;
+        </strong>{' '}
         is no longer in use. Ask them for their current profile link, or keep
         exploring other hunters and platinums.
       </p>

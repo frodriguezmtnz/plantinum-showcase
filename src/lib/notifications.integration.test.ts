@@ -71,13 +71,13 @@ describe.skipIf(!url)('notifications.ts — Postgres integration', () => {
         {
           userId: u.alice,
           kind: 'FOLLOWED_PLATE',
-          title: 'Points at old',
+          title: `@${handle.old} posted a new platinum`,
           linkUrl: `/u/${handle.old}`,
         },
         {
           userId: u.bob,
           kind: 'NEW_FOLLOWER',
-          title: 'Also points at old',
+          title: `@${handle.old} started following you`,
           linkUrl: `/u/${handle.old}`,
         },
       ],
@@ -143,13 +143,14 @@ describe.skipIf(!url)('notifications.ts — Postgres integration', () => {
     expect(updated).toBe(2);
 
     const rows = await prisma.notification.findMany({
-      where: { title: { in: ['Points at old', 'Also points at old'] } },
-      select: { userId: true, linkUrl: true },
+      where: { linkUrl: `/u/${handle.next}` },
+      select: { userId: true, title: true },
     });
     expect(rows).toHaveLength(2);
     expect(
-      rows.every((row) => row.linkUrl === `/u/${handle.next}`),
+      rows.every((row) => row.title.includes(`@${handle.next}`)),
     ).toBe(true);
+    expect(rows.some((row) => row.title.includes(`@${handle.old}`))).toBe(false);
     // The repair is inbox-agnostic: both owners were updated.
     expect(new Set(rows.map((row) => row.userId))).toEqual(
       new Set([u.alice, u.bob]),
