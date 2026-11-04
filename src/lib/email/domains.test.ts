@@ -18,6 +18,11 @@ describe('disposable domain matcher', () => {
     expect(await isDisposableEmail('someone@10minutemail.com')).toBe(true);
   });
 
+  it('flags curated domains missing from the upstream snapshot', async () => {
+    expect(await isDisposableEmail('someone@javafs.com')).toBe(true);
+    expect(await isDisposableEmail('someone@inbox.javafs.com')).toBe(true);
+  });
+
   it('flags subdomains by walking the parent suffixes', async () => {
     expect(await isDisposableEmail('someone@inbox.mailinator.com')).toBe(true);
     expect(await isDisposableEmail('someone@a.b.mailinator.com')).toBe(true);

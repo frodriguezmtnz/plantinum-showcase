@@ -1,14 +1,20 @@
 import { domainToASCII } from 'node:url';
 import domains from './disposable-domains.json';
+import extraDomains from './disposable-domains-extra.json';
 
 /**
  * Snapshot of https://github.com/disposable-email-domains/disposable-email-domains
  * (CC0). Regenerate with `pnpm update:disposable-domains`.
  *
+ * `disposable-domains-extra.json` holds the curated domains the upstream list
+ * misses, so refresh runs never drop them.
+ *
  * The list stores registrable domains, so we check the address domain and every
  * parent suffix (`a.b.mailinator.com` -> `b.mailinator.com` -> `mailinator.com`).
  */
-const BLOCKLIST = new Set(domains.map((domain) => domain.toLowerCase()));
+const BLOCKLIST = new Set(
+  [...domains, ...extraDomains.domains].map((domain) => domain.toLowerCase()),
+);
 
 const ALLOWLIST = new Set(
   (process.env.EMAIL_DOMAIN_ALLOWLIST ?? '')

@@ -21,6 +21,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       scriptSrc,
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://images.unsplash.com https://picsum.photos https://i.giphy.com https://placehold.co https://i.pravatar.cc",
       "font-src 'self' data:",
