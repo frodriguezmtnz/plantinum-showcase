@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
+import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import bcrypt from "bcrypt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -42,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.username,
           email: user.email,
-          image: user.image,
+          image: user.image ?? generatedAvatarUrl(user.username ?? user.email),
           role: user.role,
           emailConfirmed: Boolean(user.emailVerified),
         };
@@ -54,6 +55,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.username = user.name;
+        token.picture =
+          user.image ?? generatedAvatarUrl(user.name ?? user.email);
         // Cached for UI hints only — authorization always re-reads the role
         // from the database so a promotion takes effect without re-login.
         token.role = user.role;
@@ -79,7 +82,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.id = userId;
           token.username = fresh.username;
           token.email = fresh.email;
-          token.picture = fresh.image;
+          token.picture =
+            fresh.image ?? generatedAvatarUrl(fresh.username ?? userId);
           token.role = fresh.role;
           token.emailConfirmed = Boolean(fresh.emailVerified);
         }

@@ -114,7 +114,6 @@ export async function registerAction(_state: RegisterState, formData: FormData):
         name: username,
         email,
         passwordHash,
-        image: `https://i.pravatar.cc/150?u=${encodeURIComponent(username)}`,
       },
       select: { id: true },
     });

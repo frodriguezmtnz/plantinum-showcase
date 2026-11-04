@@ -23,7 +23,7 @@ const securityHeaders = [
       scriptSrc,
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://images.unsplash.com https://picsum.photos https://i.giphy.com https://placehold.co https://i.pravatar.cc",
+      "img-src 'self' data: blob: https://images.unsplash.com https://picsum.photos https://i.giphy.com https://placehold.co",
       "font-src 'self' data:",
       "connect-src 'self'",
       "frame-ancestors 'self'",

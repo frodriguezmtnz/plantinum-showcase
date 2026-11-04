@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { announceSessionRefresh } from '@/lib/session-events';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { generatedAvatarUrl } from '@/lib/generated-avatar';
 import { Button } from '@/components/ui/button';
 import { AvatarCropperDialog } from '@/components/settings/avatar-cropper-dialog';
 
@@ -42,6 +43,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
   }
 
   const image = override ? override.image : liveImage;
+  const displayImage = image ?? generatedAvatarUrl(username);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [cropOpen, setCropOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -167,7 +169,7 @@ export function AvatarField({ username, initialImage }: AvatarFieldProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
       <Avatar className="h-20 w-20 border border-border/60">
-        <AvatarImage src={image ?? undefined} alt={`Avatar for ${username}`} />
+        <AvatarImage src={displayImage} alt={`Avatar for ${username}`} />
         <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
       </Avatar>
 

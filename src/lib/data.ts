@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sanitizeBio } from "@/lib/bio";
+import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import {
   legacyProfileLink,
   toProfileLinkView,
@@ -92,7 +93,7 @@ const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
 export const toUserView = (u: UserRecord): User => ({
   id: u.id,
   username: u.username ?? 'Unknown',
-  avatarUrl: u.image ?? `https://i.pravatar.cc/150?u=${u.id}`,
+  avatarUrl: u.image ?? generatedAvatarUrl(u.username ?? u.id),
 });
 
 async function attachVoteStatus(

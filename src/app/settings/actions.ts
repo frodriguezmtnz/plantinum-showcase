@@ -20,6 +20,7 @@ import {
   putImage,
 } from "@/lib/b2";
 import { imageKeyFromUrl } from "@/lib/moderation-core";
+import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import { usernameIsTaken, reserveUsername } from "@/lib/username-registry";
 import {
   formatUsernameChangeDate,
@@ -72,10 +73,6 @@ const RATE_LIMITED =
 async function requireUserId(): Promise<string | null> {
   const session = await auth();
   return session?.user?.id ?? null;
-}
-
-function defaultAvatarFor(username: string | null, userId: string): string {
-  return `https://i.pravatar.cc/150?u=${encodeURIComponent(username ?? userId)}`;
 }
 
 function revalidateProfile(username: string | null | undefined): void {
@@ -403,9 +400,10 @@ export async function removeAvatar(): Promise<AvatarUpdateResult> {
     where: { id: userId },
     select: { username: true },
   });
-  const image = defaultAvatarFor(user?.username ?? null, userId);
+  const image = generatedAvatarUrl(user?.username ?? userId);
 
-  await prisma.user.update({ where: { id: userId }, data: { image } });
+  // No stored image: the view/session layers resolve the generated art.
+  await prisma.user.update({ where: { id: userId }, data: { image: null } });
 
   revalidateProfile(user?.username ?? null);
   revalidatePath("/", "layout");
