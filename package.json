@@ -14,6 +14,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
+    "brand": "node scripts/build-brand-assets.mjs",
     "snapshots": "tsx scripts/backfill-snapshots.ts",
     "set-role": "tsx scripts/set-role.ts",
     "update:disposable-domains": "node scripts/update-disposable-domains.mjs",
