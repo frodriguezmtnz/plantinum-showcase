@@ -98,6 +98,18 @@ test.describe('public pages', () => {
     ).toBeVisible({ timeout: 20_000 });
   });
 
+  test('account utility routes render without site chrome', async ({ page }) => {
+    for (const path of ['/forgot-password', '/reset-password', '/verify-email']) {
+      await page.goto(path);
+      await expect(page.locator('header')).toHaveCount(0);
+      await expect(page.locator('footer')).toHaveCount(0);
+    }
+
+    await page.goto('/forgot-password');
+    await expect(page.getByText('Locked out? Sorted.')).toBeVisible();
+    await expect(page.getByText(/Your platinum trophy showcase/i)).toHaveCount(0);
+  });
+
   test('registration rejects disposable email domains', async ({ page }) => {
     await page.goto('/register');
 
