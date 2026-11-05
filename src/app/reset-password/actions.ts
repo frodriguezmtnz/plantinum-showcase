@@ -2,9 +2,9 @@
 
 import { after } from "next/server";
 import { headers } from "next/headers";
-import bcrypt from "bcrypt";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { passwordPolicyError } from "@/lib/password";
+import { PASSWORD_REUSE_ERROR } from "@/lib/password-history";
 import {
   consumePasswordReset,
   sendPasswordChangedNotice,
@@ -42,9 +42,10 @@ export async function resetPasswordAction(
   if (passwordIssue) return { error: passwordIssue };
   if (password !== confirm) return { error: "The passwords do not match." };
 
-  const passwordHash = await bcrypt.hash(password, 10);
-  const result = await consumePasswordReset({ token, passwordHash });
-  if (!result.ok) return { error: INVALID_LINK };
+  const result = await consumePasswordReset({ token, password });
+  if (!result.ok) {
+    return { error: result.reason === "reused" ? PASSWORD_REUSE_ERROR : INVALID_LINK };
+  }
 
   after(async () => {
     try {

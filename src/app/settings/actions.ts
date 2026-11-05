@@ -12,6 +12,11 @@ import { repointNotificationLinks } from "@/lib/notifications";
 import { requestEmailVerification } from "@/lib/email/verification";
 import { sendPasswordChangedNotice } from "@/lib/email/password-reset";
 import { checkRateLimit } from "@/lib/rate-limit";
+import {
+  isRecentPassword,
+  rememberPassword,
+  PASSWORD_REUSE_ERROR,
+} from "@/lib/password-history";
 import { detectImageType } from "@/lib/image-signature";
 import {
   avatarImageKey,
@@ -442,20 +447,31 @@ export async function changePassword(
   if (next !== confirm) {
     return { success: false, error: "The new passwords do not match." };
   }
-  if (next === current) {
-    return {
-      success: false,
-      error: "The new password must be different from the current one.",
-    };
-  }
-
   const valid = await bcrypt.compare(current, user.passwordHash);
   if (!valid) {
     return { success: false, error: "The current password is incorrect." };
   }
 
+  if (
+    await isRecentPassword({
+      db: prisma,
+      userId,
+      currentHash: user.passwordHash,
+      password: next,
+    })
+  ) {
+    return { success: false, error: PASSWORD_REUSE_ERROR };
+  }
+
   const passwordHash = await bcrypt.hash(next, 10);
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+  await prisma.$transaction(async (tx) => {
+    await rememberPassword({
+      db: tx,
+      userId,
+      passwordHash: user.passwordHash!,
+    });
+    await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+  });
 
   after(async () => {
     try {

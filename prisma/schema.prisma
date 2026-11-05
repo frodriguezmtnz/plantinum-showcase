@@ -74,39 +74,40 @@ enum AiVerdictLabel {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  username      String?   @unique
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  plan          Plan      @default(FREE)
-  role          Role      @default(USER)
+  id                    String    @id @default(cuid())
+  name                  String?
+  username              String?   @unique
+  email                 String    @unique
+  emailVerified         DateTime?
+  image                 String?
+  passwordHash          String?
+  plan                  Plan      @default(FREE)
+  role                  Role      @default(USER)
   // Public profile extras, edited from /settings.
-  bio           String?
-  psnProfileUrl String?
+  bio                   String?
+  psnProfileUrl         String?
   // Handle changes are limited to once every 12 months.
-  usernameChangedAt DateTime?
+  usernameChangedAt     DateTime?
   // Opt-out for the "a hunter you follow posted a platinum" notices.
-  notifyFollowedUploads Boolean @default(true)
+  notifyFollowedUploads Boolean   @default(true)
   // Confirmed NSFW/serious moderation hits. Escalates the upload flow.
-  strikes       Int       @default(0)
-  createdAt     DateTime  @default(now())
+  strikes               Int       @default(0)
+  createdAt             DateTime  @default(now())
 
-  accounts      Account[]
-  sessions      Session[]
-  platinums     Platinum[]
-  votes         Vote[]    @relation("UserVotes")
-  reports       Report[]
-  notifications Notification[]
+  accounts        Account[]
+  sessions        Session[]
+  platinums       Platinum[]
+  votes           Vote[]            @relation("UserVotes")
+  reports         Report[]
+  notifications   Notification[]
+  passwordHistory PasswordHistory[]
   // One-way social graph: who this user follows and who follows them.
-  following     Follow[]  @relation("Following")
-  followers     Follow[]  @relation("Followers")
+  following       Follow[]          @relation("Following")
+  followers       Follow[]          @relation("Followers")
   // Trophy-site profiles (one per provider), e.g. PSNProfiles + Exophase.
-  profileLinks  ProfileLink[]
+  profileLinks    ProfileLink[]
   // One-shot password reset / email verification tokens.
-  emailTokens   EmailToken[]
+  emailTokens     EmailToken[]
 }
 
 // A trophy-site profile for a user. One row per provider: the PSN handle is
@@ -135,6 +136,19 @@ model UsernameHistory {
   createdAt     DateTime @default(now())
 
   @@index([userId])
+}
+
+// The last few passwords a user cannot reuse. We store the *previous* hashes
+// (never plaintext) and prune to PASSWORD_HISTORY_LIMIT on every change.
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 // One active token per (user, kind): requesting a fresh link replaces the
@@ -203,24 +217,24 @@ model VerificationToken {
 }
 
 model Platinum {
-  id           String   @id @default(cuid())
-  hash         String
-  gameName     String
-  platform     String
-  platinumDate DateTime
-  isSpoiler    Boolean  @default(false)
-  comment      String?
+  id                String           @id @default(cuid())
+  hash              String
+  gameName          String
+  platform          String
+  platinumDate      DateTime
+  isSpoiler         Boolean          @default(false)
+  comment           String?
   userId            String
-  votes             Int      @default(0)
-  monthlyVotes      Int      @default(0)
+  votes             Int              @default(0)
+  monthlyVotes      Int              @default(0)
   monthlyVotesMonth String?
   imageUrl          String
   imageHint         String
   width             Int
   height            Int
-  watermarked       Boolean    @default(true)
+  watermarked       Boolean          @default(true)
   moderationStatus  ModerationStatus @default(PUBLISHED)
-  createdAt         DateTime   @default(now())
+  createdAt         DateTime         @default(now())
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   voteRecords Vote[]   @relation("PlatinumVotes")

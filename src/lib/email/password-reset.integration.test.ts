@@ -1,11 +1,21 @@
+import bcrypt from 'bcrypt';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 const url = process.env.TEST_DATABASE_URL;
+
+const PASSWORDS = {
+  current: 'Current!Passw0rd123',
+  previousNewer: 'Previous!Newer12345',
+  previousOlder: 'Previous!Older12345',
+  fresh: 'Fresh!Passw0rd1234',
+  other: 'Other!Passw0rd12345',
+};
 
 describe.skipIf(!url)('password reset — Postgres integration', () => {
   let prisma: (typeof import('@/lib/prisma'))['prisma'];
   let send: typeof import('@/lib/email/send');
   let reset: typeof import('@/lib/email/password-reset');
+  let currentHash = '';
 
   const stamp = Date.now();
   const user = {
@@ -34,13 +44,14 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
     prisma = (await import('@/lib/prisma')).prisma;
     send = await import('@/lib/email/send');
     reset = await import('@/lib/email/password-reset');
+    currentHash = await bcrypt.hash(PASSWORDS.current, 10);
 
     await prisma.user.create({
       data: {
         id: user.id,
         email: user.email,
         username: user.username,
-        passwordHash: 'old-hash',
+        passwordHash: currentHash,
       },
     });
   });
@@ -48,17 +59,37 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
   beforeEach(async () => {
     send.clearOutbox();
     await prisma.emailToken.deleteMany({ where: { userId: user.id } });
+    await prisma.passwordHistory.deleteMany({ where: { userId: user.id } });
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: 'old-hash', emailVerified: null },
+      data: { passwordHash: currentHash, emailVerified: null },
     });
   });
 
   afterAll(async () => {
     await prisma.emailToken.deleteMany({ where: { userId: user.id } });
+    await prisma.passwordHistory.deleteMany({ where: { userId: user.id } });
     await prisma.user.deleteMany({ where: { id: user.id } });
     await prisma.$disconnect();
   });
+
+  async function seedPreviousPasswords() {
+    const now = Date.now();
+    await prisma.passwordHistory.createMany({
+      data: [
+        {
+          userId: user.id,
+          passwordHash: await bcrypt.hash(PASSWORDS.previousOlder, 10),
+          createdAt: new Date(now - 60_000),
+        },
+        {
+          userId: user.id,
+          passwordHash: await bcrypt.hash(PASSWORDS.previousNewer, 10),
+          createdAt: new Date(now - 30_000),
+        },
+      ],
+    });
+  }
 
   it('issues a single-use link for an existing account', async () => {
     const result = await reset.requestPasswordReset(user.email);
@@ -79,7 +110,7 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
 
     const consumed = await reset.consumePasswordReset({
       token,
-      passwordHash: 'new-hash',
+      password: PASSWORDS.fresh,
     });
     expect(consumed.ok).toBe(true);
 
@@ -87,15 +118,77 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
       where: { id: user.id },
       select: { passwordHash: true, emailVerified: true },
     });
-    expect(stored?.passwordHash).toBe('new-hash');
+    expect(stored?.passwordHash).toBeTruthy();
+    expect(await bcrypt.compare(PASSWORDS.fresh, stored!.passwordHash!)).toBe(
+      true,
+    );
     expect(stored?.emailVerified).toBeInstanceOf(Date);
     expect(await reset.getPasswordResetState(token)).toBe('used');
 
+    // The replaced hash is kept so it cannot be reused right away.
+    const history = await prisma.passwordHistory.findMany({
+      where: { userId: user.id },
+      select: { passwordHash: true },
+    });
+    expect(history).toHaveLength(1);
+    expect(await bcrypt.compare(PASSWORDS.current, history[0]!.passwordHash)).toBe(
+      true,
+    );
+
     const replay = await reset.consumePasswordReset({
       token,
-      passwordHash: 'another-hash',
+      password: PASSWORDS.other,
     });
     expect(replay.ok).toBe(false);
+  });
+
+  it('rejects the current password without burning the link', async () => {
+    await reset.requestPasswordReset(user.email);
+    const token = issuedToken();
+
+    expect(
+      await reset.consumePasswordReset({
+        token,
+        password: PASSWORDS.current,
+      }),
+    ).toEqual({ ok: false, reason: 'reused' });
+
+    expect(await reset.getPasswordResetState(token)).toBe('valid');
+    const stored = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { passwordHash: true },
+    });
+    expect(stored?.passwordHash).toBe(currentHash);
+  });
+
+  it('rejects the two most recent previous passwords', async () => {
+    await seedPreviousPasswords();
+    await reset.requestPasswordReset(user.email);
+    const token = issuedToken();
+
+    for (const password of [
+      PASSWORDS.previousNewer,
+      PASSWORDS.previousOlder,
+    ]) {
+      expect(await reset.consumePasswordReset({ token, password })).toEqual({
+        ok: false,
+        reason: 'reused',
+      });
+    }
+
+    expect(await reset.getPasswordResetState(token)).toBe('valid');
+  });
+
+  it('allows a password older than the stored history', async () => {
+    await seedPreviousPasswords();
+    await reset.requestPasswordReset(user.email);
+    const token = issuedToken();
+
+    const consumed = await reset.consumePasswordReset({
+      token,
+      password: PASSWORDS.fresh,
+    });
+    expect(consumed.ok).toBe(true);
   });
 
   it('replaces the previous link when a second one is requested', async () => {
@@ -123,7 +216,12 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
 
     expect(await reset.getPasswordResetState(token)).toBe('expired');
     expect(
-      (await reset.consumePasswordReset({ token, passwordHash: 'nope' })).ok,
+      (
+        await reset.consumePasswordReset({
+          token,
+          password: PASSWORDS.other,
+        })
+      ).ok,
     ).toBe(false);
   });
 

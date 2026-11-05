@@ -1,5 +1,7 @@
+import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
 import { normalizeEmail } from '@/lib/email/address';
+import { isRecentPassword, rememberPassword } from '@/lib/password-history';
 import { sendEmail } from '@/lib/email/send';
 import {
   emailTokenUrl,
@@ -81,16 +83,16 @@ export async function getPasswordResetState(
 
 export type ConsumeResetResult =
   | { ok: true; user: ResetUser }
-  | { ok: false; reason: 'invalid' };
+  | { ok: false; reason: 'invalid' | 'reused' };
 
 /** Single-use, race-safe: the conditional update claims the token first. */
 export async function consumePasswordReset({
   token,
-  passwordHash,
+  password,
   now = new Date(),
 }: {
   token: string;
-  passwordHash: string;
+  password: string;
   now?: Date;
 }): Promise<ConsumeResetResult> {
   const row = await prisma.emailToken.findUnique({
@@ -101,7 +103,7 @@ export async function consumePasswordReset({
       kind: true,
       usedAt: true,
       expiresAt: true,
-      user: { select: { email: true, username: true } },
+      user: { select: { email: true, username: true, passwordHash: true } },
     },
   });
 
@@ -114,7 +116,22 @@ export async function consumePasswordReset({
     return { ok: false, reason: 'invalid' };
   }
 
+  const passwordHash = await bcrypt.hash(password, 10);
+
   return prisma.$transaction(async (tx) => {
+    // Checked before claiming the token, so a rejected password does not burn
+    // the 60-minute link the user just received.
+    if (
+      await isRecentPassword({
+        db: tx,
+        userId: row.userId,
+        currentHash: row.user.passwordHash,
+        password,
+      })
+    ) {
+      return { ok: false as const, reason: 'reused' as const };
+    }
+
     const claimed = await tx.emailToken.updateMany({
       where: {
         id: row.id,
@@ -125,6 +142,14 @@ export async function consumePasswordReset({
     });
     if (claimed.count === 0) {
       return { ok: false as const, reason: 'invalid' as const };
+    }
+
+    if (row.user.passwordHash) {
+      await rememberPassword({
+        db: tx,
+        userId: row.userId,
+        passwordHash: row.user.passwordHash,
+      });
     }
 
     await tx.user.update({
