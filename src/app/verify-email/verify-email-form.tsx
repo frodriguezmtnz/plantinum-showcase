@@ -1,10 +1,11 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, Loader2, MailCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { fireVerificationConfetti } from '@/lib/celebrate';
 import { verifyEmailAction, type VerifyEmailState } from './actions';
 
 const initialState: VerifyEmailState = {};
@@ -15,14 +16,21 @@ export function VerifyEmailForm({ token }: { token: string }) {
     initialState,
   );
   const { refresh } = useAuth();
+  const celebrated = useRef(false);
 
   useEffect(() => {
-    if (state.success) refresh().catch(() => undefined);
+    if (!state.success) return;
+    refresh().catch(() => undefined);
+
+    if (!celebrated.current) {
+      celebrated.current = true;
+      void fireVerificationConfetti();
+    }
   }, [state.success, refresh]);
 
   if (state.success) {
     return (
-      <div className="space-y-4 text-center">
+      <div className="space-y-4 text-center" role="status" aria-live="polite">
         <CheckCircle2 className="mx-auto h-12 w-12 text-live" aria-hidden />
         <p className="text-sm text-muted-foreground">
           Your email is verified. Uploading, voting and following are unlocked.
