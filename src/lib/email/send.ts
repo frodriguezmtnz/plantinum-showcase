@@ -64,15 +64,18 @@ let smtpTransport: Transporter | null = null;
 function getSmtpTransport(): Transporter {
   if (smtpTransport) return smtpTransport;
 
+  const host = process.env.EMAIL_SMTP_HOST?.trim();
   const user = process.env.EMAIL_SMTP_USER;
   const pass = process.env.EMAIL_SMTP_PASS;
-  if (!user || !pass) {
-    throw new Error('EMAIL_SMTP_USER and EMAIL_SMTP_PASS are required for SMTP');
+  if (!host || !user || !pass) {
+    throw new Error(
+      'EMAIL_SMTP_HOST, EMAIL_SMTP_USER and EMAIL_SMTP_PASS are required for SMTP',
+    );
   }
 
   const port = Number(process.env.EMAIL_SMTP_PORT ?? 587);
   smtpTransport = nodemailer.createTransport({
-    host: process.env.EMAIL_SMTP_HOST?.trim() || 'smtp-relay.brevo.com',
+    host,
     port: Number.isFinite(port) ? port : 587,
     secure: (Number.isFinite(port) ? port : 587) === 465,
     auth: { user, pass },
