@@ -60,7 +60,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] **Celebración + chrome de cuentas**: confirmar el email dispara un confetti one-shot (`canvas-confetti` en carga diferida, paleta duotone vía tokens, respeta `prefers-reduced-motion` y `?motion=off`); `/verify-email`, `/forgot-password` y `/reset-password` son chromeless como login/registro y su aside cambia el hero de marketing por una ilustración ambiental (sobre+check / escudo+llave) con microcopy del flujo. e2e cubre la ausencia de header/footer.
 - [x] **Pruebas de email en local**: `EMAIL_TRANSPORT=ethereal` (URL de preview, sin cuenta) y `pnpm email:test <destinatario>` para validar el transporte. Runbook completo (Resend/Brevo, DNS, Vercel) en `EMAIL.md`.
 - [ ] **Ops email (fase 2)**: cuenta Resend (o Brevo como alternativa), dominio con DKIM/SPF, sender verificado, API/SMTP key y `EMAIL_*` en Vercel. Check-list y registros DNS en `EMAIL.md`.
-- [ ] **Revocación de sesiones JWT** tras reset/cambio de contraseña: hoy el JWT sigue vivo hasta caducar (30 días). Opciones: `sessionVersion` + check por request o migrar a sesiones DB.
+- [x] **Revocación de sesiones JWT** tras reset/cambio de contraseña: `User.sessionVersion` se compara en el callback `jwt` de cada petición; el cambio y el reset incrementan la versión, Auth.js limpia la cookie al devolver `null` y la pestaña actual cierra sesión pidiendo re-login.
 - [ ] **Cambio de email** (reutilizar `EmailToken` con un nuevo kind) y auditoría/marcado de cuentas existentes en dominios desechables.
 - [ ] **2FA (TOTP)** justo antes de Stripe: `/settings` (nueva) + login en dos pasos (cookie firmada + nonce) + códigos de recuperación; deps `otplib` + `qrcode`.
 - [ ] Fase 1 cobros (Stripe): checkout para PRO/PLATINUM, webhook que escriba `User.plan`, precio definitivo de PLATINUM, y decidir si borrar/subir de nuevo consume cuota.
@@ -84,9 +84,9 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] `getUsers()` cargaba TODOS los usuarios en Explorar solo para mapear nombre (resuelto con #3).
 - [x] Endurecido el acceso por email/contraseña: normalización de email al entrar, validación de username en servidor (max 20, charset) y P2002 traducido a mensaje.
 - [x] Login con throttle anti brute-force (8 intentos/5 min por email y 20 por IP, `src/lib/rate-limit.ts`).
-- [ ] Verificación de email al registrarse (hoy no se comprueba) y recuperación de contraseña real.
+- [x] Verificación de email al registrarse y recuperación de contraseña real (`/verify-email`, `/forgot-password`, `/reset-password`).
 - [x] Edición de un platino propio (solo metadata) — ver tanda en "Pulido pre-Vercel".
-- [ ] Sin snapshots históricos del Salón de la Fama: el ranking es solo del mes en curso; retirar un voto no puede reescribir el pasado porque no se archiva.
+- [x] Sin snapshots históricos del Salón de la Fama: resuelto con `MonthlyResult` (cierre al primer voto del mes siguiente o `pnpm snapshots`); retirar un voto ya no reescribe el pasado.
 - [x] Rate limiting específico en `toggleVoteForPlatinum` (20/min por usuario, `src/lib/rate-limit.ts`) además del de upload.
 
 ## Moderación / seguridad
@@ -109,7 +109,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] Mostrar/ocultar contraseña en login y registro (`PasswordInput` con Eye/EyeOff).
 - [x] Rediseño del login/registro: split-screen con panel de marca y sin header/footer (inmersivo) vía `AuthShell` + `SiteChrome`.
 - [ ] OAuth de Google (el botón ya existe pero está `disabled` "Próximamente" en `src/app/login/page.tsx`).
-- [ ] "¿Olvidaste tu contraseña?" sin flujo real (hoy es texto opaco).
+- [x] "¿Olvidaste tu contraseña?" con flujo real (`/forgot-password` + `/reset-password`).
 - [x] Progreso de subida (barra/estado) en el upload: progreso real de compresión + fase de subida. Drag & drop ahora funciona de verdad.
 
 ## SEO / share
