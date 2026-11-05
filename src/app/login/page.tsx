@@ -21,10 +21,11 @@ export default function LoginPage({
     callbackUrl?: string;
     reset?: string;
     verified?: string;
+    password?: string;
   }>;
 }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
-  const { callbackUrl, reset, verified } = use(searchParams);
+  const { callbackUrl, reset, verified, password } = use(searchParams);
   const router = useRouter();
   const { refresh } = useAuth();
   // Refreshing the session re-renders the provider, so guard against running
@@ -34,9 +35,11 @@ export default function LoginPage({
   const notice =
     reset === 'success'
       ? 'Password updated. Sign in with your new password.'
-      : verified === '1'
-        ? 'Email verified. Uploading, voting and following are unlocked.'
-        : undefined;
+      : password === 'changed'
+        ? 'Password changed. Sign in again with your new password; other sessions were closed.'
+        : verified === '1'
+          ? 'Email verified. Uploading, voting and following are unlocked.'
+          : undefined;
 
   // Sign-in runs in a server action, so the client session provider has to be
   // refreshed before navigating or the header keeps showing "Sign in".

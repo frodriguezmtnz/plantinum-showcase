@@ -81,6 +81,8 @@ model User {
   emailVerified         DateTime?
   image                 String?
   passwordHash          String?
+  // Bumped on password change/reset so every JWT issued before it is rejected.
+  sessionVersion        Int       @default(0)
   plan                  Plan      @default(FREE)
   role                  Role      @default(USER)
   // Public profile extras, edited from /settings.

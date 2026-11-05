@@ -470,7 +470,11 @@ export async function changePassword(
       userId,
       passwordHash: user.passwordHash!,
     });
-    await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+    await tx.user.update({
+      where: { id: userId },
+      // Invalidates every JWT issued before this change, including this tab.
+      data: { passwordHash, sessionVersion: { increment: 1 } },
+    });
   });
 
   after(async () => {

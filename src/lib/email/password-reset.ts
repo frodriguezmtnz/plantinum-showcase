@@ -154,7 +154,8 @@ export async function consumePasswordReset({
 
     await tx.user.update({
       where: { id: row.userId },
-      data: { passwordHash },
+      // Invalidates every JWT issued before the reset.
+      data: { passwordHash, sessionVersion: { increment: 1 } },
     });
     // Receiving the email proves ownership, so a reset also verifies it.
     await tx.user.updateMany({
