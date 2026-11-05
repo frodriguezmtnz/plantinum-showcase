@@ -19,6 +19,7 @@
     "update:disposable-domains": "node scripts/update-disposable-domains.mjs",
     "db:wipe": "tsx scripts/wipe-dev-data.ts",
     "telegram:test": "tsx scripts/telegram-test-notice.ts",
+    "email:test": "tsx scripts/email-test.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
