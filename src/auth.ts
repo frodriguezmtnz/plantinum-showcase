@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
+import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import bcrypt from "bcrypt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -42,8 +43,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.username,
           email: user.email,
-          image: user.image,
+          image: user.image ?? generatedAvatarUrl(user.username ?? user.email),
           role: user.role,
+          emailConfirmed: Boolean(user.emailVerified),
         };
       },
     }),
@@ -53,9 +55,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id;
         token.username = user.name;
+        token.picture =
+          user.image ?? generatedAvatarUrl(user.name ?? user.email);
         // Cached for UI hints only — authorization always re-reads the role
         // from the database so a promotion takes effect without re-login.
         token.role = user.role;
+        token.emailConfirmed = Boolean(user.emailConfirmed);
       }
 
       // Settings calls useSession().update() after changing the handle, avatar
@@ -65,14 +70,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (trigger === "update" && userId) {
         const fresh = await prisma.user.findUnique({
           where: { id: userId },
-          select: { username: true, email: true, image: true, role: true },
+          select: {
+            username: true,
+            email: true,
+            image: true,
+            role: true,
+            emailVerified: true,
+          },
         });
         if (fresh) {
           token.id = userId;
           token.username = fresh.username;
           token.email = fresh.email;
-          token.picture = fresh.image;
+          token.picture =
+            fresh.image ?? generatedAvatarUrl(fresh.username ?? userId);
           token.role = fresh.role;
+          token.emailConfirmed = Boolean(fresh.emailVerified);
         }
       }
 
@@ -85,6 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.name =
           (token.username as string | undefined) ?? session.user.name;
         session.user.role = (token.role as Role | undefined) ?? "USER";
+        session.user.emailConfirmed = Boolean(token.emailConfirmed);
       }
       return session;
     },

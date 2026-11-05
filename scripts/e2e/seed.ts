@@ -25,8 +25,8 @@ async function main() {
 
   const user = await prisma.user.upsert({
     where: { email },
-    update: { name: username, username, passwordHash },
-    create: { email, name: username, username, passwordHash },
+    update: { name: username, username, passwordHash, emailVerified: new Date() },
+    create: { email, name: username, username, passwordHash, emailVerified: new Date() },
     select: { id: true },
   });
 
@@ -63,12 +63,13 @@ async function main() {
   // like it (self-votes are blocked) and the undo path can be exercised.
   const neighbor = await prisma.user.upsert({
     where: { email: neighborEmail },
-    update: { name: neighborUsername, username: neighborUsername },
+    update: { name: neighborUsername, username: neighborUsername, emailVerified: new Date() },
     create: {
       email: neighborEmail,
       name: neighborUsername,
       username: neighborUsername,
       passwordHash,
+      emailVerified: new Date(),
     },
     select: { id: true },
   });

@@ -9,6 +9,9 @@ interface AuthShellProps {
   children: ReactNode;
   footer?: ReactNode;
   error?: string;
+  notice?: string;
+  /** Replaces the marketing highlights on utility flows (verify, reset…). */
+  aside?: ReactNode;
 }
 
 const HIGHLIGHTS = [
@@ -17,7 +20,15 @@ const HIGHLIGHTS = [
   { icon: Users, text: 'Show off your profile and climb the monthly ranking.' },
 ];
 
-export function AuthShell({ title, description, children, footer, error }: AuthShellProps) {
+export function AuthShell({
+  title,
+  description,
+  children,
+  footer,
+  error,
+  notice,
+  aside,
+}: AuthShellProps) {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
@@ -26,24 +37,26 @@ export function AuthShell({ title, description, children, footer, error }: AuthS
           <span className="font-headline text-xl font-bold tracking-tight">Platinum Showcase</span>
         </Link>
 
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h2 className="font-headline text-4xl font-bold leading-tight">
-              Your <span className="text-primary">platinum trophy</span> showcase.
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Upload your achievements, flex your collection, and compete in the Hall of Fame.
-            </p>
+        {aside ?? (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h2 className="font-headline text-4xl font-bold leading-tight">
+                Your <span className="text-primary">platinum trophy</span> showcase.
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Upload your achievements, flex your collection, and compete in the Hall of Fame.
+              </p>
+            </div>
+            <ul className="space-y-4 text-sm">
+              {HIGHLIGHTS.map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-start gap-3">
+                  <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <span className="text-muted-foreground">{text}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="space-y-4 text-sm">
-            {HIGHLIGHTS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3">
-                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                <span className="text-muted-foreground">{text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        )}
 
         <p className="text-xs text-muted-foreground">Platinum Showcase</p>
       </aside>
@@ -63,6 +76,12 @@ export function AuthShell({ title, description, children, footer, error }: AuthS
           {error && (
             <div className="mt-4 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
+            </div>
+          )}
+
+          {notice && (
+            <div className="mt-4 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+              {notice}
             </div>
           )}
 

@@ -222,6 +222,10 @@ export default function RegisterPage() {
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isPending ? "Creating account..." : "Create Account"}
         </Button>
+        <p className="-mt-1 text-center text-xs text-muted-foreground">
+          We will email you a link to verify your address. Uploading, voting and
+          following unlock once it is confirmed.
+        </p>
       </form>
 
       <div className="relative my-6">

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getCurrentPeriod } from '@/lib/period';
+import { generatedAvatarUrl } from '@/lib/generated-avatar';
 
 /**
  * Per-period history, built on the immutable `Vote` ledger.
@@ -49,8 +50,6 @@ interface RankingRow {
   avatarUrl: string;
 }
 
-const AVATAR_FALLBACK = (userId: string) => `https://i.pravatar.cc/150?u=${userId}`;
-
 /** The final standings of a single period, aggregated from the live votes. */
 async function buildPeriodRanking(period: string): Promise<RankingRow[]> {
   const grouped = await prisma.vote.groupBy({
@@ -93,7 +92,9 @@ async function buildPeriodRanking(period: string): Promise<RankingRow[]> {
       platform: platinum.platform,
       isSpoiler: platinum.isSpoiler,
       username: platinum.user.username ?? 'Unknown',
-      avatarUrl: platinum.user.image ?? AVATAR_FALLBACK(platinum.user.id),
+      avatarUrl:
+        platinum.user.image ??
+        generatedAvatarUrl(platinum.user.username ?? platinum.user.id),
     });
   }
   return rows;

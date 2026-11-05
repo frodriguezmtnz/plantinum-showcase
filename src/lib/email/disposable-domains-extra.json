@@ -1,0 +1,4 @@
+{
+  "note": "Manually curated disposable domains missing from the upstream snapshot. Keep sorted and lowercase.",
+  "domains": ["javafs.com"]
+}

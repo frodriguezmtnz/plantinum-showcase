@@ -46,19 +46,16 @@ const USERS = [
     id: "1",
     username: "trophy-hunter-1",
     email: "hunter@example.com",
-    image: "https://i.pravatar.cc/150?u=trophy-hunter-1",
   },
   {
     id: "2",
     username: "gamer-goddess",
     email: "goddess@example.com",
-    image: "https://i.pravatar.cc/150?u=gamer-goddess",
   },
   {
     id: "3",
     username: "platinum-player",
     email: "player@example.com",
-    image: "https://i.pravatar.cc/150?u=platinum-player",
   },
 ];
 

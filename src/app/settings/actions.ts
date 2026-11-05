@@ -2,12 +2,21 @@
 
 import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { after } from "next/server";
 import bcrypt from "bcrypt";
 import sharp from "sharp";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { repointNotificationLinks } from "@/lib/notifications";
+import { requestEmailVerification } from "@/lib/email/verification";
+import { sendPasswordChangedNotice } from "@/lib/email/password-reset";
 import { checkRateLimit } from "@/lib/rate-limit";
+import {
+  isRecentPassword,
+  rememberPassword,
+  PASSWORD_REUSE_ERROR,
+} from "@/lib/password-history";
 import { detectImageType } from "@/lib/image-signature";
 import {
   avatarImageKey,
@@ -16,6 +25,7 @@ import {
   putImage,
 } from "@/lib/b2";
 import { imageKeyFromUrl } from "@/lib/moderation-core";
+import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import { usernameIsTaken, reserveUsername } from "@/lib/username-registry";
 import {
   formatUsernameChangeDate,
@@ -68,10 +78,6 @@ const RATE_LIMITED =
 async function requireUserId(): Promise<string | null> {
   const session = await auth();
   return session?.user?.id ?? null;
-}
-
-function defaultAvatarFor(username: string | null, userId: string): string {
-  return `https://i.pravatar.cc/150?u=${encodeURIComponent(username ?? userId)}`;
 }
 
 function revalidateProfile(username: string | null | undefined): void {
@@ -160,6 +166,43 @@ export async function updateNotificationPreferences(
   });
   revalidatePath("/settings");
   return { success: true };
+}
+
+export type ResendVerificationResult =
+  | { success: true; alreadyVerified?: boolean }
+  | { success: false; error: string };
+
+export async function resendVerificationEmail(): Promise<ResendVerificationResult> {
+  const userId = await requireUserId();
+  if (!userId) return { success: false, error: "You need to sign in first." };
+
+  const headerList = await headers();
+  const ip =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "local";
+  const perUser = await checkRateLimit(
+    `verify-resend:${userId}`,
+    3,
+    3_600_000,
+  );
+  const perIp = await checkRateLimit(
+    `verify-resend-ip:${ip}`,
+    10,
+    3_600_000,
+  );
+  if (!perUser.ok || !perIp.ok) {
+    return { success: false, error: RATE_LIMITED };
+  }
+
+  const result = await requestEmailVerification(userId);
+  if (result.sent) return { success: true };
+  if (result.reason === "verified") return { success: true, alreadyVerified: true };
+
+  return {
+    success: false,
+    error: "We could not send the email right now. Try again in a few minutes.",
+  };
 }
 
 /**
@@ -362,9 +405,10 @@ export async function removeAvatar(): Promise<AvatarUpdateResult> {
     where: { id: userId },
     select: { username: true },
   });
-  const image = defaultAvatarFor(user?.username ?? null, userId);
+  const image = generatedAvatarUrl(user?.username ?? userId);
 
-  await prisma.user.update({ where: { id: userId }, data: { image } });
+  // No stored image: the view/session layers resolve the generated art.
+  await prisma.user.update({ where: { id: userId }, data: { image: null } });
 
   revalidateProfile(user?.username ?? null);
   revalidatePath("/", "layout");
@@ -387,7 +431,7 @@ export async function changePassword(
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { passwordHash: true },
+    select: { passwordHash: true, email: true, username: true },
   });
   if (!user?.passwordHash) {
     return {
@@ -403,20 +447,44 @@ export async function changePassword(
   if (next !== confirm) {
     return { success: false, error: "The new passwords do not match." };
   }
-  if (next === current) {
-    return {
-      success: false,
-      error: "The new password must be different from the current one.",
-    };
-  }
-
   const valid = await bcrypt.compare(current, user.passwordHash);
   if (!valid) {
     return { success: false, error: "The current password is incorrect." };
   }
 
+  if (
+    await isRecentPassword({
+      db: prisma,
+      userId,
+      currentHash: user.passwordHash,
+      password: next,
+    })
+  ) {
+    return { success: false, error: PASSWORD_REUSE_ERROR };
+  }
+
   const passwordHash = await bcrypt.hash(next, 10);
-  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+  await prisma.$transaction(async (tx) => {
+    await rememberPassword({
+      db: tx,
+      userId,
+      passwordHash: user.passwordHash!,
+    });
+    await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+  });
+
+  after(async () => {
+    try {
+      await sendPasswordChangedNotice({
+        userId,
+        email: user.email,
+        username: user.username,
+      });
+    } catch (error) {
+      console.error("[settings] could not send the security notice", error);
+    }
+  });
+
   return { success: true };
 }
 

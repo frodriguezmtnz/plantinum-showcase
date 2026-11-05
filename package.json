@@ -16,7 +16,10 @@
     "icons": "node scripts/generate-icons.mjs",
     "snapshots": "tsx scripts/backfill-snapshots.ts",
     "set-role": "tsx scripts/set-role.ts",
+    "update:disposable-domains": "node scripts/update-disposable-domains.mjs",
+    "db:wipe": "tsx scripts/wipe-dev-data.ts",
     "telegram:test": "tsx scripts/telegram-test-notice.ts",
+    "email:test": "tsx scripts/email-test.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
@@ -51,6 +54,7 @@
     "@radix-ui/react-tooltip": "^1.4.1",
     "bcrypt": "^6.0.0",
     "browser-image-compression": "^2.0.2",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
@@ -62,6 +66,7 @@
     "next": "^16.4.3",
     "next-auth": "5.0.0-beta.32",
     "next-themes": "^0.4.6",
+    "nodemailer": "^10.3.1",
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-day-picker": "^10.0.2",
@@ -76,6 +81,7 @@
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
@@ -91,6 +97,11 @@
     "vitest": "^5.0.5"
   },
   "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "nodemailer": "^10"
+      }
+    },
     "overrides": {
       "sharp": "0.35.5",
       "fast-uri": "^3.1.9",

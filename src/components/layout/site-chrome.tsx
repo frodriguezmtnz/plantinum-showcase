@@ -3,7 +3,13 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-const CHROMELESS_ROUTES = ['/login', '/register'];
+const CHROMELESS_ROUTES = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+];
 
 interface SiteChromeProps {
   header: ReactNode;

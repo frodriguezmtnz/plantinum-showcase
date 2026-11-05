@@ -8,6 +8,7 @@ import {
   Bell,
   CalendarClock,
   Check,
+  CheckCircle2,
   CircleAlert,
   Crown,
   ExternalLink,
@@ -37,6 +38,7 @@ import { DeleteAccount } from '@/components/settings/delete-account';
 import { PasswordInput } from '@/components/shared/password-input';
 import { PasswordRules } from '@/components/shared/password-rules';
 import { ProfileCompletion } from '@/components/shared/profile-completion';
+import { ResendVerificationButton } from '@/components/settings/resend-verification-button';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -83,6 +85,7 @@ import { cn } from '@/lib/utils';
 export interface SettingsUser {
   username: string;
   email: string;
+  emailVerified: boolean;
   image: string | null;
   bio: string | null;
   initialLinks: { provider: PsnProvider; handle: string }[];
@@ -929,8 +932,26 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           <div className="space-y-2">
             <Label htmlFor="settings-email">Email</Label>
             <Input id="settings-email" value={user.email} readOnly disabled />
+            <div className="flex flex-wrap items-center gap-3">
+              {user.emailVerified ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                  Verified
+                </span>
+              ) : (
+                <>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                    <CircleAlert className="h-3.5 w-3.5" aria-hidden />
+                    Not verified
+                  </span>
+                  <ResendVerificationButton />
+                </>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Email changes are not available yet.
+              {user.emailVerified
+                ? 'Email changes are not available yet.'
+                : 'Verify your email to unlock uploading, voting and following.'}
             </p>
           </div>
 

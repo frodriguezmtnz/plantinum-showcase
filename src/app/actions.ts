@@ -15,6 +15,7 @@ import {
   countUploadsInCurrentPeriod,
 } from "@/lib/data";
 import { getCurrentPeriod } from "@/lib/period";
+import { VERIFY_EMAIL_ACTION_ERROR } from "@/lib/email/gate";
 import {
   parseProfilePlatform,
   parseProfileSort,
@@ -233,6 +234,10 @@ export async function uploadPlatinum(formData: FormData) {
       success: false as const,
       error: "You need to sign in to upload a platinum.",
     };
+  }
+
+  if (!session.user.emailConfirmed) {
+    return { success: false as const, error: VERIFY_EMAIL_ACTION_ERROR };
   }
 
   if (!isStorageConfigured()) {
@@ -1031,6 +1036,10 @@ export async function toggleVoteForPlatinum(
     return { success: false, error: "You need to sign in to vote." };
   }
 
+  if (!session.user.emailConfirmed) {
+    return { success: false, error: VERIFY_EMAIL_ACTION_ERROR };
+  }
+
   const voteLimit = await checkRateLimit(`vote:${userId}`, 20, 60_000);
   if (!voteLimit.ok) {
     return {
@@ -1184,6 +1193,10 @@ export async function toggleFollow(username: string): Promise<FollowActionResult
   const userId = session?.user?.id;
   if (!userId) {
     return { success: false, error: "You need to sign in to follow trophy hunters." };
+  }
+
+  if (!session.user.emailConfirmed) {
+    return { success: false, error: VERIFY_EMAIL_ACTION_ERROR };
   }
 
   const followLimit = await checkRateLimit(`follow:${userId}`, 30, 60_000);

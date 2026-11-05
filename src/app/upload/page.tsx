@@ -14,5 +14,5 @@ export default async function UploadPage() {
     redirect('/login?callbackUrl=/upload');
   }
 
-  return <UploadForm />;
+  return <UploadForm emailVerified={Boolean(session.user.emailConfirmed)} />;
 }
