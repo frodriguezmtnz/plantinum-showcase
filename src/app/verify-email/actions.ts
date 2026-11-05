@@ -6,6 +6,7 @@ import { consumeEmailVerification } from "@/lib/email/verification";
 
 export interface VerifyEmailState {
   success?: boolean;
+  alreadyVerified?: boolean;
   error?: string;
 }
 
@@ -33,5 +34,5 @@ export async function verifyEmailAction(
     return { error: "This verification link is invalid or has expired." };
   }
 
-  return { success: true };
+  return { success: true, alreadyVerified: result.alreadyVerified };
 }

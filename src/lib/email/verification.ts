@@ -10,6 +10,9 @@ import type { EmailTokenState } from '@/lib/email/password-reset';
 
 export const EMAIL_VERIFY_TTL_HOURS = 24;
 
+/** `verified` means the account is already confirmed, whatever the token state. */
+export type EmailVerificationState = EmailTokenState | 'verified';
+
 export type VerificationRequestResult =
   | { sent: true }
   | { sent: false; reason: 'verified' | 'missing' | 'send-failed' };
@@ -58,7 +61,7 @@ export async function requestEmailVerification(
 export async function getEmailVerificationState(
   token: string | null | undefined,
   now: Date = new Date(),
-): Promise<EmailTokenState> {
+): Promise<EmailVerificationState> {
   if (!token) return 'invalid';
 
   const row = await prisma.emailToken.findUnique({
@@ -71,14 +74,16 @@ export async function getEmailVerificationState(
     },
   });
   if (!row || row.kind !== 'EMAIL_VERIFY') return 'invalid';
-  if (row.user.emailVerified) return 'valid';
+  // An old link for a confirmed account says so instead of pretending to
+  // verify it again (or celebrating a second time).
+  if (row.user.emailVerified) return 'verified';
   if (row.usedAt) return 'used';
   if (row.expiresAt.getTime() <= now.getTime()) return 'expired';
   return 'valid';
 }
 
 export type ConsumeVerificationResult =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; alreadyVerified: boolean }
   | { ok: false; reason: 'invalid' };
 
 /**
@@ -109,7 +114,9 @@ export async function consumeEmailVerification({
   }
 
   return prisma.$transaction(async (tx) => {
-    if (!row.user.emailVerified) {
+    const alreadyVerified = Boolean(row.user.emailVerified);
+
+    if (!alreadyVerified) {
       if (row.usedAt || row.expiresAt.getTime() <= now.getTime()) {
         return { ok: false as const, reason: 'invalid' as const };
       }
@@ -132,6 +139,6 @@ export async function consumeEmailVerification({
       where: { userId: row.userId, kind: 'EMAIL_VERIFY', NOT: { id: row.id } },
     });
 
-    return { ok: true as const, userId: row.userId };
+    return { ok: true as const, userId: row.userId, alreadyVerified };
   });
 }

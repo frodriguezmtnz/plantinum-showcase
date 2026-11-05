@@ -70,7 +70,11 @@ describe.skipIf(!url)('email verification — Postgres integration', () => {
     expect(await verification.getEmailVerificationState(token)).toBe('valid');
 
     const consumed = await verification.consumeEmailVerification({ token });
-    expect(consumed.ok).toBe(true);
+    expect(consumed).toEqual({
+      ok: true,
+      userId: user.id,
+      alreadyVerified: false,
+    });
 
     const stored = await prisma.user.findUnique({
       where: { id: user.id },
@@ -78,9 +82,30 @@ describe.skipIf(!url)('email verification — Postgres integration', () => {
     });
     expect(stored?.emailVerified).toBeInstanceOf(Date);
 
-    // Already verified: consuming again is a no-op success.
+    // The account is confirmed: the page now reports `verified` and a replay
+    // is a no-op that must not celebrate again.
+    expect(await verification.getEmailVerificationState(token)).toBe(
+      'verified',
+    );
+    expect(await verification.consumeEmailVerification({ token })).toEqual({
+      ok: true,
+      userId: user.id,
+      alreadyVerified: true,
+    });
+  });
+
+  it('reports a used link while the account is still unverified', async () => {
+    await verification.requestEmailVerification(user.id);
+    const token = issuedToken();
+
+    await prisma.emailToken.updateMany({
+      where: { userId: user.id, kind: 'EMAIL_VERIFY' },
+      data: { usedAt: new Date() },
+    });
+
+    expect(await verification.getEmailVerificationState(token)).toBe('used');
     expect((await verification.consumeEmailVerification({ token })).ok).toBe(
-      true,
+      false,
     );
   });
 
@@ -93,6 +118,7 @@ describe.skipIf(!url)('email verification — Postgres integration', () => {
       data: { expiresAt: new Date(0) },
     });
 
+    expect(await verification.getEmailVerificationState(token)).toBe('expired');
     expect((await verification.consumeEmailVerification({ token })).ok).toBe(
       false,
     );

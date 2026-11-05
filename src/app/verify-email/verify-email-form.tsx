@@ -22,11 +22,11 @@ export function VerifyEmailForm({ token }: { token: string }) {
     if (!state.success) return;
     refresh().catch(() => undefined);
 
-    if (!celebrated.current) {
+    if (!state.alreadyVerified && !celebrated.current) {
       celebrated.current = true;
       void fireVerificationConfetti();
     }
-  }, [state.success, refresh]);
+  }, [state.success, state.alreadyVerified, refresh]);
 
   if (state.success) {
     return (

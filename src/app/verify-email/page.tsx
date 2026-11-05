@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { CheckCircle2 } from 'lucide-react';
 import { AuthShell } from '@/components/shared/auth-shell';
 import { AuthUtilityAside } from '@/components/shared/auth-utility-aside';
 import { EmailVerifyIllustration } from '@/components/shared/auth-illustrations';
@@ -31,6 +32,19 @@ const VERIFY_ASIDE = (
   />
 );
 
+const VERIFIED_ASIDE = (
+  <AuthUtilityAside
+    illustration={<EmailVerifyIllustration />}
+    title="You're all set."
+    description="This address is already confirmed."
+    points={[
+      'Uploading, voting and following are unlocked.',
+      'Old links stay quiet: no second confirmation needed.',
+      'Head to Settings if you ever need a fresh link.',
+    ]}
+  />
+);
+
 const EXPIRED_ASIDE = (
   <AuthUtilityAside
     illustration={<EmailVerifyIllustration />}
@@ -51,6 +65,39 @@ export default async function VerifyEmailPage({
 }) {
   const { token } = await searchParams;
   const state = await getEmailVerificationState(token);
+
+  if (state === 'verified') {
+    return (
+      <AuthShell
+        title="Email already verified"
+        description="You confirmed this address earlier, so there is nothing else to do."
+        aside={VERIFIED_ASIDE}
+        footer={
+          <>
+            Wrong account?{' '}
+            <Link href="/login" className="underline">
+              Sign in
+            </Link>
+          </>
+        }
+      >
+        <div className="space-y-4 text-center">
+          <CheckCircle2 className="mx-auto h-12 w-12 text-live" aria-hidden />
+          <p className="text-sm text-muted-foreground">
+            Uploading, voting and following are already unlocked.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button asChild>
+              <Link href="/upload">Upload a platinum</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/settings">Go to Settings</Link>
+            </Button>
+          </div>
+        </div>
+      </AuthShell>
+    );
+  }
 
   if (state !== 'valid' || !token) {
     return (
