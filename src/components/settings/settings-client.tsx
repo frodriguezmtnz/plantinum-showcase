@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import {
   Bell,
   CalendarClock,
@@ -472,11 +473,10 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      toast({
-        title: 'Password changed',
-        description: 'Use the new password the next time you sign in.',
-        variant: 'success',
-      });
+      // The change bumped User.sessionVersion, so this tab's JWT is already
+      // invalid. Clear the cookie and ask for a fresh sign-in with the new
+      // password; other devices are signed out on their next request.
+      await signOut({ callbackUrl: '/login?password=changed' });
     });
   }
 

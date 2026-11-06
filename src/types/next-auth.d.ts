@@ -13,6 +13,7 @@ declare module "next-auth" {
   interface User {
     role?: Role;
     emailConfirmed?: boolean;
+    sessionVersion?: number;
   }
 }
 
@@ -22,5 +23,6 @@ declare module "next-auth/jwt" {
     username?: string | null;
     role?: Role;
     emailConfirmed?: boolean;
+    sessionVersion?: number;
   }
 }

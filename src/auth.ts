@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
+import { isSessionVersionStale } from "@/lib/session-revocation";
 import bcrypt from "bcrypt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -46,6 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           image: user.image ?? generatedAvatarUrl(user.username ?? user.email),
           role: user.role,
           emailConfirmed: Boolean(user.emailVerified),
+          sessionVersion: user.sessionVersion,
         };
       },
     }),
@@ -61,32 +63,53 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // from the database so a promotion takes effect without re-login.
         token.role = user.role;
         token.emailConfirmed = Boolean(user.emailConfirmed);
+        token.sessionVersion = user.sessionVersion ?? 0;
       }
 
-      // Settings calls useSession().update() after changing the handle, avatar
-      // or email. Re-read those fields so the cached session never points at a
-      // stale /u/<old-handle>. Normal requests keep hitting only the token.
       const userId = (token.id ?? token.sub) as string | undefined;
-      if (trigger === "update" && userId) {
-        const fresh = await prisma.user.findUnique({
-          where: { id: userId },
-          select: {
-            username: true,
-            email: true,
-            image: true,
-            role: true,
-            emailVerified: true,
-          },
-        });
-        if (fresh) {
-          token.id = userId;
-          token.username = fresh.username;
-          token.email = fresh.email;
-          token.picture =
-            fresh.image ?? generatedAvatarUrl(fresh.username ?? userId);
-          token.role = fresh.role;
-          token.emailConfirmed = Boolean(fresh.emailVerified);
-        }
+      if (!userId) return token;
+
+      // One primary-key read per request. It covers both the identity refresh
+      // that Settings triggers through useSession().update() and session
+      // revocation: a password change/reset bumps User.sessionVersion, so any
+      // JWT minted before it (stolen or from another device) is rejected and
+      // Auth.js clears the cookie when this callback returns null.
+      const fresh = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          username: true,
+          email: true,
+          image: true,
+          role: true,
+          emailVerified: true,
+          sessionVersion: true,
+        },
+      });
+      if (!fresh) return null;
+
+      if (user) {
+        // Sign-in through an adapter may not carry the custom field; adopt the
+        // version currently in the database instead of trusting the default.
+        token.sessionVersion = fresh.sessionVersion;
+      } else if (
+        isSessionVersionStale(
+          token.sessionVersion as number | undefined,
+          fresh.sessionVersion,
+        )
+      ) {
+        return null;
+      }
+
+      // Re-read identity fields so the cached session never points at a stale
+      // /u/<old-handle>. Normal requests keep only the version check above.
+      if (trigger === "update") {
+        token.id = userId;
+        token.username = fresh.username;
+        token.email = fresh.email;
+        token.picture =
+          fresh.image ?? generatedAvatarUrl(fresh.username ?? userId);
+        token.role = fresh.role;
+        token.emailConfirmed = Boolean(fresh.emailVerified);
       }
 
       return token;

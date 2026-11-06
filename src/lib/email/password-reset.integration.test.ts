@@ -62,7 +62,7 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
     await prisma.passwordHistory.deleteMany({ where: { userId: user.id } });
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: currentHash, emailVerified: null },
+      data: { passwordHash: currentHash, emailVerified: null, sessionVersion: 0 },
     });
   });
 
@@ -116,8 +116,10 @@ describe.skipIf(!url)('password reset — Postgres integration', () => {
 
     const stored = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { passwordHash: true, emailVerified: true },
+      select: { passwordHash: true, emailVerified: true, sessionVersion: true },
     });
+    // The bump revokes every JWT issued before the reset.
+    expect(stored?.sessionVersion).toBe(1);
     expect(stored?.passwordHash).toBeTruthy();
     expect(await bcrypt.compare(PASSWORDS.fresh, stored!.passwordHash!)).toBe(
       true,
