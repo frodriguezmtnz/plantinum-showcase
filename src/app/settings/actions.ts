@@ -11,6 +11,14 @@ import { prisma } from "@/lib/prisma";
 import { repointNotificationLinks } from "@/lib/notifications";
 import { requestEmailVerification } from "@/lib/email/verification";
 import { sendPasswordChangedNotice } from "@/lib/email/password-reset";
+import {
+  requestEmailChange as requestEmailChangeLink,
+  type RequestEmailChangeResult,
+} from "@/lib/email/change-email";
+import {
+  DISPOSABLE_EMAIL_ERROR,
+  EMAIL_IN_USE_ERROR,
+} from "@/lib/email/address";
 import { checkRateLimit } from "@/lib/rate-limit";
 import {
   isRecentPassword,
@@ -67,6 +75,24 @@ export type PasswordUpdateResult =
 export type DeleteAccountResult =
   | { success: true }
   | { success: false; error: string };
+
+export type EmailChangeRequestResult =
+  | { success: true; email: string }
+  | { success: false; error: string };
+
+const EMAIL_CHANGE_ERROR: Record<
+  Extract<RequestEmailChangeResult, { ok: false }>["reason"],
+  string
+> = {
+  invalid: "Enter a valid email address.",
+  disposable: DISPOSABLE_EMAIL_ERROR,
+  same: "That is already your email address.",
+  "in-use": EMAIL_IN_USE_ERROR,
+  password: "Your current password is incorrect.",
+  "no-password": "This account has no password to change.",
+  "send-failed":
+    "We could not send the confirmation email. Please try again in a few minutes.",
+};
 
 const MAX_AVATAR_BYTES = 4 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -203,6 +229,53 @@ export async function resendVerificationEmail(): Promise<ResendVerificationResul
     success: false,
     error: "We could not send the email right now. Try again in a few minutes.",
   };
+}
+
+/**
+ * Sends a confirmation link to the new address. The account keeps its current
+ * email until that link is consumed; the old address gets a security notice.
+ */
+export async function requestEmailChange(
+  formData: FormData,
+): Promise<EmailChangeRequestResult> {
+  const userId = await requireUserId();
+  if (!userId) return { success: false, error: "You need to sign in first." };
+
+  const headerList = await headers();
+  const ip =
+    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "local";
+  const perUser = await checkRateLimit(
+    `email-change:${userId}`,
+    5,
+    3_600_000,
+  );
+  const perIp = await checkRateLimit(
+    `email-change-ip:${ip}`,
+    10,
+    3_600_000,
+  );
+  if (!perUser.ok || !perIp.ok) {
+    return { success: false, error: RATE_LIMITED };
+  }
+
+  const newEmail = String(formData.get("email") ?? "").trim();
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  if (!newEmail || newEmail.length > 254 || currentPassword.length > 256) {
+    return { success: false, error: EMAIL_CHANGE_ERROR.invalid };
+  }
+
+  const result = await requestEmailChangeLink({
+    userId,
+    newEmail,
+    currentPassword,
+  });
+  if (!result.ok) {
+    return { success: false, error: EMAIL_CHANGE_ERROR[result.reason] };
+  }
+
+  return { success: true, email: result.newEmail };
 }
 
 /**

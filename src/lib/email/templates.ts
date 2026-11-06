@@ -97,6 +97,14 @@ function displayName(username: string | null | undefined): string {
   return username?.trim() || 'trophy hunter';
 }
 
+function formatUtc(date: Date): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
 export function passwordResetEmail({
   username,
   url,
@@ -154,11 +162,7 @@ export function passwordChangedEmail({
   username: string | null | undefined;
   changedAt: Date;
 }): EmailTemplate {
-  const when = new Intl.DateTimeFormat('en-GB', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(changedAt);
+  const when = formatUtc(changedAt);
   const resetUrl = `${getSiteUrl()}/forgot-password`;
 
   const { html, text } = renderEmail({
@@ -173,6 +177,114 @@ export function passwordChangedEmail({
 
   return {
     subject: 'Your Platinum Showcase password changed',
+    html,
+    text,
+  };
+}
+
+/** Sent to the address the account wants to switch to. */
+export function emailChangeConfirmEmail({
+  username,
+  url,
+  expiresMinutes = 30,
+}: {
+  username: string | null | undefined;
+  url: string;
+  expiresMinutes?: number;
+}): EmailTemplate {
+  const { html, text } = renderEmail({
+    heading: 'Confirm your new email',
+    intro: `Hi ${displayName(username)}, confirm this address to make it the sign-in email for your Platinum Showcase account.`,
+    ctaLabel: 'Confirm new email',
+    ctaUrl: url,
+    outro: `This link expires in ${expiresMinutes} minutes and can only be used once. Your current address keeps working until you confirm. If you did not ask for this, ignore the email and your address will not change.`,
+    preheader: 'Confirm your new Platinum Showcase email.',
+  });
+
+  return {
+    subject: 'Confirm your new Platinum Showcase email',
+    html,
+    text,
+  };
+}
+
+/** Security notice sent to the current address when the change is requested. */
+export function emailChangeRequestedEmail({
+  username,
+  newEmail,
+  requestedAt,
+}: {
+  username: string | null | undefined;
+  newEmail: string;
+  requestedAt: Date;
+}): EmailTemplate {
+  const when = formatUtc(requestedAt);
+  const { html, text } = renderEmail({
+    heading: 'Email change requested',
+    intro: `Hi ${displayName(username)}, someone asked to move your Platinum Showcase account to ${newEmail} on ${when} UTC. Your current address still works until the new one is confirmed.`,
+    ctaLabel: 'Secure my account',
+    ctaUrl: `${getSiteUrl()}/forgot-password`,
+    outro:
+      'If this was you, no action is needed. If it was not, reset your password now and review your account.',
+    preheader: 'An email change was requested on your Platinum Showcase account.',
+  });
+
+  return {
+    subject: 'Email change requested for Platinum Showcase',
+    html,
+    text,
+  };
+}
+
+/** Sent to the old address once the switch is confirmed. */
+export function emailChangedEmail({
+  username,
+  newEmail,
+  changedAt,
+}: {
+  username: string | null | undefined;
+  newEmail: string;
+  changedAt: Date;
+}): EmailTemplate {
+  const when = formatUtc(changedAt);
+  const { html, text } = renderEmail({
+    heading: 'Your email changed',
+    intro: `Hi ${displayName(username)}, the email on your Platinum Showcase account changed to ${newEmail} on ${when} UTC.`,
+    ctaLabel: 'Secure my account',
+    ctaUrl: `${getSiteUrl()}/forgot-password`,
+    outro:
+      'If you made this change, no action is needed. If it was not you, reset your password now and check your account.',
+    preheader: 'Your Platinum Showcase email changed.',
+  });
+
+  return {
+    subject: 'Your Platinum Showcase email changed',
+    html,
+    text,
+  };
+}
+
+/** Confirmation sent to the new address after the switch. */
+export function emailChangeActiveEmail({
+  username,
+  changedAt,
+}: {
+  username: string | null | undefined;
+  changedAt: Date;
+}): EmailTemplate {
+  const when = formatUtc(changedAt);
+  const { html, text } = renderEmail({
+    heading: 'Your new email is active',
+    intro: `Hi ${displayName(username)}, this address is now the sign-in email for your Platinum Showcase account as of ${when} UTC.`,
+    ctaLabel: 'Go to Settings',
+    ctaUrl: `${getSiteUrl()}/settings`,
+    outro:
+      'If you did not make this change, reset your password and review your account.',
+    preheader: 'Your new Platinum Showcase email is active.',
+  });
+
+  return {
+    subject: 'Your new Platinum Showcase email is active',
     html,
     text,
   };

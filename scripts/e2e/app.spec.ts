@@ -99,7 +99,12 @@ test.describe('public pages', () => {
   });
 
   test('account utility routes render without site chrome', async ({ page }) => {
-    for (const path of ['/forgot-password', '/reset-password', '/verify-email']) {
+    for (const path of [
+      '/forgot-password',
+      '/reset-password',
+      '/verify-email',
+      '/confirm-email-change',
+    ]) {
       await page.goto(path);
       await expect(page.locator('header')).toHaveCount(0);
       await expect(page.locator('footer')).toHaveCount(0);

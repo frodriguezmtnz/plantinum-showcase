@@ -1,6 +1,13 @@
 import nodemailer, { type Transporter } from 'nodemailer';
 
-export type EmailKind = 'password-reset' | 'email-verify' | 'password-changed';
+export type EmailKind =
+  | 'password-reset'
+  | 'email-verify'
+  | 'password-changed'
+  | 'email-change-confirm'
+  | 'email-change-requested'
+  | 'email-changed'
+  | 'email-change-active';
 
 export interface EmailMessage {
   kind: EmailKind;
