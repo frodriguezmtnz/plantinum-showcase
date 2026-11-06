@@ -4,6 +4,11 @@ import { isDisposableEmail } from './domains';
 export const EMAIL_FORMAT_ERROR = 'That email address is not valid.';
 export const DISPOSABLE_EMAIL_ERROR =
   'Please use a permanent email address. Disposable or temporary inboxes are not allowed.';
+/**
+ * Deliberately generic: Settings is authenticated, but a specific
+ * "already registered" reply would let anyone with a session probe addresses.
+ */
+export const EMAIL_IN_USE_ERROR = 'That email address cannot be used.';
 
 export function normalizeEmail(value: string): string {
   return (value ?? '').trim().toLowerCase();
@@ -42,9 +47,9 @@ export function emailFormatProblem(email: string): string | null {
 }
 
 /**
- * Registration-only guard: format plus the disposable-domain blocklist. Never
- * applied to login/reset so an address that joins the list later cannot lock a
- * real account out.
+ * Guard for addresses being attached to an account (signup or email change):
+ * format plus the disposable-domain blocklist. Never applied to login/reset so
+ * an address that joins the list later cannot lock a real account out.
  */
 export async function registrationEmailProblem(
   email: string,

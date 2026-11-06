@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  emailChangeActiveEmail,
+  emailChangeConfirmEmail,
+  emailChangeRequestedEmail,
+  emailChangedEmail,
   passwordChangedEmail,
   passwordResetEmail,
   verifyEmailEmail,
@@ -52,5 +56,54 @@ describe('email templates', () => {
     expect(email.text).toContain('trophy hunter');
     expect(email.text).toContain('UTC');
     expect(email.text).toContain('/forgot-password');
+  });
+
+  it('asks the new address to confirm with the 30-minute copy', () => {
+    const email = emailChangeConfirmEmail({
+      username: 'hunter',
+      url: 'https://example.com/confirm-email-change?token=t',
+      expiresMinutes: 30,
+    });
+
+    expect(email.subject).toBe('Confirm your new Platinum Showcase email');
+    expect(email.html).toContain('Confirm new email');
+    expect(email.html).toContain('30 minutes');
+    expect(email.text).not.toContain('old@example.com');
+  });
+
+  it('warns the old address about a requested change', () => {
+    const email = emailChangeRequestedEmail({
+      username: 'hunter',
+      newEmail: 'new@example.com',
+      requestedAt: new Date('2026-03-04T10:15:00.000Z'),
+    });
+
+    expect(email.subject).toBe('Email change requested for Platinum Showcase');
+    expect(email.text).toContain('new@example.com');
+    expect(email.text).toContain('Secure my account');
+    expect(email.text).toContain('/forgot-password');
+  });
+
+  it('tells the old address when the change completed', () => {
+    const email = emailChangedEmail({
+      username: 'hunter',
+      newEmail: 'new@example.com',
+      changedAt: new Date('2026-03-04T10:15:00.000Z'),
+    });
+
+    expect(email.subject).toBe('Your Platinum Showcase email changed');
+    expect(email.text).toContain('new@example.com');
+    expect(email.text).toContain('UTC');
+  });
+
+  it('welcomes the new address without leaking the old one', () => {
+    const email = emailChangeActiveEmail({
+      username: 'hunter',
+      changedAt: new Date('2026-03-04T10:15:00.000Z'),
+    });
+
+    expect(email.subject).toBe('Your new Platinum Showcase email is active');
+    expect(email.text).toContain('hunter');
+    expect(email.text).not.toContain('@example.com');
   });
 });
