@@ -17,6 +17,7 @@ import {
   Link2,
   Loader2,
   Lock,
+  Mail,
   Plus,
   RotateCcw,
   Save,
@@ -27,6 +28,7 @@ import {
 import { checkUsernameAvailability } from '@/app/register/actions';
 import {
   changePassword,
+  requestEmailChange,
   updateNotificationPreferences,
   updateProfile,
   updateUsername,
@@ -257,6 +259,13 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSavingPassword, startSavingPassword] = useTransition();
 
+  const [newEmail, setNewEmail] = useState('');
+  const [emailPassword, setEmailPassword] = useState('');
+  const [emailPending, setEmailPending] = useState<string | null>(null);
+  const [isSavingEmail, startSavingEmail] = useTransition();
+  const canChangeEmail =
+    newEmail.trim().length > 0 && emailPassword.length > 0;
+
   const newPasswordIssue = newPassword ? passwordPolicyError(newPassword) : null;
   const passwordsMatch = Boolean(
     newPassword && confirmPassword && newPassword === confirmPassword,
@@ -477,6 +486,32 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
       // invalid. Clear the cookie and ask for a fresh sign-in with the new
       // password; other devices are signed out on their next request.
       await signOut({ callbackUrl: '/login?password=changed' });
+    });
+  }
+
+  function handleChangeEmail() {
+    const formData = new FormData();
+    formData.set('email', newEmail.trim());
+    formData.set('currentPassword', emailPassword);
+
+    startSavingEmail(async () => {
+      const result = await requestEmailChange(formData);
+      if (!result.success) {
+        toast({
+          title: 'Email not changed',
+          description: result.error,
+          variant: 'danger',
+        });
+        return;
+      }
+      setNewEmail('');
+      setEmailPassword('');
+      setEmailPending(result.email);
+      toast({
+        title: 'Confirmation sent',
+        description: `Open the link we sent to ${result.email}. Your current address still works until you confirm.`,
+        variant: 'success',
+      });
     });
   }
 
@@ -950,9 +985,67 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
             </div>
             <p className="text-xs text-muted-foreground">
               {user.emailVerified
-                ? 'Email changes are not available yet.'
+                ? 'Use the form below to move your account to a different address.'
                 : 'Verify your email to unlock uploading, voting and following.'}
             </p>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          <div className="space-y-4">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <Mail className="h-4 w-4 text-muted-foreground" aria-hidden />
+              Change email
+            </p>
+            <div className="grid max-w-md gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-email">New email</Label>
+                <Input
+                  id="new-email"
+                  type="email"
+                  value={newEmail}
+                  onChange={(event) => setNewEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email-current-password">Current password</Label>
+                <PasswordInput
+                  id="email-current-password"
+                  value={emailPassword}
+                  onChange={(event) => setEmailPassword(event.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+            </div>
+            {emailPending && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="max-w-md rounded-lg border border-emerald-600/30 bg-emerald-600/10 px-4 py-3 text-sm text-emerald-700"
+              >
+                Confirmation sent to <strong>{emailPending}</strong>. Open the
+                link to finish. Your current address still works until then.
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              We will email a 30-minute link to the new address and warn your
+              current one. Confirming it closes every session.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleChangeEmail}
+              disabled={isSavingEmail || !canChangeEmail}
+            >
+              {isSavingEmail ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="h-4 w-4" />
+              )}
+              Send confirmation
+            </Button>
           </div>
 
           <div className="h-px bg-border" />
