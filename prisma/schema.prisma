@@ -84,6 +84,10 @@ model User {
   passwordHash          String?
   // Bumped on password change/reset so every JWT issued before it is rejected.
   sessionVersion        Int       @default(0)
+  // TOTP second factor. The secret is stored AES-256-GCM encrypted.
+  twoFactorEnabled      Boolean   @default(false)
+  twoFactorSecret       String?
+  twoFactorEnabledAt    DateTime?
   plan                  Plan      @default(FREE)
   role                  Role      @default(USER)
   // Public profile extras, edited from /settings.
@@ -97,20 +101,36 @@ model User {
   strikes               Int       @default(0)
   createdAt             DateTime  @default(now())
 
-  accounts        Account[]
-  sessions        Session[]
-  platinums       Platinum[]
-  votes           Vote[]            @relation("UserVotes")
-  reports         Report[]
-  notifications   Notification[]
-  passwordHistory PasswordHistory[]
+  accounts               Account[]
+  sessions               Session[]
+  platinums              Platinum[]
+  votes                  Vote[]                  @relation("UserVotes")
+  reports                Report[]
+  notifications          Notification[]
+  passwordHistory        PasswordHistory[]
   // One-way social graph: who this user follows and who follows them.
-  following       Follow[]          @relation("Following")
-  followers       Follow[]          @relation("Followers")
+  following              Follow[]                @relation("Following")
+  followers              Follow[]                @relation("Followers")
   // Trophy-site profiles (one per provider), e.g. PSNProfiles + Exophase.
-  profileLinks    ProfileLink[]
+  profileLinks           ProfileLink[]
   // One-shot password reset / email verification tokens.
-  emailTokens     EmailToken[]
+  emailTokens            EmailToken[]
+  // Hashed, one-time recovery codes for the TOTP second factor.
+  twoFactorRecoveryCodes TwoFactorRecoveryCode[]
+}
+
+// A one-time recovery code for the TOTP second factor. Only the SHA-256 hash
+// is stored; the plaintext is shown once when 2FA is enabled or regenerated.
+model TwoFactorRecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String    @unique
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usedAt])
 }
 
 // A trophy-site profile for a user. One row per provider: the PSN handle is
@@ -157,15 +177,15 @@ model PasswordHistory {
 // One active token per (user, kind): requesting a fresh link replaces the
 // previous one, and consuming it marks it used so a replay fails.
 model EmailToken {
-  id        String         @id @default(cuid())
-  userId    String
-  kind      EmailTokenKind
-  tokenHash String         @unique
+  id           String         @id @default(cuid())
+  userId       String
+  kind         EmailTokenKind
+  tokenHash    String         @unique
   // Only EMAIL_CHANGE uses it: the address the account will switch to.
   pendingEmail String?
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime       @default(now())
+  expiresAt    DateTime
+  usedAt       DateTime?
+  createdAt    DateTime       @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
