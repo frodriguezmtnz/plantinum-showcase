@@ -123,11 +123,11 @@ export default async function Home() {
                   </li>
                   <li className="flex items-start gap-3">
                     <Vote className="mt-0.5 h-5 w-5 shrink-0 text-live" aria-hidden />
-                    <span><span className="font-bold">The community votes.</span> One vote each — no accounts for sale.</span>
+                    <span><span className="font-bold">The community votes.</span> One vote each — no bought votes.</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Crown className="mt-0.5 h-5 w-5 shrink-0 text-dusk" aria-hidden />
-                    <span><span className="font-bold">A favourite emerges.</span> The votes settle who wore it best.</span>
+                    <span><span className="font-bold">A favorite emerges.</span> The community crowns the best plate.</span>
                   </li>
                 </ul>
               </div>
