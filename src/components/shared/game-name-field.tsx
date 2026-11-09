@@ -4,7 +4,7 @@ import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import { CheckCircle2, Loader2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import type { RawgGame } from '@/lib/rawg-types';
+import type { GameSuggestion } from '@/lib/game-types';
 
 interface GameNameFieldProps
   extends Omit<
@@ -20,7 +20,7 @@ interface GameNameFieldProps
 }
 
 interface SearchResponse {
-  results?: RawgGame[];
+  results?: GameSuggestion[];
   configured?: boolean;
   available?: boolean;
   error?: string;
@@ -50,7 +50,8 @@ export const GameNameField = forwardRef<HTMLInputElement, GameNameFieldProps>(
   ) {
   const listId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [results, setResults] = useState<RawgGame[]>([]);
+  const suppressQueryRef = useRef<string | null>(null);
+  const [results, setResults] = useState<GameSuggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [configured, setConfigured] = useState<boolean | null>(null);
@@ -62,6 +63,11 @@ export const GameNameField = forwardRef<HTMLInputElement, GameNameFieldProps>(
 
   useEffect(() => {
     if (disabled || tooShort || gameId !== null) {
+      return;
+    }
+    // Just picked an IGDB fallback title: keep it as manual text, no re-search.
+    if (suppressQueryRef.current === query.toLowerCase()) {
+      suppressQueryRef.current = null;
       return;
     }
 
@@ -109,8 +115,15 @@ export const GameNameField = forwardRef<HTMLInputElement, GameNameFieldProps>(
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, []);
 
-  function selectGame(game: RawgGame) {
-    onChange({ name: game.name, gameId: game.id });
+  function selectGame(game: GameSuggestion) {
+    if (game.provider === 'rawg') {
+      onChange({ name: game.name, gameId: game.id });
+    } else {
+      // IGDB ids live in a different space than RAWG: keep the plate unlinked
+      // (it still matches by normalised name) and avoid re-opening the list.
+      suppressQueryRef.current = game.name.trim().toLowerCase();
+      onChange({ name: game.name, gameId: null });
+    }
     setOpen(false);
     setResults([]);
   }
@@ -123,6 +136,7 @@ export const GameNameField = forwardRef<HTMLInputElement, GameNameFieldProps>(
   }
 
   function handleInput(next: string) {
+    suppressQueryRef.current = null;
     onChange({ name: next, gameId: null });
     setResults([]);
     setOpen(false);
@@ -247,6 +261,7 @@ export const GameNameField = forwardRef<HTMLInputElement, GameNameFieldProps>(
                 </span>
                 <span className="block text-xs text-muted-foreground">
                   {game.released ? game.released.slice(0, 4) : 'Year unknown'}
+                  {game.provider === 'igdb' ? ' · IGDB' : ''}
                 </span>
               </button>
             </li>

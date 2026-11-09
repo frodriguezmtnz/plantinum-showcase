@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { isRawgConfigured, searchGamesWithStatus } from '@/lib/rawg';
+import { isGameSearchConfigured, searchGamesWithStatus } from '@/lib/game-search';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   const query = new URL(request.url).searchParams.get('q')?.trim() ?? '';
 
   if (query.length < 2) {
-    return NextResponse.json({ results: [], configured: isRawgConfigured() });
+    return NextResponse.json({ results: [], configured: isGameSearchConfigured() });
   }
   if (query.length > MAX_QUERY_LENGTH) {
     return NextResponse.json(
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   }
-  if (!isRawgConfigured()) {
+  if (!isGameSearchConfigured()) {
     return NextResponse.json({ results: [], configured: false });
   }
 
