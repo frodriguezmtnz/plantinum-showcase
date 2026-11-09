@@ -48,7 +48,8 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] **Pulido X**: pills de Notifications con `focus-visible`; en móvil check/borrar se agrupan en un menú `⋯` (en `sm` siguen los dos iconos); e2e determinista para All con unread + check individual; integración Postgres de `markNotificationRead` (propietario, aislamiento entre usuarios e idempotencia).
 - [x] **Pulido XI**: `SessionRefresh` revalida el JWT al recuperar foco/visibilidad con throttle de 30s, y `BroadcastChannel` refresca al instante las otras pestañas cuando se cambia avatar o username. El header deja de quedarse con una identidad vieja al volver desde otra pestaña/dispositivo; e2e cubre el POST a `/api/auth/session` tras el foco.
 - [x] Tanda B: **avisos de actividad de seguidos** (`FOLLOWED_PLATE` al publicarse un platino) con preferencia por usuario en `/settings` y batching de 24 h (un aviso no leído por autor; los siguientes se agrupan en "N new platinums"). Los spoilers no revelan el juego y aprobar una placa `UNDER_REVIEW` también avisa (restaurar una `HIDDEN` no).
-- [ ] Tanda D/E: descubrimiento de cazadores (juegos en comun / mutuos) y leaderboard de hunters.
+- [x] **Leaderboard de trophy hunters**: pestaña "Trophy hunters" en Hall of Fame (`?board=hunters`) con los votos mensuales recibidos por cazador, alcance Global / My circle, podio top-3, banner "Your standing" y orden determinista (`src/lib/hunter-rankings.ts`). Se calcula en vivo del mes actual (sin migración ni snapshot) y suma solo placas `PUBLISHED`; tests de integración de periodo, circle, empates y standing.
+- [ ] Tanda D/E: descubrimiento de cazadores. Los **mutuos** son derivables del grafo `Follow` actual; los **juegos en común** esperan la identidad de juego de RAWG (`gameId`, ver `docs/rawg-games-api.md`).
 
 ## Notificaciones y sesión — próximas iteraciones
 
