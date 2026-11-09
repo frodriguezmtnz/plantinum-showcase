@@ -998,3 +998,7 @@ header[data-hidden]:focus-within {
 .footer-shell .footer-divider {
   border-color: hsl(0 0% 98% / 0.12);
 }
+
+.footer-shell .footer-disclaimer {
+  color: hsl(0 0% 98% / 0.5);
+}
