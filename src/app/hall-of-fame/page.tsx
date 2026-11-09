@@ -6,12 +6,17 @@ import {
   getUsersByIds,
   type User,
 } from '@/lib/data';
+import {
+  getHunterLeaderboard,
+  getViewerHunterStanding,
+} from '@/lib/hunter-rankings';
 import { auth } from '@/auth';
 import { Trophy, Award, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
+import { HunterLeaderboard } from '@/components/hall-of-fame/hunter-leaderboard';
 import { cn, isStoredImage } from '@/lib/utils';
 
 export const metadata = {
@@ -25,25 +30,40 @@ function daysUntilMonthEnd(now: Date): number {
 }
 
 type Props = {
-  searchParams: Promise<{ scope?: string }>;
+  searchParams: Promise<{ scope?: string; board?: string }>;
 };
 
 export default async function HallOfFamePage({ searchParams }: Props) {
-  const { scope: rawScope } = await searchParams;
+  const { scope: rawScope, board: rawBoard } = await searchParams;
   const scope = rawScope === 'circle' ? 'circle' : 'global';
+  const board = rawBoard === 'hunters' ? 'hunters' : 'plates';
+  const isHunterBoard = board === 'hunters';
 
   const session = await auth();
   const userId = session?.user?.id;
 
   // "My circle" is per-account; anonymous visitors sign in first.
   if (scope === 'circle' && !userId) {
-    redirect('/login?callbackUrl=/hall-of-fame%3Fscope%3Dcircle');
+    redirect(
+      `/login?callbackUrl=/hall-of-fame%3F${
+        isHunterBoard ? 'board%3Dhunters%26' : ''
+      }scope%3Dcircle`,
+    );
   }
 
-  const rankedPlatinums =
-    scope === 'circle'
-      ? await getFollowingMonthlyRanking(userId!, 10, userId)
-      : await getMonthlyRanking(10, userId);
+  const [rankedPlatinums, hunterBoard, hunterStanding] = await Promise.all([
+    isHunterBoard
+      ? Promise.resolve([])
+      : scope === 'circle'
+        ? getFollowingMonthlyRanking(userId!, 10, userId)
+        : getMonthlyRanking(10, userId),
+    isHunterBoard
+      ? getHunterLeaderboard({ scope, viewerId: userId })
+      : Promise.resolve(null),
+    isHunterBoard && userId
+      ? getViewerHunterStanding(userId)
+      : Promise.resolve(null),
+  ]);
   const users = await getUsersByIds(rankedPlatinums.map((p) => p.userId));
 
   const getUserById = (userId: string): User | undefined => users.find(u => u.id === userId);
@@ -100,9 +120,13 @@ export default async function HallOfFamePage({ searchParams }: Props) {
         <Award className="mx-auto h-14 w-14 text-dusk" />
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-headline mt-2 text-balance">Monthly Hall of Fame</h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
-          {scope === 'circle'
-            ? `The favorites among the trophy hunters you follow in ${monthYear.toLowerCase()}.`
-            : `The community's favorite platinum screenshots of ${monthYear.toLowerCase()}.`}
+          {isHunterBoard
+            ? scope === 'circle'
+              ? `The trophy hunters your circle is voting for in ${monthYear.toLowerCase()}.`
+              : `The trophy hunters earning the most votes in ${monthYear.toLowerCase()}.`
+            : scope === 'circle'
+              ? `The favorites among the trophy hunters you follow in ${monthYear.toLowerCase()}.`
+              : `The community's favorite platinum screenshots of ${monthYear.toLowerCase()}.`}
         </p>
         <p className="field-mark mt-3">
           {daysLeft === 0 ? (
@@ -111,37 +135,90 @@ export default async function HallOfFamePage({ searchParams }: Props) {
             <>The polls close in <span className="tabular font-semibold text-foreground">{daysLeft}</span> {daysLeft === 1 ? 'day' : 'days'}</>
           )}
         </p>
-        <div className="mt-5 inline-flex rounded-full border border-border/70 bg-background/40 p-0.5 text-xs">
-          <Link
-            href="/hall-of-fame"
-            aria-current={scope === 'global' ? 'page' : undefined}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
-              scope === 'global'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Trophy className="h-3.5 w-3.5" aria-hidden />
-            Global
-          </Link>
-          <Link
-            href="/hall-of-fame?scope=circle"
-            aria-current={scope === 'circle' ? 'page' : undefined}
-            className={cn(
-              'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
-              scope === 'circle'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Users className="h-3.5 w-3.5" aria-hidden />
-            My circle
-          </Link>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex rounded-full border border-border/70 bg-background/40 p-0.5 text-xs">
+            <Link
+              href={
+                scope === 'circle'
+                  ? '/hall-of-fame?scope=circle'
+                  : '/hall-of-fame'
+              }
+              aria-current={!isHunterBoard ? 'page' : undefined}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+                !isHunterBoard
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Award className="h-3.5 w-3.5" aria-hidden />
+              Platinums
+            </Link>
+            <Link
+              href={
+                scope === 'circle'
+                  ? '/hall-of-fame?board=hunters&scope=circle'
+                  : '/hall-of-fame?board=hunters'
+              }
+              aria-current={isHunterBoard ? 'page' : undefined}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+                isHunterBoard
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Users className="h-3.5 w-3.5" aria-hidden />
+              Trophy hunters
+            </Link>
+          </div>
+          <div className="inline-flex rounded-full border border-border/70 bg-background/40 p-0.5 text-xs">
+            <Link
+              href={
+                isHunterBoard ? '/hall-of-fame?board=hunters' : '/hall-of-fame'
+              }
+              aria-current={scope === 'global' ? 'page' : undefined}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+                scope === 'global'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Trophy className="h-3.5 w-3.5" aria-hidden />
+              Global
+            </Link>
+            <Link
+              href={
+                isHunterBoard
+                  ? '/hall-of-fame?board=hunters&scope=circle'
+                  : '/hall-of-fame?scope=circle'
+              }
+              aria-current={scope === 'circle' ? 'page' : undefined}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-semibold transition-colors',
+                scope === 'circle'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              <Users className="h-3.5 w-3.5" aria-hidden />
+              My circle
+            </Link>
+          </div>
         </div>
       </div>
 
-      {rankedPlatinums.length === 0 ? (
+      {isHunterBoard && hunterBoard ? (
+        <HunterLeaderboard
+          items={hunterBoard.items}
+          total={hunterBoard.total}
+          standing={hunterStanding}
+          scope={scope}
+          isSignedIn={Boolean(userId)}
+          periodLabel={monthYear.toLowerCase()}
+        />
+      ) : rankedPlatinums.length === 0 ? (
         <div className="mx-auto max-w-2xl rounded-2xl border border-dashed border-border p-12 text-center">
           {scope === 'circle' ? (
             <>
