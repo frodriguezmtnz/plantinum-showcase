@@ -32,6 +32,12 @@ export function Footer() {
           ))}
         </nav>
 
+        <p className="footer-disclaimer max-w-2xl text-xs leading-relaxed">
+          Platinum Showcase is an independent, fan-made project and is not affiliated
+          with, endorsed by, or sponsored by Sony Interactive Entertainment. All
+          trademarks and game content belong to their respective owners.
+        </p>
+
         <div className="footer-divider w-full pt-6 text-center text-sm">
           &copy; {new Date().getFullYear()} Platinum Showcase. All rights reserved.
         </div>
