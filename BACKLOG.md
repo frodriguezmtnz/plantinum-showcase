@@ -100,7 +100,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] **Avisos de moderación por Telegram** (`src/lib/telegram.ts` + `src/app/api/telegram`): si la IA marca una subida o un reporte con REVIEW/UNSAFE, se envía un mensaje al chat del moderador con el contexto completo y botones inline para **Publicar / Ocultar / Eliminar** (o **Mantener / Ocultar / Eliminar** en reportes). El webhook valida `TELEGRAM_WEBHOOK_SECRET` y el `chat_id`; las acciones reutilizan `src/lib/moderation-core.ts` (mismo código que el panel, sin duplicar lógica). Config por `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`; sin ellas queda apagado.
 - [x] **Botones de Telegram en local (long-polling)**: `TELEGRAM_POLLING=true` arranca un poller `getUpdates` desde `src/instrumentation.ts` (sin túnel) que comparte `src/lib/telegram-actions.ts` con el webhook; en producción se sigue usando el webhook. `pnpm telegram:test [platinumId]` reenvía un aviso de ejemplo para probar los botones. Telegram prohíbe webhook + getUpdates a la vez (409): el poller hace `deleteWebhook` al arrancar.
 - [x] **Moderación fail-closed y subida "moderation-first"**: las subidas nacen `UNDER_REVIEW` y solo se publican con veredicto IA `SAFE`. `REVIEW`, `UNSAFE` o cualquier fallo del clasificador (rechazo por `content_filter` del proveedor, timeout, respuesta no parseable) mantienen la placa en revisión y avisan por Telegram: un NSFW nunca llega a hacerse público. Si la IA está apagada, se publica directo como antes. Además `revalidatePath` tolera contextos sin petición (el poller de Telegram) para que moderar desde el chat no falle.
-- [x] Rate limiting en la Server Action de subida (`uploadPlatinum`: 10/hora por usuario). Limitador en memoria por instancia; en Vercel multi-instancia habrá que migrar a un store compartido (Upstash).
+- [x] Rate limiting en la Server Action de subida (`uploadPlatinum`: 10/hora por usuario). Soporta Upstash para Vercel multi-instancia, con fallback en memoria cuando no hay credenciales.
 - [x] Validar la imagen por **magic bytes**, no solo `file.type` (`src/lib/image-signature.ts`: JPEG/PNG/WEBP).
 - [ ] `next.config.ts`: quitar `remotePatterns` (unsplash/picsum/placehold — giphy ya no se usa tras el rediseño de /about) cuando todo venga de B2 y revisar la CSP (`connect-src 'self'`).
 
@@ -126,5 +126,5 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 ## Fase 2 — Despliegue en Vercel (al final)
 
 - [ ] Configurar variables de entorno en Vercel (Neon, B2, `AUTH_*`).
-- [ ] `vercel-build` con `prisma migrate deploy`.
+- [x] `vercel-build` con `prisma migrate deploy` (ya en `package.json`).
 - [ ] Smoke test en producción (subida real + visualización).
