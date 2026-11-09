@@ -9,6 +9,7 @@ const CHROMELESS_ROUTES = [
   '/forgot-password',
   '/reset-password',
   '/verify-email',
+  '/confirm-email-change',
 ];
 
 interface SiteChromeProps {

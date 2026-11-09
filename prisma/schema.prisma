@@ -24,6 +24,7 @@ enum Role {
 enum EmailTokenKind {
   PASSWORD_RESET
   EMAIL_VERIFY
+  EMAIL_CHANGE
 }
 
 // PUBLISHED is the happy path; UNDER_REVIEW keeps a plate off the public lists
@@ -160,6 +161,8 @@ model EmailToken {
   userId    String
   kind      EmailTokenKind
   tokenHash String         @unique
+  // Only EMAIL_CHANGE uses it: the address the account will switch to.
+  pendingEmail String?
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime       @default(now())
