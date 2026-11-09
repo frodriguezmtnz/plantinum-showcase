@@ -15,7 +15,7 @@ export default function TermsPage() {
           Last updated: September 30, 2026
         </p>
 
-        <p className="italic text-muted-foreground mt-4">Platinum Showcase is an unofficial, fan-made website and is not affiliated with Sony or PlayStation in any way.</p>
+        <p className="italic text-muted-foreground mt-4">Platinum Showcase is an independent, fan-made project and is not affiliated with, endorsed by, or sponsored by Sony Interactive Entertainment.</p>
 
         <p>Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Platinum Showcase website (the "Service") operated by us.</p>
         
@@ -40,6 +40,11 @@ export default function TermsPage() {
         
         <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Changes To Service</h2>
         <p>We reserve the right to withdraw or amend our Service, and any service or material we provide via the Service, in our sole discretion without notice.</p>
+
+        <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Trademarks &amp; Affiliation</h2>
+        <p>Platinum Showcase is an independent, fan-made project. It is not affiliated with, endorsed by, or sponsored by Sony Interactive Entertainment, nor by any game publisher or developer.</p>
+        <p>&quot;PlayStation&quot;, &quot;PS5&quot;, &quot;PS4&quot;, &quot;PS3&quot;, the PlayStation logo, and related marks are trademarks of Sony Interactive Entertainment Inc. All game titles, logos, screenshots, and related imagery are the property of their respective publishers and developers. Their use on this site is for identification and informational purposes only and does not imply any affiliation or endorsement.</p>
+        <p>If you are a rights holder and believe that content on this site infringes your rights, please contact us and we will review and remove it promptly.</p>
 
         <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Contact Us</h2>
         <p>If you have any questions about these Terms, please contact us.</p>
