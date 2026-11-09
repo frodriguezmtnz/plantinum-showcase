@@ -36,6 +36,8 @@ export default async function SettingsPage() {
         select: { provider: true, handle: true, url: true },
       },
       plan: true,
+      role: true,
+      twoFactorEnabled: true,
       usernameChangedAt: true,
       notifyFollowedUploads: true,
     },
@@ -73,6 +75,8 @@ export default async function SettingsPage() {
         usernameChangedAt: user.usernameChangedAt?.toISOString() ?? null,
         notifyFollowedUploads: user.notifyFollowedUploads,
         uploadsUsed,
+        twoFactorEnabled: user.twoFactorEnabled,
+        isPrivileged: user.role === 'MODERATOR' || user.role === 'ADMIN',
       }}
     />
   );

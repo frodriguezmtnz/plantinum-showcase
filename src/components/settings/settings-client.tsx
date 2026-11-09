@@ -42,6 +42,7 @@ import { PasswordInput } from '@/components/shared/password-input';
 import { PasswordRules } from '@/components/shared/password-rules';
 import { ProfileCompletion } from '@/components/shared/profile-completion';
 import { ResendVerificationButton } from '@/components/settings/resend-verification-button';
+import { TwoFactorSettings } from '@/components/settings/two-factor-settings';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -96,6 +97,8 @@ export interface SettingsUser {
   usernameChangedAt: string | null;
   notifyFollowedUploads: boolean;
   uploadsUsed: number;
+  twoFactorEnabled: boolean;
+  isPrivileged: boolean;
 }
 
 type Availability =
@@ -110,6 +113,7 @@ type Availability =
 const SETTINGS_SECTIONS = [
   { id: 'profile', label: 'Profile' },
   { id: 'account', label: 'Account' },
+  { id: 'security', label: 'Security' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'plan', label: 'Plan' },
   { id: 'danger', label: 'Danger zone' },
@@ -1107,6 +1111,17 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               Update password
             </Button>
           </div>
+        </Section>
+
+        <Section
+          id="security"
+          title="Security"
+          description="Two-factor authentication and account protection."
+        >
+          <TwoFactorSettings
+            enabled={user.twoFactorEnabled}
+            required={user.isPrivileged}
+          />
         </Section>
 
         <Section
