@@ -33,11 +33,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { GameNameField } from '@/components/shared/game-name-field';
 import {
   Select,
   SelectContent,
@@ -49,6 +49,7 @@ import {
 export interface EditablePlatinum {
   id: string;
   gameName: string;
+  gameId?: number | null;
   platform: 'PS3' | 'PS4' | 'PS5';
   platinumDate: string;
   isSpoiler: boolean;
@@ -80,6 +81,7 @@ export function EditPlatinumDialog({
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [gameId, setGameId] = useState<number | null>(platinum.gameId ?? null);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<PlatinumMetaInputValues, unknown, PlatinumMetaValues>({
@@ -94,6 +96,7 @@ export function EditPlatinumDialog({
     if (next) {
       // Re-sync with the (possibly stale) prop each time the dialog opens.
       form.reset(toDefaults(platinum));
+      setGameId(platinum.gameId ?? null);
     }
   }
 
@@ -101,6 +104,7 @@ export function EditPlatinumDialog({
     startTransition(async () => {
       const result = await editPlatinum(platinum.id, {
         gameName: values.gameName,
+        gameId,
         platform: values.platform,
         platinumDate: values.platinumDate.toISOString(),
         isSpoiler: values.isSpoiler,
@@ -161,7 +165,18 @@ export function EditPlatinumDialog({
                 <FormItem>
                   <FormLabel>Game Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Elden Ring" {...field} disabled={busy} />
+                    <GameNameField
+                      key={`${platinum.id}-${open}`}
+                      value={field.value}
+                      gameId={gameId}
+                      onChange={({ name, gameId: nextGameId }) => {
+                        field.onChange(name);
+                        setGameId(nextGameId);
+                      }}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      disabled={busy}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
