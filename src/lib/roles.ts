@@ -20,4 +20,23 @@ export async function isModerator(userId: string): Promise<boolean> {
   return MODERATOR_ROLES.includes(await getUserRole(userId));
 }
 
+export interface ModeratorAccess {
+  isModerator: boolean;
+  twoFactorEnabled: boolean;
+}
+
+/** One read for the admin guard: role plus whether the account has 2FA. */
+export async function getModeratorAccess(
+  userId: string,
+): Promise<ModeratorAccess> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true, twoFactorEnabled: true },
+  });
+  return {
+    isModerator: user ? MODERATOR_ROLES.includes(user.role) : false,
+    twoFactorEnabled: Boolean(user?.twoFactorEnabled),
+  };
+}
+
 export { MODERATOR_ROLES };

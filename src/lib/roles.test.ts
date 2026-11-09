@@ -6,7 +6,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: { user: { findUnique } },
 }));
 
-import { getUserRole, isModerator } from '@/lib/roles';
+import { getModeratorAccess, getUserRole, isModerator } from '@/lib/roles';
 
 beforeEach(() => {
   findUnique.mockReset();
@@ -37,5 +37,33 @@ describe('getUserRole', () => {
 
     findUnique.mockResolvedValueOnce(null);
     expect(await getUserRole('gone')).toBe('USER');
+  });
+});
+
+describe('getModeratorAccess', () => {
+  it('returns the moderator flag and 2FA state together', async () => {
+    findUnique.mockResolvedValueOnce({
+      role: 'MODERATOR',
+      twoFactorEnabled: true,
+    });
+    expect(await getModeratorAccess('mod')).toEqual({
+      isModerator: true,
+      twoFactorEnabled: true,
+    });
+
+    findUnique.mockResolvedValueOnce({
+      role: 'USER',
+      twoFactorEnabled: false,
+    });
+    expect(await getModeratorAccess('user')).toEqual({
+      isModerator: false,
+      twoFactorEnabled: false,
+    });
+
+    findUnique.mockResolvedValueOnce(null);
+    expect(await getModeratorAccess('missing')).toEqual({
+      isModerator: false,
+      twoFactorEnabled: false,
+    });
   });
 });

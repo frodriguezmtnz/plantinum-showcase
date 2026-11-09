@@ -28,7 +28,7 @@ import { detectImageType } from "@/lib/image-signature";
 import { planConfig, quotaReached, nextPlan, uploadsRemaining } from "@/lib/plans";
 import { platinumMetaInputSchema, reportSchema, watermarkPositionSchema } from "@/lib/schemas";
 import { buildImageHint } from "@/lib/image-hint";
-import { isModerator } from "@/lib/roles";
+import { getModeratorAccess } from "@/lib/roles";
 import { getAiTriageConfig, isAiTriageConfigured, triageImageHash } from "@/lib/ai-triage";
 import { moderationStatusForVerdict } from "@/lib/ai-verdict";
 import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
@@ -624,8 +624,15 @@ export async function moderateReport(reportId: string, decision: ModerationDecis
   if (!userId) {
     return { success: false as const, error: "You need to sign in." };
   }
-  if (!(await isModerator(userId))) {
+  const access = await getModeratorAccess(userId);
+  if (!access.isModerator) {
     return { success: false as const, error: "You don't have permission to moderate." };
+  }
+  if (!access.twoFactorEnabled) {
+    return {
+      success: false as const,
+      error: "Enable two-factor authentication in Settings before moderating.",
+    };
   }
   if (!(await checkRateLimit(`moderate:${userId}`, 60, 60_000)).ok) {
     return { success: false as const, error: "Slow down a moment and try again." };
@@ -643,8 +650,15 @@ export async function moderatePlatinum(
   if (!userId) {
     return { success: false as const, error: "You need to sign in." };
   }
-  if (!(await isModerator(userId))) {
+  const access = await getModeratorAccess(userId);
+  if (!access.isModerator) {
     return { success: false as const, error: "You don't have permission to moderate." };
+  }
+  if (!access.twoFactorEnabled) {
+    return {
+      success: false as const,
+      error: "Enable two-factor authentication in Settings before moderating.",
+    };
   }
   if (!(await checkRateLimit(`moderate:${userId}`, 60, 60_000)).ok) {
     return { success: false as const, error: "Slow down a moment and try again." };
