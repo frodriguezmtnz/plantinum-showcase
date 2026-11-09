@@ -25,6 +25,7 @@ describe('rawg search', () => {
 
   afterEach(() => {
     global.fetch = originalFetch;
+    vi.useRealTimers();
     vi.restoreAllMocks();
     if (originalKey === undefined) delete process.env.RAWG_API_KEY;
     else process.env.RAWG_API_KEY = originalKey;
@@ -134,5 +135,107 @@ describe('rawg search', () => {
 
     await expect(searchGames(' E ')).resolves.toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('opens the breaker after two failures and fails fast without fetching', async () => {
+    vi.useFakeTimers();
+    process.env.RAWG_API_KEY = 'test-key';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({}, false, 522))
+      .mockResolvedValueOnce(jsonResponse({}, false, 522));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(searchGamesWithStatus('Hades')).resolves.toEqual({
+      results: [],
+      ok: false,
+    });
+    await expect(searchGamesWithStatus('Hades')).resolves.toEqual({
+      results: [],
+      ok: false,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // Breaker is open: no network call, instant failure.
+    await expect(searchGamesWithStatus('Hades')).resolves.toEqual({
+      results: [],
+      ok: false,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    // After the window it tries RAWG again and recovers.
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ results: [{ id: 1, name: 'Hades' }] }),
+    );
+    vi.advanceTimersByTime(31_000);
+    const recovered = await searchGamesWithStatus('Hades');
+    expect(recovered.ok).toBe(true);
+    expect(recovered.results[0]?.name).toBe('Hades');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('still serves cached results while the breaker is open', async () => {
+    vi.useFakeTimers();
+    process.env.RAWG_API_KEY = 'test-key';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({ results: [{ id: 1, name: 'Celeste' }] }),
+      )
+      .mockResolvedValue(jsonResponse({}, false, 522));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(
+      searchGamesWithStatus('Celeste'),
+    ).resolves.toMatchObject({ ok: true });
+
+    await searchGamesWithStatus('Hollow');
+    await searchGamesWithStatus('Hollow');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    const cached = await searchGamesWithStatus('Celeste');
+    expect(cached.ok).toBe(true);
+    expect(cached.results[0]?.name).toBe('Celeste');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('caches empty results briefly instead of a full day', async () => {
+    vi.useFakeTimers();
+    process.env.RAWG_API_KEY = 'test-key';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ results: [] }))
+      .mockResolvedValueOnce(
+        jsonResponse({ results: [{ id: 7, name: 'Limbo' }] }),
+      );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await searchGamesWithStatus('Limbo');
+    // Immediate repeat is served from cache.
+    await searchGamesWithStatus('Limbo');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    // The short empty TTL expires and the query is retried.
+    vi.advanceTimersByTime(61_000);
+    const refreshed = await searchGamesWithStatus('Limbo');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(refreshed.ok).toBe(true);
+    expect(refreshed.results[0]?.name).toBe('Limbo');
+  });
+
+  it('keeps non-empty results cached for a day', async () => {
+    vi.useFakeTimers();
+    process.env.RAWG_API_KEY = 'test-key';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ results: [{ id: 9, name: 'Undertale' }] }),
+      );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await searchGamesWithStatus('Undertale');
+    vi.advanceTimersByTime(60 * 60 * 1000);
+    await searchGamesWithStatus('Undertale');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

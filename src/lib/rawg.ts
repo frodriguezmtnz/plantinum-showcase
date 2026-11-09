@@ -6,8 +6,10 @@
  * search is disabled and the upload form keeps its free-text fallback.
  *
  * RAWG's free tier is small (20k requests/month), so repeated queries are
- * cached in-process for a day. The cache is per serverless instance, which is
- * enough to absorb debounced typing without becoming a source of truth.
+ * cached in-process for a day (empty results only briefly). The cache is per
+ * serverless instance, which is enough to absorb debounced typing without
+ * becoming a source of truth. Repeated upstream failures open a short circuit
+ * breaker so an outage does not make every keystroke wait for the timeout.
  */
 
 import type { RawgGame } from './rawg-types';
@@ -17,8 +19,13 @@ export type { RawgGame } from './rawg-types';
 const RAWG_BASE_URL =
   process.env.RAWG_API_URL?.replace(/\/+$/, '') || 'https://api.rawg.io/api';
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+// A transient empty 200 is not "no matches forever": keep it briefly.
+const EMPTY_CACHE_TTL_MS = 60 * 1000;
 const CACHE_MAX_ENTRIES = 500;
-const REQUEST_TIMEOUT_MS = 6000;
+const REQUEST_TIMEOUT_MS = Number(process.env.RAWG_TIMEOUT_MS) || 3000;
+// Upstream outages shouldn't make every keystroke wait for the timeout.
+const CIRCUIT_OPEN_MS = 30 * 1000;
+const CIRCUIT_FAILURE_THRESHOLD = 2;
 
 interface CacheEntry {
   expiresAt: number;
@@ -33,6 +40,21 @@ export interface RawgSearchResult {
 
 const cache = new Map<string, CacheEntry>();
 
+let consecutiveFailures = 0;
+let breakerOpenUntil = 0;
+
+function recordFailure(now: number): void {
+  consecutiveFailures += 1;
+  if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+    breakerOpenUntil = now + CIRCUIT_OPEN_MS;
+  }
+}
+
+function recordSuccess(): void {
+  consecutiveFailures = 0;
+  breakerOpenUntil = 0;
+}
+
 function apiKey(): string | undefined {
   const key = process.env.RAWG_API_KEY?.trim();
   return key || undefined;
@@ -45,6 +67,8 @@ export function isRawgConfigured(): boolean {
 /** Drops the in-process cache (tests and manual refreshes). */
 export function clearRawgCache(): void {
   cache.clear();
+  consecutiveFailures = 0;
+  breakerOpenUntil = 0;
 }
 
 interface RawgResponse {
@@ -107,6 +131,11 @@ export async function searchGamesWithStatus(
     return { results: hit.results, ok: true };
   }
 
+  // While the breaker is open, fail fast instead of awaiting another timeout.
+  if (now < breakerOpenUntil) {
+    return { results: [], ok: false };
+  }
+
   const url = new URL(`${RAWG_BASE_URL}/games`);
   url.searchParams.set('key', key);
   url.searchParams.set('search', trimmed);
@@ -125,6 +154,7 @@ export async function searchGamesWithStatus(
     if (!response.ok) {
       // Never log the URL: it carries the API key.
       console.warn(`[rawg] search failed with ${response.status}`);
+      recordFailure(Date.now());
       return { results: [], ok: false };
     }
     const payload = (await response.json()) as RawgResponse;
@@ -136,11 +166,14 @@ export async function searchGamesWithStatus(
     if (name !== 'AbortError' && name !== 'TimeoutError') {
       console.warn('[rawg] search request failed', name);
     }
+    recordFailure(Date.now());
     return { results: [], ok: false };
   }
 
+  recordSuccess();
   pruneCache(now);
-  cache.set(cacheKey, { expiresAt: now + CACHE_TTL_MS, results });
+  const ttl = results.length > 0 ? CACHE_TTL_MS : EMPTY_CACHE_TTL_MS;
+  cache.set(cacheKey, { expiresAt: now + ttl, results });
   return { results, ok: true };
 }
 
