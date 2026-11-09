@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { isRawgConfigured, searchGames } from '@/lib/rawg';
+import { isRawgConfigured, searchGamesWithStatus } from '@/lib/rawg';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +39,12 @@ export async function GET(request: Request) {
   const limit = await checkRateLimit(`games:${clientIp(request)}`, 60, 60_000);
   if (!limit.ok) {
     return NextResponse.json(
-      { results: [], error: 'Too many searches. Please wait a moment.' },
+      {
+        results: [],
+        configured: true,
+        available: false,
+        error: 'Too many searches. Please wait a moment.',
+      },
       {
         status: 429,
         headers: { 'Retry-After': String(limit.retryAfterSeconds) },
@@ -47,12 +52,15 @@ export async function GET(request: Request) {
     );
   }
 
-  const results = await searchGames(query);
+  const { results, ok } = await searchGamesWithStatus(query);
   return NextResponse.json(
-    { results, configured: true },
+    { results, configured: true, available: ok },
     {
       headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=86400',
+        // Never let a CDN cache an upstream outage as "no matches".
+        'Cache-Control': ok
+          ? 'public, max-age=300, s-maxage=86400'
+          : 'no-store',
       },
     },
   );

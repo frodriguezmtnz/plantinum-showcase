@@ -25,6 +25,12 @@ interface CacheEntry {
   results: RawgGame[];
 }
 
+export interface RawgSearchResult {
+  results: RawgGame[];
+  /** False when the key is missing, the query is too short, or RAWG failed. */
+  ok: boolean;
+}
+
 const cache = new Map<string, CacheEntry>();
 
 function apiKey(): string | undefined {
@@ -84,18 +90,22 @@ function pruneCache(now: number) {
 }
 
 /**
- * Search RAWG by title. Returns an empty array when the key is missing, the
- * query is too short, or the API fails — the form degrades to free text.
+ * Search RAWG by title and keep the failure signal, so callers can avoid
+ * caching an outage as if it were "no matches".
  */
-export async function searchGames(query: string): Promise<RawgGame[]> {
+export async function searchGamesWithStatus(
+  query: string,
+): Promise<RawgSearchResult> {
   const key = apiKey();
   const trimmed = query.trim();
-  if (!key || trimmed.length < 2) return [];
+  if (!key || trimmed.length < 2) return { results: [], ok: false };
 
   const cacheKey = trimmed.toLowerCase();
   const now = Date.now();
   const hit = cache.get(cacheKey);
-  if (hit && hit.expiresAt > now) return hit.results;
+  if (hit && hit.expiresAt > now) {
+    return { results: hit.results, ok: true };
+  }
 
   const url = new URL(`${RAWG_BASE_URL}/games`);
   url.searchParams.set('key', key);
@@ -115,7 +125,7 @@ export async function searchGames(query: string): Promise<RawgGame[]> {
     if (!response.ok) {
       // Never log the URL: it carries the API key.
       console.warn(`[rawg] search failed with ${response.status}`);
-      return [];
+      return { results: [], ok: false };
     }
     const payload = (await response.json()) as RawgResponse;
     results = (payload.results ?? [])
@@ -126,10 +136,18 @@ export async function searchGames(query: string): Promise<RawgGame[]> {
     if (name !== 'AbortError' && name !== 'TimeoutError') {
       console.warn('[rawg] search request failed', name);
     }
-    return [];
+    return { results: [], ok: false };
   }
 
   pruneCache(now);
   cache.set(cacheKey, { expiresAt: now + CACHE_TTL_MS, results });
-  return results;
+  return { results, ok: true };
+}
+
+/**
+ * Search RAWG by title. Returns an empty array when the key is missing, the
+ * query is too short, or the API fails — the form degrades to free text.
+ */
+export async function searchGames(query: string): Promise<RawgGame[]> {
+  return (await searchGamesWithStatus(query)).results;
 }

@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearRawgCache, isRawgConfigured, searchGames } from '@/lib/rawg';
+import {
+  clearRawgCache,
+  isRawgConfigured,
+  searchGames,
+  searchGamesWithStatus,
+} from '@/lib/rawg';
 
 const originalFetch = global.fetch;
 const originalKey = process.env.RAWG_API_KEY;
@@ -89,6 +94,37 @@ describe('rawg search', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     await expect(searchGames('Bloodborne')).resolves.toEqual([]);
+  });
+
+  it('signals upstream failures and never caches them as no matches', async () => {
+    process.env.RAWG_API_KEY = 'test-key';
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({}, false, 502))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          results: [
+            {
+              id: 37127,
+              name: 'Bloodborne',
+              slug: 'bloodborne',
+              released: '2015-03-24',
+              background_image: null,
+            },
+          ],
+        }),
+      );
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(searchGamesWithStatus('Bloodborne')).resolves.toEqual({
+      results: [],
+      ok: false,
+    });
+
+    const recovered = await searchGamesWithStatus('Bloodborne');
+    expect(recovered.ok).toBe(true);
+    expect(recovered.results[0]?.name).toBe('Bloodborne');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('ignores queries shorter than two characters', async () => {

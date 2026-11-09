@@ -22,6 +22,7 @@ interface GameNameFieldProps
 interface SearchResponse {
   results?: RawgGame[];
   configured?: boolean;
+  available?: boolean;
   error?: string;
 }
 
@@ -76,7 +77,9 @@ export const GameNameField = forwardRef<HTMLInputElement, GameNameFieldProps>(
         const payload = (await response.json()) as SearchResponse;
         if (controller.signal.aborted) return;
 
-        setConfigured(payload.configured !== false);
+        setConfigured(
+          payload.configured !== false && payload.available !== false,
+        );
         setResults(Array.isArray(payload.results) ? payload.results : []);
         setActiveIndex(-1);
         setOpen(true);
