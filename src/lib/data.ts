@@ -25,6 +25,7 @@ export interface Platinum {
   id: string;
   hash: string;
   gameName: string;
+  gameId?: number | null;
   platform: 'PS3' | 'PS4' | 'PS5';
   platinumDate: string;
   isSpoiler: boolean;
@@ -50,6 +51,7 @@ interface PlatinumRecord {
   id: string;
   hash: string;
   gameName: string;
+  gameId?: number | null;
   platform: string;
   platinumDate: Date;
   isSpoiler: boolean;
@@ -75,6 +77,7 @@ const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   id: p.id,
   hash: p.hash,
   gameName: p.gameName,
+  gameId: p.gameId ?? null,
   platform: p.platform as 'PS3' | 'PS4' | 'PS5',
   platinumDate: p.platinumDate.toISOString(),
   isSpoiler: p.isSpoiler,

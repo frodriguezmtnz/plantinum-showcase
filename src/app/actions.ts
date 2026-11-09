@@ -65,6 +65,20 @@ const MAX_FILE_BYTES = 6 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_EDGE = 1600;
 
+/** RAWG ids are positive integers; anything else (or missing) becomes null. */
+function parseGameId(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isInteger(value) && value > 0 ? value : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!/^\d+$/.test(trimmed)) return null;
+    const parsed = Number(trimmed);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  }
+  return null;
+}
+
 export async function getUploadQuota() {
   const session = await auth();
   const userId = session?.user?.id;
@@ -298,6 +312,8 @@ export async function uploadPlatinum(formData: FormData) {
     };
   }
 
+  const gameId = parseGameId(formData.get("gameId"));
+
   const file = formData.get("screenshot");
   if (!(file instanceof File) || file.size === 0) {
     return { success: false as const, error: "A screenshot is required." };
@@ -390,6 +406,7 @@ export async function uploadPlatinum(formData: FormData) {
       data: {
         hash,
         gameName: parsed.data.gameName,
+        gameId,
         platform: parsed.data.platform,
         platinumDate: parsed.data.platinumDate,
         isSpoiler: parsed.data.isSpoiler,
@@ -475,6 +492,7 @@ export async function uploadPlatinum(formData: FormData) {
 
 export interface EditPlatinumInput {
   gameName: string;
+  gameId?: number | null;
   platform: string;
   platinumDate: string;
   isSpoiler: boolean;
@@ -514,7 +532,7 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
 
   const platinum = await prisma.platinum.findUnique({
     where: { id },
-    select: { userId: true },
+    select: { userId: true, gameName: true },
   });
   if (!platinum) {
     return { success: false as const, error: "This platinum does not exist." };
@@ -531,10 +549,24 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
     select: { username: true },
   });
 
+  // Keep the RAWG link only while the title still matches. The edit dialog
+  // sends an explicit gameId (null when the hunter typed instead of picking),
+  // but other callers may omit it and rely on this fallback.
+  const requestedGameId =
+    input.gameId === undefined ? undefined : parseGameId(input.gameId);
+  const nameChanged = parsed.data.gameName !== platinum.gameName;
+  const nextGameId =
+    requestedGameId !== undefined
+      ? requestedGameId
+      : nameChanged
+        ? null
+        : undefined;
+
   await prisma.platinum.update({
     where: { id },
     data: {
       gameName: parsed.data.gameName,
+      ...(nextGameId !== undefined ? { gameId: nextGameId } : {}),
       platform: parsed.data.platform,
       platinumDate: parsed.data.platinumDate,
       isSpoiler: parsed.data.isSpoiler,

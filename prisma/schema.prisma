@@ -225,6 +225,7 @@ model Platinum {
   id                String           @id @default(cuid())
   hash              String
   gameName          String
+  gameId            Int?
   platform          String
   platinumDate      DateTime
   isSpoiler         Boolean          @default(false)
@@ -246,6 +247,7 @@ model Platinum {
   reports     Report[]
 
   @@unique([userId, hash])
+  @@index([gameId])
   @@index([monthlyVotesMonth, monthlyVotes])
   @@index([moderationStatus])
   @@index([userId, platinumDate(sort: Desc)])

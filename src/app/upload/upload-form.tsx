@@ -36,6 +36,7 @@ import { pixelateImage } from "@/lib/pixelate-client"
 import { platinumMetaSchema, watermarkPositionSchema } from "@/lib/schemas"
 import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-position"
 import { ResendVerificationButton } from "@/components/settings/resend-verification-button"
+import { GameNameField } from "@/components/shared/game-name-field"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -91,6 +92,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
   const [compressPct, setCompressPct] = useState(0);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [quota, setQuota] = useState<Awaited<ReturnType<typeof getUploadQuota>>>(null);
+  const [gameId, setGameId] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -169,6 +171,9 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
 
       const formData = new FormData();
       formData.set("gameName", data.gameName);
+      if (gameId !== null) {
+        formData.set("gameId", String(gameId));
+      }
       formData.set("platform", data.platform);
       formData.set("platinumDate", data.platinumDate.toISOString());
       formData.set("isSpoiler", String(data.isSpoiler));
@@ -197,6 +202,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
       setPixelPreview(mosaic);
       setSubmitted({ id: result.platinumId, gameName: data.gameName, blocked });
       form.reset();
+      setGameId(null);
       setPreview(null);
 
       toast({
@@ -361,8 +367,23 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                   <FormItem>
                     <FormLabel>Game Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Elden Ring" {...field} />
+                      <GameNameField
+                        value={field.value}
+                        gameId={gameId}
+                        onChange={({ name, gameId: nextGameId }) => {
+                          field.onChange(name);
+                          setGameId(nextGameId);
+                        }}
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        disabled={busy}
+                      />
                     </FormControl>
+                    <FormDescription>
+                      Pick the exact game from the list so your platinums can be
+                      matched with other trophy hunters. You can still type it
+                      manually if it is missing.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

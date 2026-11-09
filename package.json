@@ -17,6 +17,7 @@
     "snapshots": "tsx scripts/backfill-snapshots.ts",
     "set-role": "tsx scripts/set-role.ts",
     "update:disposable-domains": "node scripts/update-disposable-domains.mjs",
+    "backfill:rawg": "tsx scripts/backfill-rawg-games.ts",
     "db:wipe": "tsx scripts/wipe-dev-data.ts",
     "telegram:test": "tsx scripts/telegram-test-notice.ts",
     "email:test": "tsx scripts/email-test.ts",
