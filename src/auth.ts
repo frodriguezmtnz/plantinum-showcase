@@ -1,11 +1,20 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import { isSessionVersionStale } from "@/lib/session-revocation";
+import { verifyTwoFactorLogin } from "@/lib/two-factor";
 import bcrypt from "bcrypt";
+
+class TwoFactorRequiredError extends CredentialsSignin {
+  code = "2fa_required";
+}
+
+class TwoFactorRateLimitedError extends CredentialsSignin {
+  code = "2fa_rate_limited";
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -23,6 +32,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        otp: { label: "Authentication code", type: "text" },
       },
       async authorize(credentials) {
         // Credentials sign-up stores emails lower-cased, so normalize here too
@@ -40,6 +50,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!isValid) return null;
 
+        if (user.twoFactorEnabled) {
+          const otp = (credentials?.otp as string | undefined)?.trim();
+          if (!otp) throw new TwoFactorRequiredError();
+
+          const result = await verifyTwoFactorLogin(
+            user.id,
+            user.twoFactorSecret,
+            otp,
+          );
+          if (result === "rate-limited") throw new TwoFactorRateLimitedError();
+          if (result !== "ok") throw new CredentialsSignin();
+        }
+
         return {
           id: user.id,
           name: user.username,
@@ -53,6 +76,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // OAuth is not wired yet. If it lands, a 2FA account must complete a
+      // second-factor challenge before a session can be created; until that
+      // flow exists, block the shortcut rather than bypassing TOTP.
+      if (!account || account.provider === "credentials") return true;
+      if (!user?.id) return true;
+      const fresh = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { twoFactorEnabled: true },
+      });
+      return !fresh?.twoFactorEnabled;
+    },
     async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
