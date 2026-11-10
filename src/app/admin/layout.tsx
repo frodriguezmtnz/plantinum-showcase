@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { auth } from '@/auth';
-import { isModerator } from '@/lib/roles';
+import { getModeratorAccess } from '@/lib/roles';
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -21,8 +21,12 @@ export default async function AdminLayout({
   if (!session?.user?.id) {
     redirect('/login?callbackUrl=/admin/reports');
   }
-  if (!(await isModerator(session.user.id))) {
+  const access = await getModeratorAccess(session.user.id);
+  if (!access.isModerator) {
     notFound();
+  }
+  if (!access.twoFactorEnabled) {
+    redirect('/settings#security');
   }
   return children;
 }
