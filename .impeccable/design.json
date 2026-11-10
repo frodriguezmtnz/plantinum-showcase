@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-25T12:00:00.000Z",
+  "generatedAt": "2026-11-10T16:45:00.000Z",
   "title": "Design System: Platinum Showcase",
   "extensions": {
     "colorMeta": {
@@ -450,6 +450,11 @@
         "name": "header-tuck",
         "value": "translateY(-100%) over 300ms --ease-bloom",
         "purpose": "Bar hides on scroll-down past 96px, returns on scroll-up; :focus-within always reveals; disabled under reduced-motion."
+      },
+      {
+        "name": "skyline-boot",
+        "value": "autoAlpha 0 to 1, scale 1.04 to 1, 1.4s power2.out, transform-origin 50% 100%",
+        "purpose": "The ghosted trophy skyline resolves into the paper field as the console boots, before the strip and title land."
       }
     ],
     "breakpoints": [
@@ -535,6 +540,14 @@
       "description": "The 11px tracked-caps data label; the only surviving small-caps device, and only for data.",
       "html": "<p class=\"ds-field-mark\">PLATFORM</p>",
       "css": ".ds-field-mark { font: 700 11px/1.4 Mulish, sans-serif; letter-spacing: 0.22em; text-transform: uppercase; color: hsl(211 22% 36%); }"
+    },
+    {
+      "name": "Trophy Skyline",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Ghosted brand-trophy skyline standing behind the home browse row: a 2000px-wide render anchored to the row's baseline at 9% multiply on paper (6% screen on the night ground), dissolved upward by an alpha mask, cropped to cover under sm, and decorative only.",
+      "html": "<div class=\"hero-skyline\" aria-hidden><img class=\"hero-skyline-art\" src=\"/assets/brand/hero-trophies.webp\" alt=\"\" /></div>",
+      "css": ".hero-skyline { position: absolute; left: 50%; bottom: 0.25rem; translate: -50% 0; width: min(1150px, 100%); height: clamp(200px, 30vh, 300px); pointer-events: none; user-select: none; } .hero-skyline-art { object-fit: contain; object-position: bottom center; opacity: var(--skyline-opacity, 0.09); filter: saturate(0.55); mix-blend-mode: multiply; mask-image: linear-gradient(to top, #000 0%, #000 22%, transparent 88%); -webkit-mask-image: linear-gradient(to top, #000 0%, #000 22%, transparent 88%); } @media (max-width: 639px) { .hero-skyline { height: clamp(150px, 26vh, 230px); bottom: 0; } .hero-skyline-art { object-fit: cover; opacity: var(--skyline-opacity, 0.08); } } .dark .hero-skyline-art { opacity: var(--skyline-opacity, 0.06); filter: saturate(0.4) contrast(1.15); mix-blend-mode: screen; }"
     }
   ],
   "narrative": {
