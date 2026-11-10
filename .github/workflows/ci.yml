@@ -107,6 +107,11 @@ jobs:
       EMAIL_TRANSPORT: console
       E2E_EMAIL: e2e@platinum-showcase.test
       E2E_PASSWORD: PwTest12345!
+      E2E_2FA_EMAIL: e2e-2fa@platinum-showcase.test
+      E2E_2FA_PASSWORD: PwTest12345!
+      E2E_2FA_USERNAME: e2e-2fa
+      # CI-only 32-byte key so enabling 2FA works during the E2E run.
+      TOTP_ENCRYPTION_KEY: BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
       PW_CHANNEL: chromium
 
     steps:
