@@ -20,6 +20,12 @@ const username = process.env.E2E_USERNAME ?? "e2e-runner";
 const neighborEmail = process.env.E2E_NEIGHBOR_EMAIL ?? "e2e-neighbor@platinum-showcase.test";
 const neighborUsername = process.env.E2E_NEIGHBOR_USERNAME ?? "e2e-neighbor";
 
+// Dedicated account for the 2FA specs. Kept separate from `email` so enabling
+// two-factor does not affect the shared login used by the rest of the suite.
+const twoFactorEmail = process.env.E2E_2FA_EMAIL ?? "e2e-2fa@platinum-showcase.test";
+const twoFactorUsername = process.env.E2E_2FA_USERNAME ?? "e2e-2fa";
+const twoFactorPassword = process.env.E2E_2FA_PASSWORD ?? password;
+
 async function main() {
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -98,8 +104,34 @@ async function main() {
     },
   });
 
+  // Reset the 2FA fixture on every run so a failed spec never leaves the
+  // account protected and breaks the next suite run.
+  const twoFactorUser = await prisma.user.upsert({
+    where: { email: twoFactorEmail },
+    update: {
+      name: twoFactorUsername,
+      username: twoFactorUsername,
+      passwordHash: await bcrypt.hash(twoFactorPassword, 10),
+      emailVerified: new Date(),
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      twoFactorEnabledAt: null,
+    },
+    create: {
+      email: twoFactorEmail,
+      name: twoFactorUsername,
+      username: twoFactorUsername,
+      passwordHash: await bcrypt.hash(twoFactorPassword, 10),
+      emailVerified: new Date(),
+    },
+    select: { id: true },
+  });
+  await prisma.twoFactorRecoveryCode.deleteMany({
+    where: { userId: twoFactorUser.id },
+  });
+
   console.log(
-    `Seeded ${email} with 14 platinums and one unread notification, plus the ${neighborUsername} vote target.`,
+    `Seeded ${email} with 14 platinums and one unread notification, plus the ${neighborUsername} vote target and the ${twoFactorUsername} 2FA account.`,
   );
 }
 
