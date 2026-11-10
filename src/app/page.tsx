@@ -8,6 +8,7 @@ import {
 import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { RaceRow, type RaceEntry } from '@/components/shared/race-row';
+import { HeroTrophySkyline } from '@/components/shared/hero-trophy-skyline';
 import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -77,7 +78,7 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="px-6 text-center">
+        <div className="relative z-20 px-6 text-center">
           <h1 className="font-headline overflow-hidden pb-[0.12em] text-4xl font-light leading-[1.08] tracking-tight text-balance text-foreground md:text-6xl">
             <span className="hm-title block">Show your platinum to the world.</span>
           </h1>
@@ -92,11 +93,12 @@ export default async function Home() {
             No plates yet — be the first to show one.
           </p>
         )}
-        <div className="hm-row w-full">
+        <div className="hm-row relative z-10 w-full">
+          <HeroTrophySkyline />
           <RaceRow entries={entries} />
         </div>
 
-        <p className="hm-hint field-mark hidden sm:block">
+        <p className="hm-hint field-mark relative z-10 hidden sm:block">
           Arrows or scroll to browse · Enter opens the plate
         </p>
       </section>
