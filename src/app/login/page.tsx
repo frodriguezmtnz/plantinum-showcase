@@ -11,6 +11,7 @@ import { loginAction, type LoginState } from "./actions";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
+import { useAutoSubmitTotp } from "@/hooks/use-auto-submit-totp";
 
 const initialState: LoginState = {};
 
@@ -38,6 +39,14 @@ export default function LoginPage({
   // Refreshing the session re-renders the provider, so guard against running
   // the post-sign-in navigation more than once.
   const navigatedRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useAutoSubmitTotp({
+    value: otp,
+    enabled: !!state.requiresTwoFactor && !useRecoveryCode,
+    pending: isPending,
+    onSubmit: () => formRef.current?.requestSubmit(),
+  });
 
   const notice =
     reset === 'success'
@@ -80,7 +89,7 @@ export default function LoginPage({
         </>
       }
     >
-      <form action={formAction} className="grid gap-4">
+      <form ref={formRef} action={formAction} className="grid gap-4">
         <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
         {state.requiresTwoFactor ? (
           <>

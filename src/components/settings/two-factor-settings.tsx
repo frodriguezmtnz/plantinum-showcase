@@ -18,6 +18,7 @@ import {
   regenerateRecoveryCodes,
 } from '@/app/settings/two-factor-actions';
 import { PasswordInput } from '@/components/shared/password-input';
+import { useAutoSubmitTotp } from '@/hooks/use-auto-submit-totp';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,9 +72,9 @@ export function TwoFactorSettings({
     });
   }
 
-  function handleConfirmSetup() {
+  function handleConfirmSetup(codeValue: string) {
     const formData = new FormData();
-    formData.set('code', code);
+    formData.set('code', codeValue);
     startTransition(async () => {
       const result = await confirmTwoFactorSetup(formData);
       if (!result.success) return fail(result.error);
@@ -108,6 +109,13 @@ export function TwoFactorSettings({
       setMode('idle');
     });
   }
+
+  useAutoSubmitTotp({
+    value: code,
+    enabled: mode === 'setup' && setup !== null,
+    pending: isPending,
+    onSubmit: () => handleConfirmSetup(code),
+  });
 
   async function copyRecoveryCodes() {
     if (!recoveryCodes) return;
@@ -184,7 +192,7 @@ export function TwoFactorSettings({
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                onClick={handleConfirmSetup}
+                onClick={() => handleConfirmSetup(code)}
                 disabled={isPending || code.replace(/\s/g, '').length !== 6}
               >
                 {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
