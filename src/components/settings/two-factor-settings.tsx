@@ -248,7 +248,13 @@ export function TwoFactorSettings({
             onClick={isDisable ? handleDisable : handleRegenerate}
             disabled={isPending || !password || !code}
           >
-            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isDisable ? (
+              <ShieldOff className="h-4 w-4" aria-hidden />
+            ) : (
+              <KeyRound className="h-4 w-4" aria-hidden />
+            )}
             {isDisable ? 'Disable 2FA and sign out' : 'Generate new codes'}
           </Button>
           <Button type="button" variant="ghost" onClick={() => resetForm()}>
@@ -342,6 +348,7 @@ export function TwoFactorSettings({
           className="text-destructive hover:text-destructive"
           onClick={() => resetForm('disable')}
         >
+          <ShieldOff className="h-4 w-4" aria-hidden />
           Disable 2FA
         </Button>
       </div>
