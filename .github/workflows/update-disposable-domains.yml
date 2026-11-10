@@ -39,7 +39,7 @@ jobs:
         run: pnpm exec vitest run src/lib/email/domains.test.ts
 
       - name: Open a PR only when the snapshot changed
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/update-disposable-domains
           delete-branch: true
