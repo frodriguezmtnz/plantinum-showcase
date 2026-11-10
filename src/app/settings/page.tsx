@@ -38,6 +38,10 @@ export default async function SettingsPage() {
       plan: true,
       role: true,
       twoFactorEnabled: true,
+      twoFactorRecoveryCodes: {
+        where: { usedAt: null },
+        select: { id: true },
+      },
       usernameChangedAt: true,
       notifyFollowedUploads: true,
     },
@@ -76,6 +80,7 @@ export default async function SettingsPage() {
         notifyFollowedUploads: user.notifyFollowedUploads,
         uploadsUsed,
         twoFactorEnabled: user.twoFactorEnabled,
+        recoveryCodesRemaining: user.twoFactorRecoveryCodes.length,
         isPrivileged: user.role === 'MODERATOR' || user.role === 'ADMIN',
       }}
     />

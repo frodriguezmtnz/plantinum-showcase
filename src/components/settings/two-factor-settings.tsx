@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 import {
   Check,
   Copy,
+  Download,
   KeyRound,
   Loader2,
   ShieldCheck,
@@ -20,7 +21,16 @@ import {
 import { PasswordInput } from '@/components/shared/password-input';
 import { useAutoSubmitTotp } from '@/hooks/use-auto-submit-totp';
 import { useToast } from '@/hooks/use-toast';
-import { isTotpCode, isTwoFactorCode } from '@/lib/two-factor-code';
+import {
+  buildRecoveryCodesFile,
+  recoveryCodesFileName,
+} from '@/lib/recovery-codes-file';
+import {
+  isTotpCode,
+  isTwoFactorCode,
+  RECOVERY_CODE_COUNT,
+} from '@/lib/two-factor-code';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,9 +40,13 @@ type Mode = 'idle' | 'setup' | 'disable' | 'regenerate';
 export function TwoFactorSettings({
   enabled,
   required,
+  username,
+  recoveryCodesRemaining,
 }: {
   enabled: boolean;
   required: boolean;
+  username: string;
+  recoveryCodesRemaining: number;
 }) {
   const { toast } = useToast();
   const [mode, setMode] = useState<Mode>('idle');
@@ -42,6 +56,10 @@ export function TwoFactorSettings({
     null,
   );
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [codesContext, setCodesContext] = useState<
+    'enabled' | 'regenerated' | null
+  >(null);
+  const [remaining, setRemaining] = useState(recoveryCodesRemaining);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -80,6 +98,8 @@ export function TwoFactorSettings({
       const result = await confirmTwoFactorSetup(formData);
       if (!result.success) return fail(result.error);
       setRecoveryCodes(result.recoveryCodes);
+      setCodesContext('enabled');
+      setRemaining(result.recoveryCodes.length);
       setCode('');
       setSetup(null);
       setMode('idle');
@@ -105,6 +125,8 @@ export function TwoFactorSettings({
       const result = await regenerateRecoveryCodes(formData);
       if (!result.success) return fail(result.error);
       setRecoveryCodes(result.recoveryCodes);
+      setCodesContext('regenerated');
+      setRemaining(result.recoveryCodes.length);
       setPassword('');
       setCode('');
       setMode('idle');
@@ -132,6 +154,35 @@ export function TwoFactorSettings({
     window.setTimeout(() => setCopied(false), 2000);
   }
 
+  function downloadRecoveryCodes() {
+    if (!recoveryCodes) return;
+    const generatedAt = new Date();
+    const content = buildRecoveryCodesFile({
+      username,
+      codes: recoveryCodes,
+      generatedAt,
+    });
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = recoveryCodesFileName({ username, generatedAt });
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
+  function finishRegenerate() {
+    setRecoveryCodes(null);
+    setCodesContext(null);
+    toast({
+      title: 'Recovery codes updated',
+      description: `${RECOVERY_CODE_COUNT} new one-time codes are ready.`,
+      variant: 'success',
+    });
+  }
+
   if (recoveryCodes) {
     return (
       <div className="space-y-4">
@@ -139,7 +190,8 @@ export function TwoFactorSettings({
           <p className="text-sm font-semibold">Save these recovery codes now.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             They are shown once. Each code works a single time if you lose your
-            authenticator app.
+            authenticator app. We only keep hashes, so download or copy them
+            before leaving this page.
           </p>
         </div>
         <div className="grid max-w-xl grid-cols-1 gap-2 rounded-xl border border-border bg-muted/30 p-4 font-mono text-sm sm:grid-cols-2">
@@ -148,16 +200,35 @@ export function TwoFactorSettings({
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={copyRecoveryCodes}>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              copied &&
+                'border-emerald-600/40 text-emerald-700 dark:text-emerald-400',
+            )}
+            onClick={copyRecoveryCodes}
+          >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {copied ? 'Copied' : 'Copy codes'}
           </Button>
-          <Button
-            type="button"
-            onClick={() => signOut({ callbackUrl: '/login?twofactor=enabled' })}
-          >
-            I saved them — sign in again
+          <Button type="button" variant="outline" onClick={downloadRecoveryCodes}>
+            <Download className="h-4 w-4" />
+            Download codes .txt
           </Button>
+          {codesContext === 'regenerated' ? (
+            <Button type="button" variant="success" onClick={finishRegenerate}>
+              <Check className="h-4 w-4" />
+              Done
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => signOut({ callbackUrl: '/login?twofactor=enabled' })}
+            >
+              I saved them — sign in again
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -341,6 +412,9 @@ export function TwoFactorSettings({
     );
   }
 
+  const noCodes = remaining === 0;
+  const lowCodes = remaining > 0 && remaining <= 3;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -351,6 +425,33 @@ export function TwoFactorSettings({
         <p className="text-sm text-muted-foreground">
           Your password is followed by a code from your authenticator app.
         </p>
+      </div>
+      <div
+        role="status"
+        aria-live="polite"
+        className={cn(
+          'rounded-xl border p-3 text-sm',
+          noCodes
+            ? 'border-destructive/40 bg-destructive/10 text-destructive'
+            : lowCodes
+              ? 'border-amber-600/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+              : 'border-border/70 bg-muted/30 text-muted-foreground',
+        )}
+      >
+        {noCodes ? (
+          <>
+            <p className="font-semibold">No recovery codes left.</p>
+            <p className="mt-1">
+              Regenerate them before you lose your authenticator app.
+            </p>
+          </>
+        ) : (
+          <p>
+            <span className="font-semibold text-foreground">{remaining}</span> of{' '}
+            {RECOVERY_CODE_COUNT} recovery codes unused.
+            {lowCodes && ' Regenerate them when you get a chance.'}
+          </p>
+        )}
       </div>
       <div className="flex flex-wrap gap-2">
         <Button

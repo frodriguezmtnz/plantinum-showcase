@@ -8,12 +8,12 @@ import QRCode from 'qrcode';
 import { generateSecret, generateURI, verify } from 'otplib';
 import { prisma } from '@/lib/prisma';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { RECOVERY_CODE_COUNT } from '@/lib/two-factor-code';
 
 export const TOTP_ISSUER = 'Platinum Showcase';
 export const TOTP_DIGITS = 6;
 export const TOTP_PERIOD_SECONDS = 30;
 export const TOTP_TOLERANCE_SECONDS = 30;
-export const RECOVERY_CODE_COUNT = 10;
 
 const RECOVERY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const RECOVERY_GROUP_SIZE = 4;
