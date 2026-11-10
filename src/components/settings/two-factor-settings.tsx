@@ -23,7 +23,7 @@ import { useAutoSubmitTotp } from '@/hooks/use-auto-submit-totp';
 import { useToast } from '@/hooks/use-toast';
 import {
   buildRecoveryCodesFile,
-  RECOVERY_CODE_FILE_NAME,
+  recoveryCodesFileName,
 } from '@/lib/recovery-codes-file';
 import {
   isTotpCode,
@@ -156,16 +156,17 @@ export function TwoFactorSettings({
 
   function downloadRecoveryCodes() {
     if (!recoveryCodes) return;
+    const generatedAt = new Date();
     const content = buildRecoveryCodesFile({
       username,
       codes: recoveryCodes,
-      generatedAt: new Date(),
+      generatedAt,
     });
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = RECOVERY_CODE_FILE_NAME;
+    anchor.download = recoveryCodesFileName({ username, generatedAt });
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -199,16 +200,25 @@ export function TwoFactorSettings({
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={copyRecoveryCodes}>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              copied &&
+                'border-emerald-600/40 text-emerald-700 dark:text-emerald-400',
+            )}
+            onClick={copyRecoveryCodes}
+          >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {copied ? 'Copied' : 'Copy codes'}
           </Button>
           <Button type="button" variant="outline" onClick={downloadRecoveryCodes}>
             <Download className="h-4 w-4" />
-            Download .txt
+            Download codes .txt
           </Button>
           {codesContext === 'regenerated' ? (
-            <Button type="button" onClick={finishRegenerate}>
+            <Button type="button" variant="success" onClick={finishRegenerate}>
+              <Check className="h-4 w-4" />
               Done
             </Button>
           ) : (
