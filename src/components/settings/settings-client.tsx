@@ -98,6 +98,7 @@ export interface SettingsUser {
   notifyFollowedUploads: boolean;
   uploadsUsed: number;
   twoFactorEnabled: boolean;
+  recoveryCodesRemaining: number;
   isPrivileged: boolean;
 }
 
@@ -1121,6 +1122,8 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
           <TwoFactorSettings
             enabled={user.twoFactorEnabled}
             required={user.isPrivileged}
+            username={savedUsername}
+            recoveryCodesRemaining={user.recoveryCodesRemaining}
           />
         </Section>
 
