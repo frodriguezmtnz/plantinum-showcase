@@ -2,7 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
-import images from "../src/lib/placeholder-images.json";
+import images from "./placeholder-images.json";
 
 type PlaceholderImage = {
   id: string;
@@ -24,20 +24,16 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 function getImage(seed: number): ImageSeed {
-  const imageData = (images as { placeholderImages: PlaceholderImage[] }).placeholderImages[seed - 1];
+  const all = (images as { placeholderImages: PlaceholderImage[] }).placeholderImages;
+  const imageData = all[(seed - 1) % all.length];
   if (!imageData) {
-    return {
-      imageUrl: `https://picsum.photos/seed/${seed}/600/338`,
-      imageHint: "game screenshot",
-      width: 600,
-      height: 338,
-    };
+    throw new Error("placeholder-images.json is empty: run `pnpm demo:art` first");
   }
   return {
     imageUrl: imageData.imageUrl,
     imageHint: imageData.imageHint,
-    width: 600,
-    height: 338,
+    width: 1600,
+    height: 900,
   };
 }
 

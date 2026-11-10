@@ -23,7 +23,7 @@ const securityHeaders = [
       scriptSrc,
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://images.unsplash.com https://picsum.photos https://i.giphy.com https://placehold.co",
+      "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "connect-src 'self'",
       "frame-ancestors 'self'",
@@ -56,28 +56,6 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
     ];
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
-      },
-    ],
   },
 };
 

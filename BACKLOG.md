@@ -105,7 +105,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] **Moderación fail-closed y subida "moderation-first"**: las subidas nacen `UNDER_REVIEW` y solo se publican con veredicto IA `SAFE`. `REVIEW`, `UNSAFE` o cualquier fallo del clasificador (rechazo por `content_filter` del proveedor, timeout, respuesta no parseable) mantienen la placa en revisión y avisan por Telegram: un NSFW nunca llega a hacerse público. Si la IA está apagada, se publica directo como antes. Además `revalidatePath` tolera contextos sin petición (el poller de Telegram) para que moderar desde el chat no falle.
 - [x] Rate limiting en la Server Action de subida (`uploadPlatinum`: 10/hora por usuario). Soporta Upstash para Vercel multi-instancia, con fallback en memoria cuando no hay credenciales.
 - [x] Validar la imagen por **magic bytes**, no solo `file.type` (`src/lib/image-signature.ts`: JPEG/PNG/WEBP).
-- [ ] `next.config.ts`: quitar `remotePatterns` (unsplash/picsum/placehold — giphy ya no se usa tras el rediseño de /about) cuando todo venga de B2 y revisar la CSP (`connect-src 'self'`).
+- [x] `next.config.ts`: fuera `remotePatterns` (unsplash/picsum/placehold — giphy ya no se usa tras el rediseño de /about) y `img-src` de la CSP reducido a `'self' data: blob:`. El único consumidor remoto era el seed: `prisma/placeholder-images.json` (12 fuentes de Unsplash + fallback picsum) pasa a 12 AVIF locales en `public/demo/plates/` generados por `pnpm demo:art` (`scripts/build-demo-art.mjs`: 1600×900, q60, mismo encoder que las subidas) y el seed ya no pide imágenes a la red. `connect-src 'self'` se mantiene.
 
 ## UX / diseño
 
