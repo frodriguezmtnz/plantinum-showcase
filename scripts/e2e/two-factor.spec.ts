@@ -16,7 +16,7 @@ async function submitPassword(page: Page) {
   await page.goto('/login');
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
-  await page.locator('form button[type=submit]').click();
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 }
 
 async function currentCode() {
@@ -100,7 +100,7 @@ test('disables 2FA and signs out', async ({ page }) => {
   // With 2FA off, signing in only asks for the password.
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
-  await page.locator('form button[type=submit]').click();
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await page.waitForURL(`${baseURL}/`, { timeout: 15_000 });
   await expect(page.locator('#otp')).toHaveCount(0);
 });
