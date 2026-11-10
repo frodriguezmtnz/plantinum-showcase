@@ -1,5 +1,6 @@
 const TOTP_CODE_LENGTH = 6;
 export const RECOVERY_CODE_LENGTH = 20;
+export const RECOVERY_CODE_COUNT = 10;
 
 /** A complete authenticator code: exactly six digits (whitespace ignored). */
 export function isTotpCode(value: string): boolean {
