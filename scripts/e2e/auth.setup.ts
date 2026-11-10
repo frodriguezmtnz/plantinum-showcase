@@ -21,7 +21,7 @@ setup('authenticate', async ({ page, context }) => {
   await page.goto('/login');
   await page.fill('#email', EMAIL);
   await page.fill('#password', PASSWORD);
-  await page.locator('form button[type=submit]').click();
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await page.waitForURL(baseURL + '/');
   await expect(page.locator('header button[aria-label^="Account menu"]')).toHaveCount(1);
 

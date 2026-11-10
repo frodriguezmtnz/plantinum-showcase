@@ -10,7 +10,7 @@ async function login(page: Page) {
   await page.goto('/login');
   await page.fill('#email', EMAIL!);
   await page.fill('#password', PASSWORD!);
-  await page.locator('form button[type=submit]').click();
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await page.waitForURL(baseURL + '/');
 }
 
@@ -77,7 +77,9 @@ test.describe('public pages', () => {
 
   test('login page links to a working forgot-password page', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('form button[type=submit]')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Sign In', exact: true }),
+    ).toBeVisible();
 
     const link = page.getByRole('link', { name: /forgot your password/i });
     await expect(link).toBeVisible();
@@ -85,13 +87,13 @@ test.describe('public pages', () => {
 
     await expect(page).toHaveURL(/\/forgot-password$/);
     await expect(page.locator('#email')).toBeVisible();
-    await expect(page.locator('form button[type=submit]')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Send reset link' })).toBeVisible();
   });
 
   test('forgot password returns a generic confirmation', async ({ page }) => {
     await page.goto('/forgot-password');
     await page.fill('#email', process.env.E2E_EMAIL ?? 'e2e@platinum-showcase.test');
-    await page.locator('form button[type=submit]').click();
+    await page.getByRole('button', { name: 'Send reset link' }).click();
 
     await expect(
       page.getByText(/if that email belongs to an account/i),
@@ -127,7 +129,7 @@ test.describe('public pages', () => {
     await page.fill('#email', `someone@mailinator.com`);
     await page.fill('#password', 'PwTest12345!Abc');
     await page.fill('#confirmPassword', 'PwTest12345!Abc');
-    await page.locator('form button[type=submit]').click();
+    await page.getByRole('button', { name: 'Create Account' }).click();
 
     await expect(
       page.getByText(/permanent email address/i),
