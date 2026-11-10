@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
 import { useAutoSubmitTotp } from "@/hooks/use-auto-submit-totp";
+import { isRecoveryCodeEntry, isTotpCode } from "@/lib/two-factor-code";
 
 const initialState: LoginState = {};
 
@@ -47,6 +48,10 @@ export default function LoginPage({
     pending: isPending,
     onSubmit: () => formRef.current?.requestSubmit(),
   });
+
+  const isCompleteOtp = useRecoveryCode
+    ? isRecoveryCodeEntry(otp)
+    : isTotpCode(otp);
 
   const notice =
     reset === 'success'
@@ -113,13 +118,25 @@ export default function LoginPage({
                 autoFocus
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                {useRecoveryCode
-                  ? 'Each recovery code works once.'
-                  : 'Open your authenticator app and enter the current 6-digit code.'}
-              </p>
+              {otp && !isCompleteOtp ? (
+                <p className="text-xs text-destructive">
+                  {useRecoveryCode
+                    ? 'Enter your full 20-character recovery code.'
+                    : 'Enter the 6-digit code from your authenticator app.'}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {useRecoveryCode
+                    ? 'Each recovery code works once.'
+                    : 'Open your authenticator app and enter the current 6-digit code.'}
+                </p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={isPending || !otp}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending || !isCompleteOtp}
+            >
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isPending ? 'Verifying...' : 'Verify and sign in'}
             </Button>

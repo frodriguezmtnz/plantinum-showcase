@@ -20,6 +20,7 @@ import {
 import { PasswordInput } from '@/components/shared/password-input';
 import { useAutoSubmitTotp } from '@/hooks/use-auto-submit-totp';
 import { useToast } from '@/hooks/use-toast';
+import { isTotpCode, isTwoFactorCode } from '@/lib/two-factor-code';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -117,6 +118,13 @@ export function TwoFactorSettings({
     onSubmit: () => handleConfirmSetup(code),
   });
 
+  useAutoSubmitTotp({
+    value: code,
+    enabled: (mode === 'disable' || mode === 'regenerate') && password !== '',
+    pending: isPending,
+    onSubmit: () => (mode === 'disable' ? handleDisable() : handleRegenerate()),
+  });
+
   async function copyRecoveryCodes() {
     if (!recoveryCodes) return;
     await navigator.clipboard.writeText(recoveryCodes.join('\n'));
@@ -193,7 +201,7 @@ export function TwoFactorSettings({
               <Button
                 type="button"
                 onClick={() => handleConfirmSetup(code)}
-                disabled={isPending || code.replace(/\s/g, '').length !== 6}
+                disabled={isPending || !isTotpCode(code)}
               >
                 {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                 Verify and enable
@@ -239,6 +247,17 @@ export function TwoFactorSettings({
             autoComplete="one-time-code"
             placeholder="123456"
           />
+          <p
+            className={
+              code && !isTwoFactorCode(code)
+                ? 'text-xs text-destructive'
+                : 'text-xs text-muted-foreground'
+            }
+          >
+            {code && !isTwoFactorCode(code)
+              ? 'Enter a 6-digit authenticator code or a full 20-character recovery code.'
+              : 'Use a code from your authenticator app, or a recovery code if you lost it.'}
+          </p>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex flex-wrap gap-2">
@@ -246,7 +265,7 @@ export function TwoFactorSettings({
             type="button"
             variant={isDisable ? 'destructive' : 'default'}
             onClick={isDisable ? handleDisable : handleRegenerate}
-            disabled={isPending || !password || !code}
+            disabled={isPending || !password || !isTwoFactorCode(code)}
           >
             {isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

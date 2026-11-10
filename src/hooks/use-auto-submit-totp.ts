@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { isTotpCode } from '@/lib/two-factor-code';
 
 interface UseAutoSubmitTotpOptions {
   value: string;
@@ -9,8 +10,6 @@ interface UseAutoSubmitTotpOptions {
   onSubmit: () => void;
   delayMs?: number;
 }
-
-const SIX_DIGITS = /^\d{6}$/;
 
 /**
  * Auto-submit a 6-digit TOTP once the value has been stable for `delayMs`, so a
@@ -42,7 +41,7 @@ export function useAutoSubmitTotp({
     }
 
     const normalized = value.replace(/\s/g, '');
-    if (!SIX_DIGITS.test(normalized)) {
+    if (!isTotpCode(normalized)) {
       lastAttemptedRef.current = null;
       return;
     }
