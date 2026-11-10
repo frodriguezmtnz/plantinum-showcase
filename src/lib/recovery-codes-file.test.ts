@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildRecoveryCodesFile,
-  RECOVERY_CODE_FILE_NAME,
+  recoveryCodesFileName,
 } from '@/lib/recovery-codes-file';
 
 const codes = Array.from(
@@ -37,7 +37,20 @@ describe('buildRecoveryCodesFile', () => {
     expect(file).toContain('cannot be shown again');
   });
 
-  it('uses a plain-text filename', () => {
-    expect(RECOVERY_CODE_FILE_NAME.endsWith('.txt')).toBe(true);
+  it('names the file after the account and the generation date', () => {
+    expect(
+      recoveryCodesFileName({ username: 'Trophy_Hunter', generatedAt }),
+    ).toBe(
+      'platinum-showcase-recovery-codes-trophy_hunter-2026-11-10.txt',
+    );
+  });
+
+  it('sanitizes unusual handles for a safe filename', () => {
+    expect(
+      recoveryCodesFileName({ username: ' Trophy Hunter! ', generatedAt }),
+    ).toBe('platinum-showcase-recovery-codes-trophy-hunter-2026-11-10.txt');
+    expect(recoveryCodesFileName({ username: '   ', generatedAt })).toBe(
+      'platinum-showcase-recovery-codes-account-2026-11-10.txt',
+    );
   });
 });

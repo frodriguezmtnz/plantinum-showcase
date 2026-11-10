@@ -1,7 +1,22 @@
 import { RECOVERY_CODE_COUNT } from '@/lib/two-factor-code';
 
-export const RECOVERY_CODE_FILE_NAME =
-  'platinum-showcase-recovery-codes.txt';
+/** Builds a download name that identifies the account and the generation date. */
+export function recoveryCodesFileName({
+  username,
+  generatedAt,
+}: {
+  username: string;
+  generatedAt: Date;
+}): string {
+  const safeUsername =
+    username
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'account';
+  const date = generatedAt.toISOString().slice(0, 10);
+  return `platinum-showcase-recovery-codes-${safeUsername}-${date}.txt`;
+}
 
 /**
  * Builds the plain-text file offered right after recovery codes are generated.
