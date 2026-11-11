@@ -479,7 +479,7 @@ input[type='search']::-webkit-search-decoration {
 
 .group:hover .podium-shine::before,
 .group:focus-visible .podium-shine::before {
-  animation: podium-sweep 1.6s ease-in-out;
+  animation: podium-sweep 3.5s var(--ease-bloom);
 }
 
 @keyframes podium-sweep {
@@ -488,7 +488,7 @@ input[type='search']::-webkit-search-decoration {
     opacity: 0;
   }
   18% {
-    opacity: 0.95;
+    opacity: 0.98;
   }
   100% {
     left: 130%;

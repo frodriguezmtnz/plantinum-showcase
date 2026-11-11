@@ -92,7 +92,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       bgColor: 'bg-[hsl(44_92%_90%/0.8)]',
       shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
       order: 'md:order-2',
-      lift: 'md:-translate-y-16',
+      lift: 'md:-translate-y-28',
       rankText: 'Champion',
       shine: 'hsl(44 92% 72% / 0.7)',
     },
@@ -250,7 +250,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
         <>
       {/* Podium Section */}
       {podiumPlatinums.length > 0 && (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 items-end max-w-5xl mx-auto mb-20 pt-16">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 items-end max-w-5xl mx-auto mb-30 pt-16">
           {podiumPlatinums.map((platinum, index) => {
             const rank = (index + 1) as 1 | 2 | 3;
             const user = getUserById(platinum.userId);
