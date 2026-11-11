@@ -84,6 +84,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
     order: string;
     lift: string;
     rankText: string;
+    shine: string;
   }> = {
     1: {
       borderColor: 'ring-2 ring-dusk-bright/65',
@@ -91,8 +92,9 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       bgColor: 'bg-[hsl(44_92%_90%/0.8)]',
       shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
       order: 'md:order-2',
-      lift: 'md:-translate-y-12',
+      lift: 'md:-translate-y-28',
       rankText: 'Champion',
+      shine: 'hsl(44 92% 72% / 0.7)',
     },
     2: {
       borderColor: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
@@ -100,8 +102,9 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       bgColor: 'bg-[hsl(206_45%_94%/0.85)]',
       shadowClass: 'hover:shadow-bloom focus-visible:shadow-bloom',
       order: 'md:order-1',
-      lift: 'md:-translate-y-6',
+      lift: 'md:-translate-y-8',
       rankText: '2nd Place',
+      shine: 'hsl(206 55% 82% / 0.65)',
     },
     3: {
       borderColor: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
@@ -111,6 +114,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       order: 'md:order-3',
       lift: '',
       rankText: '3rd Place',
+      shine: 'hsl(28 70% 72% / 0.65)',
     },
   };
 
@@ -246,7 +250,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
         <>
       {/* Podium Section */}
       {podiumPlatinums.length > 0 && (
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 items-end max-w-5xl mx-auto mb-20 pt-16">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 items-end max-w-5xl mx-auto mb-30 pt-16">
           {podiumPlatinums.map((platinum, index) => {
             const rank = (index + 1) as 1 | 2 | 3;
             const user = getUserById(platinum.userId);
@@ -257,18 +261,19 @@ export default async function HallOfFamePage({ searchParams }: Props) {
                 <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full outline-none transition-transform duration-300 focus-visible:scale-[1.02]">
                   <Card className={cn(
-                    "panel-solid overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02]",
+                    "panel-solid group relative overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02]",
                     styles.borderColor,
                     styles.bgColor,
                     styles.shadowClass
                   )}>
-                    <div className="relative bg-mat" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
+                    <span className="podium-shine" style={{ ['--shine' as string]: styles.shine }} aria-hidden />
+                    <div className="relative aspect-video overflow-hidden bg-mat">
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}
                         fill
                         sizes="(max-width: 768px) 90vw, 30vw"
-                        className="object-contain"
+                        className="object-cover"
                         data-ai-hint={platinum.imageHint}
                         unoptimized={isStoredImage(platinum.imageUrl)}
                       />

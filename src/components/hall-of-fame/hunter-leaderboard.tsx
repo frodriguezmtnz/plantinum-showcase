@@ -21,7 +21,16 @@ interface HunterLeaderboardProps {
 
 const PODIUM_STYLES: Record<
   1 | 2 | 3,
-  { ring: string; bg: string; text: string; label: string; order: string; lift: string }
+  {
+    ring: string;
+    bg: string;
+    text: string;
+    label: string;
+    order: string;
+    lift: string;
+    shine: string;
+    hoverRing: string;
+  }
 > = {
   1: {
     ring: 'ring-2 ring-dusk-bright/65',
@@ -30,6 +39,8 @@ const PODIUM_STYLES: Record<
     label: 'Champion',
     order: 'md:order-2',
     lift: 'md:-translate-y-8',
+    shine: 'hsl(44 92% 72% / 0.7)',
+    hoverRing: 'hover:ring-dusk-bright',
   },
   2: {
     ring: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
@@ -38,6 +49,8 @@ const PODIUM_STYLES: Record<
     label: '2nd place',
     order: 'md:order-1',
     lift: 'md:-translate-y-4',
+    shine: 'hsl(206 55% 82% / 0.65)',
+    hoverRing: 'hover:ring-[hsl(211_50%_62%/0.9)]',
   },
   3: {
     ring: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
@@ -46,6 +59,8 @@ const PODIUM_STYLES: Record<
     label: '3rd place',
     order: 'md:order-3',
     lift: '',
+    shine: 'hsl(28 70% 72% / 0.65)',
+    hoverRing: 'hover:ring-[hsl(28_65%_55%/0.9)]',
   },
 };
 
@@ -157,14 +172,17 @@ export function HunterLeaderboard({
             <Link
               key={item.userId}
               href={`/u/${item.username}`}
+              style={{ ['--shine' as string]: style.shine }}
               className={cn(
-                'flex flex-col items-center rounded-2xl px-5 py-6 text-center outline-none transition-transform duration-300 hover:-translate-y-1 focus-visible:shadow-bloom',
+                'group relative flex flex-col items-center overflow-hidden rounded-2xl px-5 py-6 text-center outline-none transition duration-300 hover:shadow-[0_0_28px_-6px_var(--shine)] focus-visible:shadow-bloom',
                 style.ring,
+                style.hoverRing,
                 style.bg,
                 style.order,
                 style.lift,
               )}
             >
+              <span className="podium-shine" aria-hidden />
               <span className={cn('field-mark', style.text)}>{style.label}</span>
               <Avatar className="mt-3 h-16 w-16 border-2 border-background/60">
                 <AvatarImage src={item.avatarUrl} alt={item.username} />
