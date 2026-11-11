@@ -85,6 +85,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
     lift: string;
     rankText: string;
     shine: string;
+    mobileScale: string;
   }> = {
     1: {
       borderColor: 'ring-2 ring-dusk-bright/65',
@@ -95,6 +96,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       lift: 'md:-translate-y-28',
       rankText: 'Champion',
       shine: 'hsl(44 92% 72% / 0.7)',
+      mobileScale: 'scale-[1.03]',
     },
     2: {
       borderColor: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
@@ -105,6 +107,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       lift: 'md:-translate-y-8',
       rankText: '2nd Place',
       shine: 'hsl(206 55% 82% / 0.65)',
+      mobileScale: 'scale-[1.015]',
     },
     3: {
       borderColor: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
@@ -115,6 +118,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       lift: '',
       rankText: '3rd Place',
       shine: 'hsl(28 70% 72% / 0.65)',
+      mobileScale: '',
     },
   };
 
@@ -257,7 +261,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
             const styles = podiumStyles[rank];
 
             return (
-              <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift)}>
+              <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift, styles.mobileScale, 'md:scale-100')}>
                 <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full outline-none transition-transform duration-300 focus-visible:scale-[1.02]">
                   <Card
