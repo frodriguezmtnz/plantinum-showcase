@@ -2,6 +2,7 @@
 
 import { use, useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +13,30 @@ import { useAuth } from "@/hooks/use-auth";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
 import { useAutoSubmitTotp } from "@/hooks/use-auto-submit-totp";
+import { safeRelativeCallback } from "@/lib/callback-url";
 import { isRecoveryCodeEntry, isTotpCode } from "@/lib/two-factor-code";
 
 const initialState: LoginState = {};
+
+function oauthErrorMessage(error: string | undefined): string | undefined {
+  switch (error) {
+    case "OAuthAccountNotLinked":
+      return "An account already exists with this email. Sign in with your password first; you can connect Google from Settings later.";
+    case "oauth_2fa":
+      return "This account uses two-factor authentication. Sign in with your email and password.";
+    case "oauth_unverified":
+      return "Google could not verify that email address. Try another Google account.";
+    case "AccessDenied":
+      return "Google sign-in was cancelled or denied.";
+    case "Configuration":
+    case "OAuthCallback":
+    case "OAuthSignin":
+    case "CallbackRouteError":
+      return "Google sign-in is not available right now. Please try again later.";
+    default:
+      return undefined;
+  }
+}
 
 export default function LoginPage({
   searchParams,
@@ -26,13 +48,15 @@ export default function LoginPage({
     password?: string;
     email?: string;
     twofactor?: string;
+    error?: string;
   }>;
 }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
-  const { callbackUrl, reset, verified, password, email, twofactor } =
+  const { callbackUrl, reset, verified, password, email, twofactor, error: oauthError } =
     use(searchParams);
   const router = useRouter();
   const { refresh } = useAuth();
+  const [googlePending, setGooglePending] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [otp, setOtp] = useState('');
@@ -52,6 +76,17 @@ export default function LoginPage({
   const isCompleteOtp = useRecoveryCode
     ? isRecoveryCodeEntry(otp)
     : isTotpCode(otp);
+
+  const safeCallback = safeRelativeCallback(callbackUrl);
+
+  async function handleGoogleSignIn() {
+    setGooglePending(true);
+    try {
+      await signIn("google", { callbackUrl: safeCallback });
+    } catch {
+      setGooglePending(false);
+    }
+  }
 
   const notice =
     reset === 'success'
@@ -83,7 +118,7 @@ export default function LoginPage({
     <AuthShell
       title="Sign In"
       description="Join the community to vote on and show off your platinums."
-      error={state.error}
+      error={state.error ?? oauthErrorMessage(oauthError)}
       notice={notice}
       footer={
         <>
@@ -95,7 +130,7 @@ export default function LoginPage({
       }
     >
       <form ref={formRef} action={formAction} className="grid gap-4">
-        <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
+        <input type="hidden" name="callbackUrl" value={safeCallback} />
         {state.requiresTwoFactor ? (
           <>
             <input type="hidden" name="email" value={loginEmail} />
@@ -211,9 +246,15 @@ export default function LoginPage({
           <span className="bg-background px-2">or</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" type="button" disabled title="Coming soon">
-        Sign in with Google
-        <span className="field-mark ml-2 opacity-70">Coming soon</span>
+      <Button
+        variant="outline"
+        className="w-full"
+        type="button"
+        onClick={handleGoogleSignIn}
+        disabled={googlePending || isPending}
+      >
+        {googlePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {googlePending ? 'Redirecting to Google...' : 'Sign in with Google'}
       </Button>
     </AuthShell>
   );

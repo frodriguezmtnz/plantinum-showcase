@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,16 @@ export default function RegisterPage() {
   }, [state.redirectTo, refresh, router]);
 
   const usernameStatus = useUsernameAvailability(username);
+
+  const [googlePending, setGooglePending] = useState(false);
+  async function handleGoogleSignUp() {
+    setGooglePending(true);
+    try {
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      setGooglePending(false);
+    }
+  }
 
   const passwordIssue = password ? passwordPolicyError(password) : null;
   const passwordsMatch =
@@ -137,8 +148,15 @@ export default function RegisterPage() {
           <span className="bg-background px-2">or</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" type="button" disabled title="Coming soon">
-        Sign up with Google
+      <Button
+        variant="outline"
+        className="w-full"
+        type="button"
+        onClick={handleGoogleSignUp}
+        disabled={googlePending || isPending}
+      >
+        {googlePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {googlePending ? 'Redirecting to Google...' : 'Sign up with Google'}
       </Button>
     </AuthShell>
   );
