@@ -448,6 +448,54 @@ input[type='search']::-webkit-search-decoration {
   color: var(--live);
 }
 
+/* Podium shimmer: a light swipe in the field's own metal (gold / console blue
+   / ember bronze) that crosses the card on hover or keyboard focus. The tint
+   rides in via --shine from the rank's styles; the sweep is pure CSS. */
+.podium-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.podium-shine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 55%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    var(--shine, hsl(0 0% 100% / 0.55)),
+    transparent
+  );
+  transform: skewX(-18deg);
+  opacity: 0;
+}
+
+.group:hover .podium-shine::before,
+.group:focus-visible .podium-shine::before {
+  animation: podium-sweep 0.9s var(--ease-bloom);
+}
+
+@keyframes podium-sweep {
+  0% {
+    left: -60%;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.95;
+  }
+  100% {
+    left: 130%;
+    opacity: 0;
+  }
+}
+
 /* Pills that live on top of screenshots: physical white chips in both
    themes, so their ink text never depends on the inverted tokens. */
 .photo-chip {
@@ -706,6 +754,10 @@ input[type='search']::-webkit-search-decoration {
 
   .vote-heart-burst {
     display: none;
+  }
+
+  .podium-shine::before {
+    animation: none;
   }
 
   .sky-field {

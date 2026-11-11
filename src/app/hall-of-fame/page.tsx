@@ -84,6 +84,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
     order: string;
     lift: string;
     rankText: string;
+    shine: string;
   }> = {
     1: {
       borderColor: 'ring-2 ring-dusk-bright/65',
@@ -93,6 +94,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       order: 'md:order-2',
       lift: 'md:-translate-y-8',
       rankText: 'Champion',
+      shine: 'hsl(44 92% 72% / 0.7)',
     },
     2: {
       borderColor: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
@@ -102,6 +104,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       order: 'md:order-1',
       lift: 'md:-translate-y-4',
       rankText: '2nd Place',
+      shine: 'hsl(206 55% 82% / 0.65)',
     },
     3: {
       borderColor: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
@@ -111,6 +114,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       order: 'md:order-3',
       lift: '',
       rankText: '3rd Place',
+      shine: 'hsl(28 70% 72% / 0.65)',
     },
   };
 
@@ -257,11 +261,12 @@ export default async function HallOfFamePage({ searchParams }: Props) {
                 <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full outline-none transition-transform duration-300 focus-visible:scale-[1.02]">
                   <Card className={cn(
-                    "panel-solid overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02]",
+                    "panel-solid group relative overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02]",
                     styles.borderColor,
                     styles.bgColor,
                     styles.shadowClass
                   )}>
+                    <span className="podium-shine" style={{ ['--shine' as string]: styles.shine }} aria-hidden />
                     <div className="relative aspect-video overflow-hidden bg-mat">
                       <Image
                         src={platinum.imageUrl}
