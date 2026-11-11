@@ -91,7 +91,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       bgColor: 'bg-[hsl(44_92%_90%/0.8)]',
       shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
       order: 'md:order-2',
-      lift: 'md:-translate-y-12',
+      lift: 'md:-translate-y-8',
       rankText: 'Champion',
     },
     2: {
@@ -100,7 +100,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       bgColor: 'bg-[hsl(206_45%_94%/0.85)]',
       shadowClass: 'hover:shadow-bloom focus-visible:shadow-bloom',
       order: 'md:order-1',
-      lift: 'md:-translate-y-6',
+      lift: 'md:-translate-y-4',
       rankText: '2nd Place',
     },
     3: {
@@ -262,13 +262,13 @@ export default async function HallOfFamePage({ searchParams }: Props) {
                     styles.bgColor,
                     styles.shadowClass
                   )}>
-                    <div className="relative bg-mat" style={{ aspectRatio: `${platinum.width} / ${platinum.height}` }}>
+                    <div className="relative aspect-video overflow-hidden bg-mat">
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}
                         fill
                         sizes="(max-width: 768px) 90vw, 30vw"
-                        className="object-contain"
+                        className="object-cover"
                         data-ai-hint={platinum.imageHint}
                         unoptimized={isStoredImage(platinum.imageUrl)}
                       />
