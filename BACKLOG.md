@@ -113,7 +113,7 @@ Mejoras pendientes y deuda conocida, para ir puliendo la web antes de la Fase 2 
 - [x] UI 100% en inglés: traducidos todos los strings (acciones, toasts, header, auth, explore, perfiles, upload) y `toLocaleString` a `en-US`. Decisión de producto: idioma único para alcance internacional.
 - [x] Mostrar/ocultar contraseña en login y registro (`PasswordInput` con Eye/EyeOff).
 - [x] Rediseño del login/registro: split-screen con panel de marca y sin header/footer (inmersivo) vía `AuthShell` + `SiteChrome`.
-- [ ] OAuth de Google (el botón ya existe pero está `disabled` "Próximamente" en `src/app/login/page.tsx`).
+- [x] OAuth de Google: provider en `src/auth.ts` (solo activo con `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`), botones activos en login/registro y `pages.newUser` → `/welcome`. Los usuarios nuevos eligen handle en el onboarding, que también copia el avatar de Google a B2 (sharp + moderación fail-open; si falla, avatar generado) y marca `emailVerified`. No se auto-vinculan cuentas por email: si ya existe una cuenta con esa dirección, el error pide entrar con contraseña (y conectar Google desde Settings más adelante). Las cuentas con 2FA se bloquean en Google con un mensaje claro. Sin migración: `Account`/`VerificationToken` ya existían.
 - [x] "¿Olvidaste tu contraseña?" con flujo real (`/forgot-password` + `/reset-password`).
 - [x] Progreso de subida (barra/estado) en el upload: progreso real de compresión + fase de subida. Drag & drop ahora funciona de verdad.
 

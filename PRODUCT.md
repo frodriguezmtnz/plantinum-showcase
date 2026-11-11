@@ -26,7 +26,7 @@ Trophy culture: players screenshot the platinum toast / trophy list as proof, di
 
 ## Capabilities and Constraints
 
-- Stack already decided by the codebase: Next.js 16 App Router, Tailwind v4 + shadcn/ui, Prisma + PostgreSQL (Neon), Cloudflare/B2-style S3 object storage for images, NextAuth v5 (credentials today; Google OAuth button exists but disabled, "coming soon").
+- Stack already decided by the codebase: Next.js 16 App Router, Tailwind v4 + shadcn/ui, Prisma + PostgreSQL (Neon), Cloudflare/B2-style S3 object storage for images, NextAuth v5 (credentials + Google OAuth with a username onboarding step; existing password accounts are not auto-linked by email).
 - **Language: English only.** Spanish strings still exist in some components; they must be translated, and `html lang`/metadata must match. (Committed constraint, part of this work.)
 - Comments are owner-only today; **third-party public comments are out of scope** (decided, not postponed).
 - **Following is one-way and public** (added 2026-10): trophy hunters can follow each other from a profile, see follower/following lists, and get an in-app notice when someone starts following them.
