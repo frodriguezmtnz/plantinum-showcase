@@ -161,7 +161,7 @@
           "hsl(205 42% 96%)",
           "hsl(205 40% 98%)"
         ],
-        "note": "Image letterbox mat behind contained podium shots; 2nd-place ground at 0.85."
+        "note": "Image letterbox mat behind contained detail-page shots; 2nd-place ground at 0.85."
       },
       "haze": {
         "role": "neutral",
@@ -610,7 +610,7 @@
       "Do use the single --bloom treatment for hover, focus, and resting selection, and keep exactly one resting selection per browse row.",
       "Do reserve .field-mark (11px/700/0.22em) for data labels and render every changing count with tabular-nums.",
       "Do use the two frosts correctly: 74% .panel for chrome, 92% .panel-solid for content surfaces.",
-      "Do show screenshots at native aspect ratio (contained on a cloud mat when the shape matters, as on the podium).",
+      "Do show screenshots at native aspect ratio (contained on a cloud mat when the shape matters, as on the detail page).",
       "Do state real database counts or say the board is empty — live honesty is part of the world.",
       "Do honor prefers-reduced-motion (and ?motion=off): static field, no hover lift or blur, intro and reveals skipped; selection stays the ice ring alone."
     ],
@@ -622,7 +622,7 @@
       "Don't add looping or ambient motion beyond the near-still field; intro and reveals fire once and clearProps so bloom keeps working.",
       "Don't stagger platinum-card mount fades; the uniform 500ms wash is the deliberate choice.",
       "Don't let red (vote/destructive) or the amber podium family wander off their reserved jobs.",
-      "Don't build new surfaces on the last two legacy utilities (section-divider, shadow-champion); they survive only for hall-of-fame and retire when it rebuilds."
+      "Don't build new surfaces on the last legacy utility (shadow-champion); it survives only for the Hall of Fame champion and retires when the podium rebuilds."
     ]
   }
 }
