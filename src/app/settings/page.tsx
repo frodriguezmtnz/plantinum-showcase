@@ -48,7 +48,7 @@ export default async function SettingsPage() {
   });
 
   if (!user?.username) {
-    redirect('/login?callbackUrl=/settings');
+    redirect('/welcome?callbackUrl=/settings');
   }
 
   const uploadsUsed = await countUploadsInCurrentPeriod(userId);
