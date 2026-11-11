@@ -158,7 +158,7 @@ export function HunterLeaderboard({
               key={item.userId}
               href={`/u/${item.username}`}
               className={cn(
-                'flex flex-col items-center rounded-2xl px-5 py-6 text-center outline-none transition-transform duration-300 hover:-translate-y-1 focus-visible:shadow-bloom',
+                'flex flex-col items-center rounded-2xl px-5 py-6 text-center outline-none transition duration-300 focus-visible:shadow-bloom',
                 style.ring,
                 style.bg,
                 style.order,
