@@ -913,25 +913,6 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
-/* Legacy but live: hall-of-fame heading rule; retires with its last page. */
-.section-divider::before,
-.section-divider::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 38%;
-  height: 1px;
-  background: var(--border);
-}
-
-.section-divider::before {
-  left: 0;
-}
-
-.section-divider::after {
-  right: 0;
-}
-
 /* ── Night Console ──────────────────────────────────────────────────────
    The same browse screen after lights-out: ink-navy ground, dark frosted
    panels, inverted chrome (white CTAs with ink text). The duotone

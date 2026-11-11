@@ -306,8 +306,8 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       {/* Other Rankings */}
       {otherRankedPlatinums.length > 0 && (
          <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-8 font-headline relative section-divider">
-            <span className="panel-solid px-4 relative rounded-full">Rest of the Top 10</span>
+          <h2 className="mb-6 text-center font-headline text-2xl font-bold">
+            Rest of the Top 10
           </h2>
           <ul className="space-y-4">
             {otherRankedPlatinums.map((platinum, index) => {
