@@ -46,7 +46,7 @@ const PODIUM_STYLES: Record<
     ring: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
     bg: 'bg-[hsl(206_45%_94%/0.85)]',
     text: 'text-[hsl(211_45%_32%)]',
-    label: '2nd place',
+    label: '2nd Place',
     order: 'md:order-1',
     lift: 'md:-translate-y-4',
     shine: 'hsl(206 55% 82% / 0.65)',
@@ -56,7 +56,7 @@ const PODIUM_STYLES: Record<
     ring: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
     bg: 'bg-[hsl(28_65%_93%/0.85)]',
     text: 'text-[hsl(24_60%_34%)]',
-    label: '3rd place',
+    label: '3rd Place',
     order: 'md:order-3',
     lift: '',
     shine: 'hsl(28 70% 72% / 0.65)',
@@ -174,7 +174,7 @@ export function HunterLeaderboard({
               href={`/u/${item.username}`}
               style={{ ['--shine' as string]: style.shine }}
               className={cn(
-                'group relative flex flex-col items-center overflow-hidden rounded-2xl px-5 py-6 text-center outline-none transition duration-300 hover:shadow-[0_0_28px_-6px_var(--shine)] focus-visible:shadow-bloom',
+                'group relative flex flex-col items-center overflow-hidden rounded-2xl px-5 py-6 text-center outline-none transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_28px_-6px_var(--shine)] focus-visible:shadow-bloom',
                 style.ring,
                 style.hoverRing,
                 style.bg,
@@ -223,7 +223,7 @@ export function HunterLeaderboard({
                   href={`/u/${item.username}`}
                   className="block rounded-xl outline-none transition-shadow duration-300 focus-visible:shadow-bloom"
                 >
-                  <Card className="panel-solid flex items-center gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-popover hover:shadow-bloom sm:p-4">
+                  <Card className="panel-solid flex items-center gap-4 rounded-xl p-3 transition duration-300 hover:shadow-glow sm:p-4">
                     <div className="w-10 shrink-0 text-center text-xl font-bold tabular text-muted-foreground">
                       #{item.rank}
                     </div>
