@@ -121,13 +121,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // account that shares the address. The latter is not linked
       // automatically; it is checked so 2FA cannot be bypassed through the
       // OAuth redirect.
+      const or = [
+        ...(user?.id ? [{ id: user.id }] : []),
+        ...(email ? [{ email }] : []),
+      ];
+      if (or.length === 0) return true;
+
       const matches = await prisma.user.findMany({
-        where: {
-          OR: [
-            ...(user?.id ? [{ id: user.id }] : []),
-            ...(email ? [{ email }] : []),
-          ],
-        },
+        where: { OR: or },
         select: { twoFactorEnabled: true },
       });
 
