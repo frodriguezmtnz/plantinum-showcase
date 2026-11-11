@@ -479,7 +479,7 @@ input[type='search']::-webkit-search-decoration {
 
 .group:hover .podium-shine::before,
 .group:focus-visible .podium-shine::before {
-  animation: podium-sweep 0.9s var(--ease-bloom);
+  animation: podium-sweep 1.6s ease-in-out;
 }
 
 @keyframes podium-sweep {
