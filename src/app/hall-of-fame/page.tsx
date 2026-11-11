@@ -90,7 +90,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       borderColor: 'ring-2 ring-dusk-bright/65',
       textColor: 'text-[hsl(30_72%_32%)]',
       bgColor: 'bg-[hsl(44_92%_90%/0.8)]',
-      shadowClass: 'shadow-champion hover:shadow-champion focus-visible:shadow-champion',
+      shadowClass: 'shadow-champion',
       order: 'md:order-2',
       lift: 'md:-translate-y-28',
       rankText: 'Champion',
@@ -100,7 +100,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       borderColor: 'ring-1 ring-[hsl(211_30%_55%/0.5)]',
       textColor: 'text-[hsl(211_45%_32%)]',
       bgColor: 'bg-[hsl(206_45%_94%/0.85)]',
-      shadowClass: 'hover:shadow-bloom focus-visible:shadow-bloom',
+      shadowClass: '',
       order: 'md:order-1',
       lift: 'md:-translate-y-8',
       rankText: '2nd Place',
@@ -110,7 +110,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
       borderColor: 'ring-1 ring-[hsl(24_55%_45%/0.5)]',
       textColor: 'text-[hsl(24_60%_34%)]',
       bgColor: 'bg-[hsl(28_65%_93%/0.85)]',
-      shadowClass: 'hover:shadow-bloom focus-visible:shadow-bloom',
+      shadowClass: '',
       order: 'md:order-3',
       lift: '',
       rankText: '3rd Place',
@@ -260,13 +260,16 @@ export default async function HallOfFamePage({ searchParams }: Props) {
               <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift)}>
                 <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full outline-none transition-transform duration-300 focus-visible:scale-[1.02]">
-                  <Card className={cn(
-                    "panel-solid group relative overflow-hidden text-center rounded-xl transition-all duration-300 hover:scale-[1.02]",
-                    styles.borderColor,
-                    styles.bgColor,
-                    styles.shadowClass
-                  )}>
-                    <span className="podium-shine" style={{ ['--shine' as string]: styles.shine }} aria-hidden />
+                  <Card
+                    style={{ ['--shine' as string]: styles.shine }}
+                    className={cn(
+                      "panel-solid group relative overflow-hidden text-center rounded-xl transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_28px_-6px_var(--shine)] focus-visible:shadow-bloom",
+                      styles.borderColor,
+                      styles.bgColor,
+                      styles.shadowClass
+                    )}
+                  >
+                    <span className="podium-shine" aria-hidden />
                     <div className="relative aspect-video overflow-hidden">
                       <Image
                         src={platinum.imageUrl}

@@ -174,7 +174,7 @@ export function HunterLeaderboard({
               href={`/u/${item.username}`}
               style={{ ['--shine' as string]: style.shine }}
               className={cn(
-                'group relative flex flex-col items-center overflow-hidden rounded-2xl px-5 py-6 text-center outline-none transition duration-300 hover:shadow-[0_0_28px_-6px_var(--shine)] focus-visible:shadow-bloom',
+                'group relative flex flex-col items-center overflow-hidden rounded-2xl px-5 py-6 text-center outline-none transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_28px_-6px_var(--shine)] focus-visible:shadow-bloom',
                 style.ring,
                 style.hoverRing,
                 style.bg,
