@@ -59,8 +59,8 @@ async function fetchGoogleAvatar(url: string): Promise<Buffer | null> {
 
   const contentType = (response.headers.get("content-type") ?? "")
     .split(";")[0]
-    .trim()
-    .toLowerCase();
+    ?.trim()
+    .toLowerCase() ?? "";
   if (!contentType.startsWith("image/")) return null;
 
   const declaredLength = Number(response.headers.get("content-length") ?? 0);
