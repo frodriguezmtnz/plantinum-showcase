@@ -262,7 +262,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
 
             return (
               <div key={platinum.id} className={cn('flex flex-col items-center transform transition-transform', styles.order, styles.lift, styles.mobileScale, 'md:scale-100')}>
-                <h2 className={cn('text-2xl font-bold mb-2 font-headline', styles.textColor)}>{styles.rankText}</h2>
+                <h2 className={cn('field-mark mb-2', styles.textColor)}>{styles.rankText}</h2>
                 <Link href={`/platinum/${platinum.id}`} className="w-full outline-none transition-transform duration-300 focus-visible:scale-[1.02]">
                   <Card
                     style={{ ['--shine' as string]: styles.shine }}
