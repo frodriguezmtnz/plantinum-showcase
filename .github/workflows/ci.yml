@@ -144,8 +144,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
+      - name: Configure apt retries
+        run: echo 'Acquire::Retries "5";' | sudo tee /etc/apt/apt.conf.d/80-retries
+
       - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
+        shell: bash
+        run: |
+          set +e
+          for attempt in 1 2 3; do
+            pnpm exec playwright install --with-deps chromium && exit 0
+            echo "playwright install failed (attempt ${attempt}/3); retrying in 20s..."
+            sleep 20
+          done
+          echo "playwright install failed after 3 attempts"
+          exit 1
 
       - name: Build
         run: pnpm build
