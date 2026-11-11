@@ -1,5 +1,7 @@
 import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import type { Provider } from "next-auth/providers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
@@ -8,12 +10,78 @@ import { isSessionVersionStale } from "@/lib/session-revocation";
 import { verifyTwoFactorLogin } from "@/lib/two-factor";
 import bcrypt from "bcrypt";
 
+const googleOAuthConfigured = Boolean(
+  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET,
+);
+
 class TwoFactorRequiredError extends CredentialsSignin {
   code = "2fa_required";
 }
 
 class TwoFactorRateLimitedError extends CredentialsSignin {
   code = "2fa_rate_limited";
+}
+
+const credentialsProvider = Credentials({
+  name: "credentials",
+  credentials: {
+    email: { label: "Email", type: "email" },
+    password: { label: "Password", type: "password" },
+    otp: { label: "Authentication code", type: "text" },
+  },
+  async authorize(credentials) {
+    // Credentials sign-up stores emails lower-cased, so normalize here too
+    // (otherwise "Pepe@Mail.com " would never match an existing account).
+    const email = (credentials?.email as string | undefined)?.trim().toLowerCase();
+    const password = credentials?.password as string | undefined;
+
+    if (!email || !password) return null;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user || !user.passwordHash) return null;
+
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+
+    if (!isValid) return null;
+
+    if (user.twoFactorEnabled) {
+      const otp = (credentials?.otp as string | undefined)?.trim();
+      if (!otp) throw new TwoFactorRequiredError();
+
+      const result = await verifyTwoFactorLogin(
+        user.id,
+        user.twoFactorSecret,
+        otp,
+      );
+      if (result === "rate-limited") throw new TwoFactorRateLimitedError();
+      if (result !== "ok") throw new CredentialsSignin();
+    }
+
+    return {
+      id: user.id,
+      name: user.username,
+      email: user.email,
+      image: user.image ?? generatedAvatarUrl(user.username ?? user.email),
+      role: user.role,
+      emailConfirmed: Boolean(user.emailVerified),
+      sessionVersion: user.sessionVersion,
+    };
+  },
+});
+
+const providers: Provider[] = [credentialsProvider];
+
+if (googleOAuthConfigured) {
+  providers.push(
+    Google({
+      // Existing password accounts are not linked by email automatically: the
+      // user has to sign in with the password first (then connect Google from
+      // Settings if desired). Linking by email would bypass their 2FA.
+      allowDangerousEmailAccountLinking: false,
+      authorization: { params: { prompt: "select_account" } },
+    }),
+  );
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -25,79 +93,55 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   pages: {
     signIn: "/login",
+    error: "/login",
+    // OAuth users are created without a handle: send them to the onboarding
+    // page before they can use the rest of the app.
+    newUser: "/welcome",
   },
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        otp: { label: "Authentication code", type: "text" },
-      },
-      async authorize(credentials) {
-        // Credentials sign-up stores emails lower-cased, so normalize here too
-        // (otherwise "Pepe@Mail.com " would never match an existing account).
-        const email = (credentials?.email as string | undefined)?.trim().toLowerCase();
-        const password = credentials?.password as string | undefined;
-
-        if (!email || !password) return null;
-
-        const user = await prisma.user.findUnique({ where: { email } });
-
-        if (!user || !user.passwordHash) return null;
-
-        const isValid = await bcrypt.compare(password, user.passwordHash);
-
-        if (!isValid) return null;
-
-        if (user.twoFactorEnabled) {
-          const otp = (credentials?.otp as string | undefined)?.trim();
-          if (!otp) throw new TwoFactorRequiredError();
-
-          const result = await verifyTwoFactorLogin(
-            user.id,
-            user.twoFactorSecret,
-            otp,
-          );
-          if (result === "rate-limited") throw new TwoFactorRateLimitedError();
-          if (result !== "ok") throw new CredentialsSignin();
-        }
-
-        return {
-          id: user.id,
-          name: user.username,
-          email: user.email,
-          image: user.image ?? generatedAvatarUrl(user.username ?? user.email),
-          role: user.role,
-          emailConfirmed: Boolean(user.emailVerified),
-          sessionVersion: user.sessionVersion,
-        };
-      },
-    }),
-  ],
+  providers,
   callbacks: {
-    async signIn({ user, account }) {
-      // OAuth is not wired yet. If it lands, a 2FA account must complete a
-      // second-factor challenge before a session can be created; until that
-      // flow exists, block the shortcut rather than bypassing TOTP.
-      if (!account || account.provider === "credentials") return true;
-      if (!user?.id) return true;
-      const fresh = await prisma.user.findUnique({
-        where: { id: user.id },
+    async signIn({ user, account, profile }) {
+      if (!account || account.provider !== "google") return true;
+
+      const googleProfile = profile as
+        | { email?: string | null; email_verified?: boolean }
+        | undefined;
+
+      // Google is authoritative for the address: never create a session for an
+      // email it has not verified.
+      if (googleProfile?.email_verified !== true) {
+        return "/login?error=oauth_unverified";
+      }
+
+      const email = (googleProfile?.email ?? user?.email ?? "")
+        .trim()
+        .toLowerCase();
+
+      // Look up both the already-linked account (user.id) and a password
+      // account that shares the address. The latter is not linked
+      // automatically; it is checked so 2FA cannot be bypassed through the
+      // OAuth redirect.
+      const matches = await prisma.user.findMany({
+        where: {
+          OR: [
+            ...(user?.id ? [{ id: user.id }] : []),
+            ...(email ? [{ email }] : []),
+          ],
+        },
         select: { twoFactorEnabled: true },
       });
-      return !fresh?.twoFactorEnabled;
+
+      // TOTP is not implemented for the OAuth redirect flow yet. Blocking is
+      // safer than creating a session that would skip the second factor.
+      if (matches.some((match) => match.twoFactorEnabled)) {
+        return "/login?error=oauth_2fa";
+      }
+
+      return true;
     },
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.username = user.name;
-        token.picture =
-          user.image ?? generatedAvatarUrl(user.name ?? user.email);
-        // Cached for UI hints only — authorization always re-reads the role
-        // from the database so a promotion takes effect without re-login.
-        token.role = user.role;
-        token.emailConfirmed = Boolean(user.emailConfirmed);
         token.sessionVersion = user.sessionVersion ?? 0;
       }
 
@@ -135,17 +179,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return null;
       }
 
-      // Re-read identity fields so the cached session never points at a stale
-      // /u/<old-handle>. Normal requests keep only the version check above.
-      if (trigger === "update") {
-        token.id = userId;
-        token.username = fresh.username;
-        token.email = fresh.email;
-        token.picture =
-          fresh.image ?? generatedAvatarUrl(fresh.username ?? userId);
-        token.role = fresh.role;
-        token.emailConfirmed = Boolean(fresh.emailVerified);
-      }
+      // Always mirror the database identity. This is what makes the first
+      // Google sign-in correct: the adapter creates the row with the Google
+      // display name, and the handle only exists after /welcome. An incomplete
+      // profile therefore has a null username (and a generated avatar) until
+      // onboarding finishes.
+      token.username = fresh.username;
+      token.email = fresh.email;
+      token.picture = fresh.username
+        ? fresh.image ?? generatedAvatarUrl(fresh.username)
+        : generatedAvatarUrl(userId);
+      token.role = fresh.role;
+      token.emailConfirmed = Boolean(fresh.emailVerified);
 
       return token;
     },
@@ -153,8 +198,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token && session.user) {
         session.user.id = (token.id ?? token.sub) as string;
         session.user.image = token.picture as string | undefined;
-        session.user.name =
-          (token.username as string | undefined) ?? session.user.name;
+        // Keep this nullish on purpose: the header and the onboarding gate use
+        // a missing handle to send OAuth users to /welcome.
+        session.user.name = (token.username as string | null | undefined) ?? null;
         session.user.role = (token.role as Role | undefined) ?? "USER";
         session.user.emailConfirmed = Boolean(token.emailConfirmed);
       }
