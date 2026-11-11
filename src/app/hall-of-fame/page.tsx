@@ -267,7 +267,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
                     styles.shadowClass
                   )}>
                     <span className="podium-shine" style={{ ['--shine' as string]: styles.shine }} aria-hidden />
-                    <div className="relative aspect-video overflow-hidden bg-mat">
+                    <div className="relative aspect-video overflow-hidden">
                       <Image
                         src={platinum.imageUrl}
                         alt={`Screenshot for ${platinum.gameName}`}
