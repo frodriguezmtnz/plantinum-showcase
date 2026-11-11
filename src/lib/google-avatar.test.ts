@@ -1,5 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import { googleAvatarHiResUrl, isGoogleAvatarUrl } from '@/lib/google-avatar';
+import { afterEach, describe, expect, it } from 'vitest';
+import {
+  googleAvatarHiResUrl,
+  importGoogleAvatar,
+  isGoogleAvatarUrl,
+} from '@/lib/google-avatar';
+
+const STORAGE_ENV_KEYS = [
+  'B2_KEY_ID',
+  'B2_APP_KEY',
+  'B2_BUCKET',
+  'B2_ENDPOINT',
+  'B2_REGION',
+] as const;
 
 describe('isGoogleAvatarUrl', () => {
   it('accepts https googleusercontent subdomains', () => {
@@ -36,5 +48,46 @@ describe('googleAvatarHiResUrl', () => {
   it('never rewrites non-google hosts', () => {
     const url = 'https://example.com/avatar=s96-c';
     expect(googleAvatarHiResUrl(url)).toBe(url);
+  });
+});
+
+describe('importGoogleAvatar', () => {
+  const original = Object.fromEntries(
+    STORAGE_ENV_KEYS.map((key) => [key, process.env[key]]),
+  );
+
+  afterEach(() => {
+    for (const key of STORAGE_ENV_KEYS) {
+      if (original[key] === undefined) delete process.env[key];
+      else process.env[key] = original[key];
+    }
+  });
+
+  function configureStorage() {
+    process.env.B2_KEY_ID = 'key';
+    process.env.B2_APP_KEY = 'secret';
+    process.env.B2_BUCKET = 'bucket';
+    process.env.B2_ENDPOINT = 'https://s3.eu-central-003.backblazeb2.com';
+    process.env.B2_REGION = 'eu-central-003';
+  }
+
+  it('returns null without touching storage when B2 is not configured', async () => {
+    for (const key of STORAGE_ENV_KEYS) delete process.env[key];
+    await expect(
+      importGoogleAvatar({
+        userId: 'user-1',
+        url: 'https://lh3.googleusercontent.com/a/abc=s96-c',
+      }),
+    ).resolves.toBeNull();
+  });
+
+  it('refuses to fetch non-google hosts even when storage exists', async () => {
+    configureStorage();
+    await expect(
+      importGoogleAvatar({
+        userId: 'user-1',
+        url: 'https://example.com/avatar.png',
+      }),
+    ).resolves.toBeNull();
   });
 });
