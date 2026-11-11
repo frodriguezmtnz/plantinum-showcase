@@ -324,7 +324,7 @@ export default async function HallOfFamePage({ searchParams }: Props) {
               return (
                 <li key={platinum.id}>
                   <Link href={`/platinum/${platinum.id}`} className="block rounded-xl outline-none transition-shadow duration-300 focus-visible:shadow-bloom">
-                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition-all duration-300 hover:bg-popover hover:shadow-bloom">
+                    <Card className="panel-solid p-3 sm:p-4 rounded-xl flex items-center gap-4 transition duration-300 hover:shadow-glow">
                       <div className={`text-2xl sm:text-3xl font-bold w-12 text-center shrink-0 text-muted-foreground tabular`}>#{rank}</div>
                       <Image 
                         src={platinum.imageUrl} 

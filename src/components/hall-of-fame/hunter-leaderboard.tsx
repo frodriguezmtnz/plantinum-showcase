@@ -223,7 +223,7 @@ export function HunterLeaderboard({
                   href={`/u/${item.username}`}
                   className="block rounded-xl outline-none transition-shadow duration-300 focus-visible:shadow-bloom"
                 >
-                  <Card className="panel-solid flex items-center gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-popover hover:shadow-bloom sm:p-4">
+                  <Card className="panel-solid flex items-center gap-4 rounded-xl p-3 transition duration-300 hover:shadow-glow sm:p-4">
                     <div className="w-10 shrink-0 text-center text-xl font-bold tabular text-muted-foreground">
                       #{item.rank}
                     </div>

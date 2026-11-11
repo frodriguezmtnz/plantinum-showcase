@@ -44,6 +44,9 @@
     --ice: hsl(322 100% 52%);
     --ice-soft: hsl(322 90% 82%);
     --bloom: 0 0 0 3px hsl(322 100% 65% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.45);
+    /* Symmetric halo (no vertical offset): the "Rest of..." list hover glow,
+       reads as light around the card rather than a shadow lifting from below. */
+    --glow: 0 0 0 1px hsl(322 100% 65% / 0.45), 0 0 28px -4px hsl(322 100% 70% / 0.5);
     --lift: 0 14px 34px -22px hsl(207 60% 28% / 0.4);
     --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -131,6 +134,7 @@
   --color-dusk-bright: var(--dusk-amber-bright);
   --shadow-champion: var(--champion-aura);
   --shadow-bloom: var(--bloom);
+  --shadow-glow: var(--glow);
   --shadow-lift: var(--lift);
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -945,6 +949,7 @@ input[type='search']::-webkit-search-decoration {
   --live: var(--ps-green);
   --ice: hsl(322 100% 58%);
   --bloom: 0 0 0 3px hsl(322 100% 65% / 0.8), 0 22px 48px -20px hsl(207 60% 28% / 0.6);
+  --glow: 0 0 0 1px hsl(322 100% 70% / 0.5), 0 0 30px -4px hsl(322 100% 72% / 0.55);
   --lift: 0 14px 34px -22px hsl(207 60% 28% / 0.55);
   --paper: hsl(212 38% 10%);
   --grid-line: hsl(210 18% 70% / 0.08);
