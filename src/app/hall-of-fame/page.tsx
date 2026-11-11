@@ -343,12 +343,12 @@ export default async function HallOfFamePage({ searchParams }: Props) {
                           </div>
                         )}
                       </div>
-                      <div className="hidden sm:flex flex-col items-end text-right shrink-0">
-                        <div className="flex items-center gap-2 text-lg font-bold text-live tabular">
+                      <div className="flex flex-col items-end text-right shrink-0">
+                        <div className="flex items-center gap-2 text-base font-bold text-live tabular sm:text-lg">
                           <span>{platinum.monthlyVotes}</span>
-                          <Trophy className="w-5 h-5" />
+                          <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
-                        <span className="text-xs text-muted-foreground">Monthly Votes</span>
+                        <span className="hidden text-xs text-muted-foreground sm:block">Monthly Votes</span>
                       </div>
                     </Card>
                   </Link>
