@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountDeleteConfirmEmail,
+  accountDeletedEmail,
   emailChangeActiveEmail,
   emailChangeConfirmEmail,
   emailChangeRequestedEmail,
@@ -105,5 +107,32 @@ describe('email templates', () => {
     expect(email.subject).toBe('Your new Platinum Showcase email is active');
     expect(email.text).toContain('hunter');
     expect(email.text).not.toContain('@example.com');
+  });
+
+  it('asks passwordless accounts to confirm the deletion with a 30-minute link', () => {
+    const email = accountDeleteConfirmEmail({
+      username: 'hunter',
+      url: 'https://example.com/confirm-account-delete?token=t',
+      expiresMinutes: 30,
+    });
+
+    expect(email.subject).toBe(
+      'Confirm the deletion of your Platinum Showcase account',
+    );
+    expect(email.html).toContain('Review and delete my account');
+    expect(email.html).toContain('30 minutes');
+    expect(email.text).toContain('can only be used once');
+  });
+
+  it('records the deletion without offering a way back', () => {
+    const email = accountDeletedEmail({
+      username: null,
+      deletedAt: new Date('2026-03-04T10:15:00.000Z'),
+    });
+
+    expect(email.subject).toBe('Your Platinum Showcase account was deleted');
+    expect(email.text).toContain('trophy hunter');
+    expect(email.text).toContain('UTC');
+    expect(email.text).toContain('cannot be restored');
   });
 });

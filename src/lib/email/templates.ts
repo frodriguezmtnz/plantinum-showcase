@@ -289,3 +289,58 @@ export function emailChangeActiveEmail({
     text,
   };
 }
+
+/**
+ * Sent to accounts without a password (Google sign-ups) as the step-up for a
+ * deletion: the link opens a danger page that performs the irreversible work.
+ */
+export function accountDeleteConfirmEmail({
+  username,
+  url,
+  expiresMinutes = 30,
+}: {
+  username: string | null | undefined;
+  url: string;
+  expiresMinutes?: number;
+}): EmailTemplate {
+  const { html, text } = renderEmail({
+    heading: 'Confirm account deletion',
+    intro: `Hi ${displayName(username)}, someone asked to permanently delete your Platinum Showcase account, its platinums and uploaded images. The link below is the only confirmation step.`,
+    ctaLabel: 'Review and delete my account',
+    ctaUrl: url,
+    outro: `This link expires in ${expiresMinutes} minutes and can only be used once. If you did not ask for this, ignore the email and your account stays exactly as it is.`,
+    preheader: 'Confirm the deletion of your Platinum Showcase account.',
+  });
+
+  return {
+    subject: 'Confirm the deletion of your Platinum Showcase account',
+    html,
+    text,
+  };
+}
+
+/** Best-effort record sent after the account and its plates are gone. */
+export function accountDeletedEmail({
+  username,
+  deletedAt,
+}: {
+  username: string | null | undefined;
+  deletedAt: Date;
+}): EmailTemplate {
+  const when = formatUtc(deletedAt);
+  const { html, text } = renderEmail({
+    heading: 'Your account was deleted',
+    intro: `Hi ${displayName(username)}, your Platinum Showcase account, its platinums and uploaded images were permanently deleted on ${when} UTC.`,
+    ctaLabel: 'Back to the showcase',
+    ctaUrl: getSiteUrl(),
+    outro:
+      'This message is your record of the deletion; nothing further is needed. Deleted accounts and plates cannot be restored.',
+    preheader: 'Your Platinum Showcase account was deleted.',
+  });
+
+  return {
+    subject: 'Your Platinum Showcase account was deleted',
+    html,
+    text,
+  };
+}

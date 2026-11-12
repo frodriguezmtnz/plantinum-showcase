@@ -44,6 +44,7 @@ export default async function SettingsPage() {
       },
       usernameChangedAt: true,
       notifyFollowedUploads: true,
+      passwordHash: true,
     },
   });
 
@@ -82,6 +83,7 @@ export default async function SettingsPage() {
         twoFactorEnabled: user.twoFactorEnabled,
         recoveryCodesRemaining: user.twoFactorRecoveryCodes.length,
         isPrivileged: user.role === 'MODERATOR' || user.role === 'ADMIN',
+        hasPassword: Boolean(user.passwordHash),
       }}
     />
   );

@@ -5,16 +5,21 @@ import type { EmailTokenKind } from '@/generated/prisma/enums';
 /** Short enough to limit a leaked link, long enough for mail filters. */
 export const EMAIL_CHANGE_TTL_MINUTES = 30;
 
+/** Destroying the account deserves the same tight window as an email change. */
+export const ACCOUNT_DELETE_TTL_MINUTES = 30;
+
 export const EMAIL_TOKEN_TTL_MS: Record<EmailTokenKind, number> = {
   PASSWORD_RESET: 60 * 60 * 1000,
   EMAIL_VERIFY: 24 * 60 * 60 * 1000,
   EMAIL_CHANGE: EMAIL_CHANGE_TTL_MINUTES * 60 * 1000,
+  ACCOUNT_DELETE: ACCOUNT_DELETE_TTL_MINUTES * 60 * 1000,
 };
 
 export const EMAIL_TOKEN_PATH: Record<EmailTokenKind, string> = {
   PASSWORD_RESET: '/reset-password',
   EMAIL_VERIFY: '/verify-email',
   EMAIL_CHANGE: '/confirm-email-change',
+  ACCOUNT_DELETE: '/confirm-account-delete',
 };
 
 /** Only the hash is stored; the raw token exists just in the email link. */

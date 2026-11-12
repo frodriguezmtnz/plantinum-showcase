@@ -49,10 +49,11 @@ export default function LoginPage({
     email?: string;
     twofactor?: string;
     error?: string;
+    deleted?: string;
   }>;
 }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
-  const { callbackUrl, reset, verified, password, email, twofactor, error: oauthError } =
+  const { callbackUrl, reset, verified, password, email, twofactor, error: oauthError, deleted } =
     use(searchParams);
   const router = useRouter();
   const { refresh } = useAuth();
@@ -101,7 +102,9 @@ export default function LoginPage({
               ? 'Two-factor authentication is on. Sign in with your authenticator code.'
               : twofactor === 'disabled'
                 ? 'Two-factor authentication is off. Sign in with your password.'
-                : undefined;
+                : deleted === '1'
+                  ? 'Your account and all its plates are gone. Take care, trophy hunter.'
+                  : undefined;
 
   // Sign-in runs in a server action, so the client session provider has to be
   // refreshed before navigating or the header keeps showing "Sign in".

@@ -12,6 +12,7 @@ const CHROMELESS_ROUTES = [
   '/reset-password',
   '/verify-email',
   '/confirm-email-change',
+  '/confirm-account-delete',
   '/welcome',
 ];
 
