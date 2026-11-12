@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import type { ReactNode } from 'react';
 
@@ -23,7 +23,6 @@ interface SiteChromeProps {
 
 export function SiteChrome({ header, footer, children }: SiteChromeProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: session, status } = useSession();
   const hideChrome = CHROMELESS_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
@@ -32,13 +31,19 @@ export function SiteChrome({ header, footer, children }: SiteChromeProps) {
   // Google users are created without a handle. `pages.newUser` sends them to
   // /welcome on the first login, but this guard catches later visits that land
   // on a normal page (closed tab, another device, etc.).
+  //
+  // Use a full navigation instead of a soft `router.replace`: a stale client
+  // session must re-read the session from the server, otherwise `/` and
+  // `/welcome` can bounce against each other while the server already knows
+  // the handle.
   useEffect(() => {
     if (hideChrome || status !== 'authenticated') return;
     if (session?.user && !session.user.name) {
       const target = `${window.location.pathname}${window.location.search}`;
-      router.replace(`/welcome?callbackUrl=${encodeURIComponent(target)}`);
+      const destination = `/welcome?callbackUrl=${encodeURIComponent(target)}`;
+      window.location.assign(new URL(destination, window.location.origin).href);
     }
-  }, [hideChrome, status, session?.user, router]);
+  }, [hideChrome, status, session?.user]);
 
   return (
     <div className="relative flex min-h-screen flex-col">

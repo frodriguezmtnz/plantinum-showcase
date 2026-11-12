@@ -1,7 +1,6 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,7 +30,6 @@ export function WelcomeForm({
   );
   const [username, setUsername] = useState('');
   const usernameStatus = useUsernameAvailability(username);
-  const router = useRouter();
   const { refresh, logout } = useAuth();
   // Refreshing the session re-renders the provider, so guard against running
   // the post-onboarding navigation more than once.
@@ -41,10 +39,24 @@ export function WelcomeForm({
     if (!state.redirectTo || navigatedRef.current) return;
     navigatedRef.current = true;
     const target = state.redirectTo;
+    // `update()` can resolve with no session (next-auth swallows the failed
+    // session request), which leaves the client copy of the session stale and
+    // bounces `/` back to `/welcome`. A full page load re-reads the session
+    // from the server, so the handle is always picked up. Keep the soft
+    // refresh as a best-effort sync and surface silent failures.
     refresh()
-      .catch(() => undefined)
-      .finally(() => router.push(target));
-  }, [state.redirectTo, refresh, router]);
+      .then((session) => {
+        if (!session) {
+          console.warn(
+            '[welcome] session refresh returned no data; using a full page load',
+          );
+        }
+      })
+      .catch((error) => {
+        console.warn('[welcome] could not refresh the session', error);
+      })
+      .finally(() => window.location.assign(target));
+  }, [state.redirectTo, refresh]);
 
   const blocked =
     usernameStatus.state === 'invalid' ||
