@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AuthShell } from '@/components/shared/auth-shell';
+import { AuthUtilityAside } from '@/components/shared/auth-utility-aside';
+import { HandleSetupIllustration } from '@/components/shared/auth-illustrations';
 import { UsernameHint } from '@/components/shared/username-hint';
 import { useAuth } from '@/hooks/use-auth';
 import { useUsernameAvailability } from '@/hooks/use-username-availability';
@@ -67,6 +69,18 @@ export function WelcomeForm({
     <AuthShell
       title="Choose your username"
       description="One last step before you start showing off your platinums."
+      aside={
+        <AuthUtilityAside
+          illustration={<HandleSetupIllustration />}
+          title="Almost there."
+          description="Pick the handle that will sit under every platinum you post."
+          points={[
+            'Your handle is your public profile: /u/your-handle.',
+            'We copy your Google photo as your avatar; you can replace it any time in Settings.',
+            'Handles can be changed once every 12 months, so pick with care.',
+          ]}
+        />
+      }
       error={state.error}
       footer={
         <button
