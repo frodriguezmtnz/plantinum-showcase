@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { auth } from '@/auth';
 import { AuthShell } from '@/components/shared/auth-shell';
 import { AuthUtilityAside } from '@/components/shared/auth-utility-aside';
-import { EmailVerifyIllustration } from '@/components/shared/auth-illustrations';
+import { AccountDeleteIllustration } from '@/components/shared/auth-illustrations';
 import { Button } from '@/components/ui/button';
 import { getAccountDeleteState } from '@/lib/email/account-delete';
 import { ConfirmAccountDeleteForm } from './confirm-account-delete-form';
@@ -21,7 +21,7 @@ const INVALID_COPY = {
 
 const VALID_ASIDE = (
   <AuthUtilityAside
-    illustration={<EmailVerifyIllustration />}
+    illustration={<AccountDeleteIllustration />}
     title="Last chance to turn back."
     description="Opening this link was the confirmation step; the delete below is the point of no return."
     points={[
@@ -34,7 +34,7 @@ const VALID_ASIDE = (
 
 const INVALID_ASIDE = (
   <AuthUtilityAside
-    illustration={<EmailVerifyIllustration />}
+    illustration={<AccountDeleteIllustration />}
     title="Links don't last forever."
     description="Deletion links are single-use and expire after 30 minutes."
     points={[

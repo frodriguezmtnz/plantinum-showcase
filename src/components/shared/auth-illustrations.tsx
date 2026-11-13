@@ -1,8 +1,9 @@
 /**
  * Server-rendered drawings for the account utility pages: an envelope with a
- * confirmed check, a shield with a key, and a trophy above a handle tag. Same
- * ambient SVG + CSS language as the 404/moved-handle illustrations — no JS,
- * and the motion stops under `prefers-reduced-motion`.
+ * confirmed check, a shield with a key, a trophy above a handle tag, and a bin
+ * swallowing the trophy for the danger flow. Same ambient SVG + CSS language
+ * as the 404/moved-handle illustrations — no JS, and the motion stops under
+ * `prefers-reduced-motion`.
  */
 
 import { cn } from '@/lib/utils';
@@ -409,6 +410,116 @@ export function FarewellTrophyIllustration({ className }: IllustrationProps) {
             @handle
           </text>
         </g>
+      </svg>
+    </div>
+  );
+}
+
+/** Danger-page drawing: a bin with the trophy dropping in, not a celebration. */
+export function AccountDeleteIllustration({ className }: IllustrationProps) {
+  return (
+    <div className={cn('mx-auto h-52 w-52 text-muted-foreground', className)}>
+      <svg
+        viewBox="0 0 160 160"
+        fill="none"
+        role="presentation"
+        aria-hidden="true"
+        className="h-full w-full"
+      >
+        <circle
+          className="ambient-halo text-primary"
+          cx="80"
+          cy="80"
+          r="62"
+          stroke="currentColor"
+          strokeOpacity="0.22"
+          strokeWidth="1.5"
+          strokeDasharray="3 9"
+        />
+        <circle
+          className="ambient-ghost"
+          cx="80"
+          cy="80"
+          r="44"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="5 9"
+        />
+
+        <g className="ambient-float">
+          {/* The trophy about to go in. */}
+          <g
+            transform="translate(80 50) scale(0.46) rotate(12) translate(-80 -59)"
+            fill="currentColor"
+            fillOpacity="0.14"
+            stroke="currentColor"
+            strokeOpacity="0.5"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M62 35.6 H98 V48.8 A18 18 0 0 1 62 48.8 Z" />
+            <path d="M62 40.4 C53.6 40.4 53.6 52.4 62 52.4" fill="none" />
+            <path d="M98 40.4 C106.4 40.4 106.4 52.4 98 52.4" fill="none" />
+            <path d="M75.2 64.8 H84.8 L83.6 76.4 H76.4 Z" />
+            <rect x="66.8" y="76.4" width="26.4" height="6" rx="2.4" />
+          </g>
+
+          {/* Open lid, tilted ajar. */}
+          <g
+            transform="rotate(-9 80 69)"
+            fill="currentColor"
+            fillOpacity="0.18"
+            stroke="currentColor"
+            strokeOpacity="0.55"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          >
+            <rect x="52" y="64" width="56" height="8" rx="4" />
+            <path d="M72 64 a8 6 0 0 1 16 0" fill="none" strokeLinecap="round" />
+          </g>
+
+          {/* Bin body. */}
+          <path
+            d="M56 78 h48 l-5 46 a6 6 0 0 1 -6 5 h-26 a6 6 0 0 1 -6 -5 z"
+            fill="currentColor"
+            fillOpacity="0.12"
+            stroke="currentColor"
+            strokeOpacity="0.45"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <g stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M70 88 v32" />
+            <path d="M80 88 v34" />
+            <path d="M90 88 v32" />
+          </g>
+        </g>
+
+        <circle
+          className="ambient-drift"
+          cx="36"
+          cy="44"
+          r="2.2"
+          fill="currentColor"
+          fillOpacity="0.5"
+        />
+        <path
+          className="ambient-drift ambient-drift--late"
+          d="M112 30 h9"
+          stroke="currentColor"
+          strokeOpacity="0.4"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle
+          className="ambient-drift ambient-drift--later"
+          cx="126"
+          cy="126"
+          r="2.4"
+          fill="currentColor"
+          fillOpacity="0.45"
+        />
       </svg>
     </div>
   );
