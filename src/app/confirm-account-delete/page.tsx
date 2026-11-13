@@ -137,8 +137,8 @@ export default async function ConfirmAccountDeletePage({
         username ? (
           <>
             You are signed in as{' '}
-            <strong className="text-foreground">@{username}</strong> · {email}.
-            This is the account that will be destroyed.
+            <strong className="text-foreground">{email}</strong>. This is the
+            account that will be destroyed.
           </>
         ) : (
           'This is the final confirmation. It cannot be undone.'
@@ -154,11 +154,7 @@ export default async function ConfirmAccountDeletePage({
         </>
       }
     >
-      <ConfirmAccountDeleteForm
-        token={token}
-        username={username}
-        platinumCount={platinumCount}
-      />
+      <ConfirmAccountDeleteForm token={token} platinumCount={platinumCount} />
     </AuthShell>
   );
 }
