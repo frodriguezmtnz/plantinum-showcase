@@ -15,6 +15,20 @@ export type DeleteAccountDataResult =
   | { ok: false; reason: 'token-spent' };
 
 /**
+ * `revalidatePath` throws outside a Next request context (integration tests,
+ * background jobs): `Invariant: static generation store missing`. The deletion
+ * is already committed at this point and dynamic pages re-render on the next
+ * request, so purge the cache best-effort, like moderation does.
+ */
+function safeRevalidateLayout(): void {
+  try {
+    revalidatePath('/', 'layout');
+  } catch (error) {
+    console.warn('[account-deletion] revalidatePath skipped', error);
+  }
+}
+
+/**
  * Irreversible account teardown shared by the password flow in Settings and
  * the emailed confirmation link. Plates and their stored images go away,
  * frozen monthly rows keep their display data but lose the (now dead) link,
@@ -85,6 +99,6 @@ export async function deleteAccountData(
     }
   }
 
-  revalidatePath('/', 'layout');
+  safeRevalidateLayout();
   return { ok: true };
 }
