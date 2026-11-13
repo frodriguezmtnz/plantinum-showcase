@@ -12,7 +12,15 @@ import {
 
 const initialState: ConfirmAccountDeleteState = {};
 
-export function ConfirmAccountDeleteForm({ token }: { token: string }) {
+export function ConfirmAccountDeleteForm({
+  token,
+  username,
+  platinumCount,
+}: {
+  token: string;
+  username: string | null;
+  platinumCount: number;
+}) {
   const [state, formAction, isPending] = useActionState(
     confirmAccountDeleteAction,
     initialState,
@@ -27,13 +35,21 @@ export function ConfirmAccountDeleteForm({ token }: { token: string }) {
     return () => window.clearTimeout(timer);
   }, [state.success]);
 
+  const plateLabel =
+    platinumCount === 1 ? '1 platinum' : `${platinumCount} platinums`;
+  const scope =
+    platinumCount === 0
+      ? 'your profile and every uploaded image'
+      : `${plateLabel} and every uploaded image`;
+  const farewell = username
+    ? `@${username} and its ${plateLabel} are gone. Take care, trophy hunter.`
+    : 'Your account and all its plates are gone. Take care, trophy hunter.';
+
   if (state.success) {
     return (
       <div className="space-y-4 text-center" role="status" aria-live="polite">
         <FarewellTrophyIllustration />
-        <p className="text-sm text-muted-foreground">
-          Your account and all its plates are gone. Take care, trophy hunter.
-        </p>
+        <p className="text-sm text-muted-foreground">{farewell}</p>
       </div>
     );
   }
@@ -51,8 +67,13 @@ export function ConfirmAccountDeleteForm({ token }: { token: string }) {
         aria-hidden
       />
       <p className="text-center text-sm text-muted-foreground">
-        Deleting removes your profile, every platinum and all uploaded images.
-        This cannot be undone.
+        Deleting{' '}
+        {username ? (
+          <strong className="text-foreground">@{username}</strong>
+        ) : (
+          'your account'
+        )}{' '}
+        removes {scope}. This cannot be undone.
       </p>
       <Button
         type="submit"

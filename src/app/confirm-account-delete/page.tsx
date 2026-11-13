@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { AuthShell } from '@/components/shared/auth-shell';
 import { AuthUtilityAside } from '@/components/shared/auth-utility-aside';
 import { AccountDeleteIllustration } from '@/components/shared/auth-illustrations';
@@ -117,10 +118,32 @@ export default async function ConfirmAccountDeletePage({
     );
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      username: true,
+      email: true,
+      _count: { select: { platinums: true } },
+    },
+  });
+  const username = user?.username ?? null;
+  const email = user?.email ?? session.user.email ?? '';
+  const platinumCount = user?._count.platinums ?? 0;
+
   return (
     <AuthShell
-      title="Delete your account?"
-      description="This is the final confirmation. It cannot be undone."
+      title={username ? `Delete @${username}?` : 'Delete your account?'}
+      description={
+        username ? (
+          <>
+            You are signed in as{' '}
+            <strong className="text-foreground">@{username}</strong> · {email}.
+            This is the account that will be destroyed.
+          </>
+        ) : (
+          'This is the final confirmation. It cannot be undone.'
+        )
+      }
       aside={VALID_ASIDE}
       footer={
         <>
@@ -131,7 +154,11 @@ export default async function ConfirmAccountDeletePage({
         </>
       }
     >
-      <ConfirmAccountDeleteForm token={token} />
+      <ConfirmAccountDeleteForm
+        token={token}
+        username={username}
+        platinumCount={platinumCount}
+      />
     </AuthShell>
   );
 }
