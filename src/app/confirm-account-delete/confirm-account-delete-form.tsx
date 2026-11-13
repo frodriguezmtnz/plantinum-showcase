@@ -4,6 +4,7 @@ import { useActionState, useEffect } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
+import { FarewellTrophyIllustration } from '@/components/shared/auth-illustrations';
 import {
   confirmAccountDeleteAction,
   type ConfirmAccountDeleteState,
@@ -19,16 +20,19 @@ export function ConfirmAccountDeleteForm({ token }: { token: string }) {
 
   useEffect(() => {
     if (!state.success) return;
-    // The account row is gone, so the session cookie is worthless. Clear it
-    // and land on the sign-in page with a notice.
-    void signOut({ callbackUrl: '/login?deleted=1' });
+    // Let the farewell animation play before the session cookie is cleared.
+    const timer = window.setTimeout(() => {
+      void signOut({ callbackUrl: '/login?deleted=1' });
+    }, 1600);
+    return () => window.clearTimeout(timer);
   }, [state.success]);
 
   if (state.success) {
     return (
       <div className="space-y-4 text-center" role="status" aria-live="polite">
+        <FarewellTrophyIllustration />
         <p className="text-sm text-muted-foreground">
-          Your account and plates are gone. Taking you to the sign-in page…
+          Your account and all its plates are gone. Take care, trophy hunter.
         </p>
       </div>
     );

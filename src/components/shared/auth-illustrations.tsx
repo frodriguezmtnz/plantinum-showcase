@@ -323,3 +323,93 @@ export function HandleSetupIllustration({ className }: IllustrationProps) {
     </div>
   );
 }
+
+/** Farewell for the deleted-account screen: the trophy lifts and dissolves. */
+export function FarewellTrophyIllustration({ className }: IllustrationProps) {
+  return (
+    <div className={cn('mx-auto h-52 w-52 text-muted-foreground', className)}>
+      <svg
+        viewBox="0 0 160 160"
+        fill="none"
+        role="presentation"
+        aria-hidden="true"
+        className="h-full w-full"
+      >
+        <g className="farewell-trophy">
+          <circle
+            className="text-primary"
+            cx="80"
+            cy="80"
+            r="62"
+            stroke="currentColor"
+            strokeOpacity="0.22"
+            strokeWidth="1.5"
+            strokeDasharray="3 9"
+          />
+          <circle
+            cx="80"
+            cy="80"
+            r="44"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeDasharray="5 9"
+          />
+
+          <g
+            fill="currentColor"
+            fillOpacity="0.12"
+            stroke="currentColor"
+            strokeOpacity="0.45"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M62 35.6 H98 V48.8 A18 18 0 0 1 62 48.8 Z" />
+            <path d="M62 40.4 C53.6 40.4 53.6 52.4 62 52.4" fill="none" />
+            <path d="M98 40.4 C106.4 40.4 106.4 52.4 98 52.4" fill="none" />
+            <path d="M75.2 64.8 H84.8 L83.6 76.4 H76.4 Z" />
+          </g>
+          <rect
+            className="text-primary"
+            x="66.8"
+            y="76.4"
+            width="26.4"
+            height="6"
+            rx="2.4"
+            fill="currentColor"
+            fillOpacity="0.28"
+            stroke="currentColor"
+            strokeOpacity="0.55"
+            strokeWidth="1.5"
+          />
+
+          <rect
+            x="40"
+            y="98"
+            width="80"
+            height="26"
+            rx="13"
+            fill="currentColor"
+            fillOpacity="0.12"
+            stroke="currentColor"
+            strokeOpacity="0.45"
+            strokeWidth="1.5"
+          />
+          <text
+            className="text-primary"
+            x="80"
+            y="111.3"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="currentColor"
+            fontFamily="system-ui, -apple-system, 'Segoe UI', Arial, sans-serif"
+            fontSize="13"
+            fontWeight="700"
+          >
+            @handle
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
