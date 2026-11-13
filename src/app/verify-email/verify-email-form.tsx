@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { CheckCircle2, Loader2, MailCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { fireVerificationConfetti } from '@/lib/celebrate';
+import { fireAccountReadyConfetti } from '@/lib/celebrate';
 import { verifyEmailAction, type VerifyEmailState } from './actions';
 
 const initialState: VerifyEmailState = {};
@@ -24,7 +24,7 @@ export function VerifyEmailForm({ token }: { token: string }) {
 
     if (!state.alreadyVerified && !celebrated.current) {
       celebrated.current = true;
-      void fireVerificationConfetti();
+      void fireAccountReadyConfetti();
     }
   }, [state.success, state.alreadyVerified, refresh]);
 

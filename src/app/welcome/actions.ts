@@ -16,6 +16,12 @@ export interface WelcomeState {
   error?: string;
   /** Set on success; the page refreshes the session and navigates. */
   redirectTo?: string;
+  /**
+   * Only present when the handle was just created. The client uses it to
+   * celebrate and show the success screen; the already-onboarded path only
+   * carries `redirectTo`.
+   */
+  username?: string;
 }
 
 /**
@@ -95,5 +101,5 @@ export async function completeOAuthProfile(
   revalidatePath("/", "layout");
   revalidatePath(`/u/${username}`);
 
-  return { redirectTo: callbackUrl };
+  return { redirectTo: callbackUrl, username };
 }

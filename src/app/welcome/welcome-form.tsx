@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useEffect, useRef, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { AuthUtilityAside } from '@/components/shared/auth-utility-aside';
 import { HandleSetupIllustration } from '@/components/shared/auth-illustrations';
 import { UsernameHint } from '@/components/shared/username-hint';
 import { useAuth } from '@/hooks/use-auth';
+import { fireAccountReadyConfetti } from '@/lib/celebrate';
 import { useUsernameAvailability } from '@/hooks/use-username-availability';
 import {
   USERNAME_MAX_LENGTH,
@@ -41,6 +42,13 @@ export function WelcomeForm({
     if (!state.redirectTo || navigatedRef.current) return;
     navigatedRef.current = true;
     const target = state.redirectTo;
+    // A freshly created handle gets a short success moment; the confetti is
+    // fired right away so it plays while the screen is visible.
+    const celebrating = Boolean(state.username);
+    const delay = celebrating ? 1200 : 0;
+    if (celebrating) void fireAccountReadyConfetti();
+
+    let timer: number | undefined;
     // `update()` can resolve with no session (next-auth swallows the failed
     // session request), which leaves the client copy of the session stale and
     // bounces `/` back to `/welcome`. A full page load re-reads the session
@@ -57,8 +65,51 @@ export function WelcomeForm({
       .catch((error) => {
         console.warn('[welcome] could not refresh the session', error);
       })
-      .finally(() => window.location.assign(target));
-  }, [state.redirectTo, refresh]);
+      .finally(() => {
+        if (delay > 0) {
+          timer = window.setTimeout(
+            () => window.location.assign(target),
+            delay,
+          );
+        } else {
+          window.location.assign(target);
+        }
+      });
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [state.redirectTo, state.username, refresh]);
+
+  if (state.redirectTo && state.username) {
+    return (
+      <AuthShell
+        title="Welcome aboard."
+        description="Your shelf is ready for its first platinum."
+        aside={
+          <AuthUtilityAside
+            illustration={<HandleSetupIllustration />}
+            title="You're in."
+            description="One second and we will take you to the showcase."
+            points={[
+              `Your handle is live at /u/${state.username}.`,
+              'Upload a platinum with its screenshot and the story behind it.',
+              'Vote and follow to climb the monthly ranking.',
+            ]}
+          />
+        }
+      >
+        <div className="space-y-4 text-center" role="status" aria-live="polite">
+          <CheckCircle2 className="mx-auto h-12 w-12 text-live" aria-hidden />
+          <p className="text-sm text-muted-foreground">
+            Welcome aboard,{' '}
+            <strong className="text-foreground">@{state.username}</strong>.
+            Taking you to the showcase…
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
 
   const blocked =
     usernameStatus.state === 'invalid' ||
