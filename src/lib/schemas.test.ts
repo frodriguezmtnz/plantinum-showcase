@@ -6,6 +6,7 @@ import {
 } from '@/lib/schemas';
 
 const base = {
+  title: 'Platinum #1 - Elden Ring',
   gameName: 'Elden Ring',
   platform: 'PS5' as const,
   platinumDate: new Date('2024-02-01'),
@@ -15,6 +16,7 @@ const base = {
 describe('platinumMetaSchema', () => {
   it('accepts valid metadata', () => {
     const parsed = platinumMetaSchema.parse({ ...base, isSpoiler: true });
+    expect(parsed.title).toBe('Platinum #1 - Elden Ring');
     expect(parsed.gameName).toBe('Elden Ring');
     expect(parsed.platform).toBe('PS5');
     expect(parsed.isSpoiler).toBe(true);
@@ -39,6 +41,28 @@ describe('platinumMetaSchema', () => {
     });
     expect(parsed.gameName).toBe('Elden Ring');
     expect(parsed.comment).toBe('gg');
+  });
+
+  it('rejects a title shorter than 3 characters', () => {
+    expect(
+      platinumMetaSchema.safeParse({ ...base, title: 'ab', isSpoiler: false }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a title longer than 120 characters', () => {
+    expect(
+      platinumMetaSchema.safeParse({ ...base, title: 'x'.repeat(121), isSpoiler: false })
+        .success,
+    ).toBe(false);
+  });
+
+  it('trims the title', () => {
+    const parsed = platinumMetaSchema.parse({
+      ...base,
+      title: '  Platinum #1  ',
+      isSpoiler: false,
+    });
+    expect(parsed.title).toBe('Platinum #1');
   });
 
   it('rejects a game name shorter than 5 characters', () => {

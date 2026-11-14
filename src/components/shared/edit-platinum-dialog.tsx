@@ -33,6 +33,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
@@ -48,6 +49,7 @@ import {
 
 export interface EditablePlatinum {
   id: string;
+  title?: string | null;
   gameName: string;
   gameId?: number | null;
   platform: 'PS3' | 'PS4' | 'PS5';
@@ -64,6 +66,7 @@ interface EditPlatinumDialogProps {
 
 function toDefaults(platinum: EditablePlatinum): PlatinumMetaValues {
   return {
+    title: platinum.title ?? '',
     gameName: platinum.gameName,
     platform: platinum.platform,
     platinumDate: new Date(platinum.platinumDate),
@@ -103,6 +106,7 @@ export function EditPlatinumDialog({
   function onSubmit(values: PlatinumMetaValues) {
     startTransition(async () => {
       const result = await editPlatinum(platinum.id, {
+        title: values.title,
         gameName: values.gameName,
         gameId,
         platform: values.platform,
@@ -158,6 +162,28 @@ export function EditPlatinumDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Platinum Title</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Platinum #1 - Tomb Raider"
+                      disabled={busy}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Your own headline for this plate. Game Name stays the title
+                    used for matching.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="gameName"

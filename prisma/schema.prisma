@@ -245,6 +245,10 @@ model VerificationToken {
 model Platinum {
   id                String           @id @default(cuid())
   hash              String
+  // Hunter's own headline for the plate (e.g. "Platinum #1 - Tomb Raider").
+  // Nullable only for plates created before the field existed; the upload form
+  // requires it, and the UI falls back to gameName when it is missing.
+  title             String?
   gameName          String
   gameId            Int?
   platform          String

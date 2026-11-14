@@ -104,6 +104,28 @@ const uploadSchema = platinumMetaInputSchema.extend({
 });
 
 /**
+ * Lightweight status probe for the post-upload screen. A plate starts as
+ * UNDER_REVIEW and the screener publishes it a few seconds later, so the owner
+ * polls this until it settles. Only the owner (or a moderator) can read it.
+ */
+export async function getPlatinumModerationStatus(id: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+
+  const plate = await prisma.platinum.findUnique({
+    where: { id },
+    select: { userId: true, moderationStatus: true },
+  });
+  if (!plate) return null;
+  if (plate.userId !== userId) {
+    const { isModerator } = await getModeratorAccess(userId);
+    if (!isModerator) return null;
+  }
+  return plate.moderationStatus;
+}
+
+/**
  * Post-upload AI screening. The plate is created as UNDER_REVIEW, so it is never
  * public until cleared: only an explicit SAFE verdict publishes it, while
  * REVIEW, UNSAFE or any classifier failure (refusal, timeout, unparseable) keeps
@@ -304,6 +326,7 @@ export async function uploadPlatinum(formData: FormData) {
   }
 
   const parsed = uploadSchema.safeParse({
+    title: formData.get("title"),
     gameName: formData.get("gameName"),
     platform: formData.get("platform"),
     platinumDate: formData.get("platinumDate"),
@@ -412,6 +435,7 @@ export async function uploadPlatinum(formData: FormData) {
     const platinum = await prisma.platinum.create({
       data: {
         hash,
+        title: parsed.data.title,
         gameName: parsed.data.gameName,
         gameId,
         platform: parsed.data.platform,
@@ -498,6 +522,7 @@ export async function uploadPlatinum(formData: FormData) {
 }
 
 export interface EditPlatinumInput {
+  title: string;
   gameName: string;
   gameId?: number | null;
   platform: string;
@@ -527,6 +552,7 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
   }
 
   const parsed = platinumMetaInputSchema.safeParse({
+    title: input.title,
     gameName: input.gameName,
     platform: input.platform,
     platinumDate: input.platinumDate,
@@ -572,6 +598,7 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
   await prisma.platinum.update({
     where: { id },
     data: {
+      title: parsed.data.title,
       gameName: parsed.data.gameName,
       ...(nextGameId !== undefined ? { gameId: nextGameId } : {}),
       platform: parsed.data.platform,

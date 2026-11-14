@@ -32,6 +32,12 @@ export const watermarkPositionSchema = z
  * on purpose: editing never re-processes or replaces the screenshot.
  */
 export const platinumMetaSchema = z.object({
+  /** Hunter's own headline, e.g. "Platinum #1 - Tomb Raider". */
+  title: z
+    .string()
+    .trim()
+    .min(3, { message: "Title must be at least 3 characters." })
+    .max(120, { message: "Title is too long." }),
   gameName: z
     .string()
     .trim()

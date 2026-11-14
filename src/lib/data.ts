@@ -24,6 +24,8 @@ const PUBLISHED_ONLY = { moderationStatus: 'PUBLISHED' as const };
 export interface Platinum {
   id: string;
   hash: string;
+  /** Hunter's own headline; older plates have none and fall back to gameName. */
+  title: string | null;
   gameName: string;
   gameId?: number | null;
   platform: 'PS3' | 'PS4' | 'PS5';
@@ -50,6 +52,7 @@ export interface User {
 interface PlatinumRecord {
   id: string;
   hash: string;
+  title: string | null;
   gameName: string;
   gameId?: number | null;
   platform: string;
@@ -76,6 +79,7 @@ interface UserRecord {
 const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   id: p.id,
   hash: p.hash,
+  title: p.title,
   gameName: p.gameName,
   gameId: p.gameId ?? null,
   platform: p.platform as 'PS3' | 'PS4' | 'PS5',
@@ -351,6 +355,34 @@ export async function getPlatinumById(
 
   const [view] = await attachVoteStatus([platinum], currentUserId);
   return view;
+}
+
+/**
+ * Other published plates for the same game, best-voted first. The RAWG
+ * `gameId` is the stable identity, so it wins when present; unlinked plates
+ * (typed by hand or uploaded before the picker existed) still match on an
+ * exact, case-insensitive title.
+ */
+export async function getPlatinumsForSameGame(
+  { gameId, gameName }: { gameId?: number | null; gameName: string },
+  excludeId: string,
+  currentUserId?: string,
+  limit = 6,
+): Promise<Platinum[]> {
+  const nameMatch = {
+    gameName: { equals: gameName.trim(), mode: 'insensitive' as const },
+  };
+
+  const platinums = await prisma.platinum.findMany({
+    where: {
+      ...PUBLISHED_ONLY,
+      id: { not: excludeId },
+      ...(gameId ? { OR: [{ gameId }, nameMatch] } : nameMatch),
+    },
+    orderBy: [{ votes: 'desc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+    take: limit,
+  });
+  return attachVoteStatus(platinums, currentUserId);
 }
 
 export async function getPlatinumsByUserId(
