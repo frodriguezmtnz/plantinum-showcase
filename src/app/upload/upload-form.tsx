@@ -42,6 +42,7 @@ import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-pos
 import { ResendVerificationButton } from "@/components/settings/resend-verification-button"
 import { GameNameField } from "@/components/shared/game-name-field"
 import { firePlatinumPublishedConfetti } from "@/lib/celebrate"
+import { ShareWinButton } from "@/app/upload/share-win-button"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -376,6 +377,9 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
               <Button asChild>
                 <Link href={`/platinum/${submitted.id}`}>View your platinum</Link>
               </Button>
+              {published && (
+                <ShareWinButton platinumId={submitted.id} gameName={submitted.gameName} />
+              )}
               <Button
                 type="button"
                 variant="outline"
