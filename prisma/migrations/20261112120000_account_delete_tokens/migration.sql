@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "EmailTokenKind" ADD VALUE 'ACCOUNT_DELETE';

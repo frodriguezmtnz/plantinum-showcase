@@ -4,6 +4,7 @@ import { AuthError, CredentialsSignin } from "next-auth";
 import { headers } from "next/headers";
 import { signIn } from "@/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { safeRelativeCallback } from "@/lib/callback-url";
 
 const MAX_ATTEMPTS_PER_EMAIL = 8;
 const MAX_ATTEMPTS_PER_IP = 20;
@@ -27,11 +28,9 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   }
 
   // Only allow same-site relative paths back (never "//host" or absolute URLs).
-  const rawCallback = (formData.get("callbackUrl") as string | undefined)?.trim();
-  const callbackUrl =
-    rawCallback && rawCallback.startsWith("/") && !rawCallback.startsWith("//")
-      ? rawCallback
-      : "/";
+  const callbackUrl = safeRelativeCallback(
+    formData.get("callbackUrl") as string | undefined,
+  );
 
   // Brute-force barrier: cap attempts per account and per client address.
   const headerList = await headers();

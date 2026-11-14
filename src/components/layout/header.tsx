@@ -79,6 +79,8 @@ function NavLink({ href, active, children, ...props }: NavLinkProps) {
 export function Header() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  // OAuth accounts have no handle until they finish onboarding.
+  const handle = user?.name?.trim() || null;
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
 
@@ -159,9 +161,9 @@ export function Header() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href={`/u/${user.name}`}>
+                    <Link href={handle ? `/u/${handle}` : '/welcome'}>
                       <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
+                      <span>{handle ? 'Profile' : 'Finish setup'}</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -248,9 +250,16 @@ export function Header() {
                           </div>
                         </div>
                         <SheetClose asChild>
-                          <NavLink href={`/u/${user.name}`} active={pathname === `/u/${user.name}`}>
+                          <NavLink
+                            href={handle ? `/u/${handle}` : '/welcome'}
+                            active={
+                              handle
+                                ? pathname === `/u/${handle}`
+                                : pathname === '/welcome'
+                            }
+                          >
                             <UserIcon className="mr-2 h-4 w-4" />
-                            Profile
+                            {handle ? 'Profile' : 'Finish setup'}
                           </NavLink>
                         </SheetClose>
                         <SheetClose asChild>

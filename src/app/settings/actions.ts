@@ -16,6 +16,11 @@ import {
   type RequestEmailChangeResult,
 } from "@/lib/email/change-email";
 import {
+  requestAccountDelete as requestAccountDeleteLink,
+  type RequestAccountDeleteResult,
+} from "@/lib/email/account-delete";
+import { deleteAccountData } from "@/lib/account-deletion";
+import {
   DISPOSABLE_EMAIL_ERROR,
   EMAIL_IN_USE_ERROR,
 } from "@/lib/email/address";
@@ -32,7 +37,6 @@ import {
   isStorageConfigured,
   putImage,
 } from "@/lib/b2";
-import { imageKeyFromUrl } from "@/lib/moderation-core";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import { usernameIsTaken, reserveUsername } from "@/lib/username-registry";
 import {
@@ -74,6 +78,10 @@ export type PasswordUpdateResult =
 
 export type DeleteAccountResult =
   | { success: true }
+  | { success: false; error: string };
+
+export type AccountDeleteRequestResult =
+  | { success: true; email: string }
   | { success: false; error: string };
 
 export type EmailChangeRequestResult =
@@ -566,9 +574,9 @@ export async function changePassword(
 }
 
 /**
- * Irreversible. Plates and their stored images go away, frozen monthly rows
- * keep their display data but lose the (now dead) link, and the account is
- * deleted in cascade. The client signs out on success.
+ * Irreversible. Password accounts confirm with their password; accounts
+ * without one (Google sign-ups) use the emailed confirmation link instead.
+ * The client signs out on success.
  */
 export async function deleteAccount(
   formData: FormData,
@@ -591,8 +599,15 @@ export async function deleteAccount(
       platinums: { select: { id: true, imageUrl: true, hash: true } },
     },
   });
-  if (!user?.passwordHash) {
+  if (!user) {
     return { success: false, error: "Your account could not be found." };
+  }
+  if (!user.passwordHash) {
+    return {
+      success: false,
+      error:
+        "This account signs in with Google and has no password. Confirm the deletion with the emailed link instead.",
+    };
   }
   if (!user.username || confirmUsername !== user.username) {
     return {
@@ -604,48 +619,59 @@ export async function deleteAccount(
     return { success: false, error: "The password is incorrect." };
   }
 
-  const platinumIds = user.platinums.map((plate) => plate.id);
-
-  await prisma.$transaction(async (tx) => {
-    // Freeing the handle forever keeps old links from resolving to a stranger.
-    if (user.username) {
-      await reserveUsername(user.username, userId, tx);
-    }
-    if (platinumIds.length > 0) {
-      await tx.monthlyResult.updateMany({
-        where: { platinumId: { in: platinumIds } },
-        data: { platinumId: null },
-      });
-    }
-    await tx.user.delete({ where: { id: userId } });
+  await deleteAccountData({
+    id: userId,
+    username: user.username,
+    platinums: user.platinums,
   });
 
-  // Storage cleanup after the cascade: only drop bytes no other plate shares.
-  const seen = new Set<string>();
-  for (const plate of user.platinums) {
-    if (seen.has(plate.hash)) continue;
-    seen.add(plate.hash);
-    const remaining = await prisma.platinum.count({
-      where: { hash: plate.hash },
-    });
-    if (remaining > 0) continue;
-    const key = imageKeyFromUrl(plate.imageUrl);
-    if (!key) continue;
-    try {
-      await deleteImage(key);
-    } catch {
-      // Best effort, same policy as moderation deletes.
-    }
-  }
-
-  if (isStorageConfigured()) {
-    try {
-      await deleteImage(avatarImageKey(userId));
-    } catch {
-      // No avatar stored, or storage down.
-    }
-  }
-
-  revalidatePath("/", "layout");
   return { success: true };
 }
+
+const ACCOUNT_DELETE_ERROR: Record<
+  Extract<RequestAccountDeleteResult, { ok: false }>["reason"],
+  string
+> = {
+  "not-found": "Your account could not be found.",
+  "has-password":
+    "This account has a password. Confirm the deletion with it in the same dialog.",
+  unverified: "Verify your email before deleting the account.",
+  "send-failed":
+    "We could not send the confirmation email. Please try again in a few minutes.",
+};
+
+/**
+ * Passwordless accounts cannot confirm with a password, so the dialog emails a
+ * single-use link. The token is bound to the signed-in user and the deletion
+ * itself happens on /confirm-account-delete.
+ */
+export async function requestAccountDelete(
+  formData: FormData,
+): Promise<AccountDeleteRequestResult> {
+  const userId = await requireUserId();
+  if (!userId) return { success: false, error: "You need to sign in first." };
+
+  if (!(await checkRateLimit(`settings-delete:${userId}`, 3, 3_600_000)).ok) {
+    return { success: false, error: RATE_LIMITED };
+  }
+
+  const confirmUsername = String(formData.get("confirmUsername") ?? "").trim();
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+  if (!user?.username || confirmUsername !== user.username) {
+    return {
+      success: false,
+      error: "Type your username exactly to confirm the deletion.",
+    };
+  }
+
+  const result = await requestAccountDeleteLink({ userId });
+  if (!result.ok) {
+    return { success: false, error: ACCOUNT_DELETE_ERROR[result.reason] };
+  }
+
+  return { success: true, email: result.email };
+}
+

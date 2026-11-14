@@ -100,6 +100,7 @@ export interface SettingsUser {
   twoFactorEnabled: boolean;
   recoveryCodesRemaining: number;
   isPrivileged: boolean;
+  hasPassword: boolean;
 }
 
 type Availability =
@@ -1221,11 +1222,16 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
               Deleting your account removes your profile, platinums and uploaded
               images.
             </p>
-            <DeleteAccount username={savedUsername} />
+            <DeleteAccount
+              username={savedUsername}
+              hasPassword={user.hasPassword}
+            />
           </div>
           <p className="flex items-center gap-2 text-xs text-muted-foreground">
             <Check className="h-3.5 w-3.5" aria-hidden />
-            You will be asked for your username and password.
+            {user.hasPassword
+              ? 'You will be asked for your username and password.'
+              : 'You will be asked for your username, then we email you a confirmation link.'}
           </p>
         </Section>
       </div>

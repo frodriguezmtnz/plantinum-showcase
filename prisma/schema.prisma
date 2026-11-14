@@ -25,6 +25,7 @@ enum EmailTokenKind {
   PASSWORD_RESET
   EMAIL_VERIFY
   EMAIL_CHANGE
+  ACCOUNT_DELETE
 }
 
 // PUBLISHED is the happy path; UNDER_REVIEW keeps a plate off the public lists

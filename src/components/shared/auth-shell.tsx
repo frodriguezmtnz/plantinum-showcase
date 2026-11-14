@@ -5,7 +5,7 @@ import { PlatinumMarkIcon } from '@/components/icons/platinum-mark-icon';
 
 interface AuthShellProps {
   title: string;
-  description: string;
+  description: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   error?: string;

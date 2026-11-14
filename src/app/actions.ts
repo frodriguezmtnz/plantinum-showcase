@@ -250,6 +250,13 @@ export async function uploadPlatinum(formData: FormData) {
     };
   }
 
+  if (!session.user.name) {
+    return {
+      success: false as const,
+      error: "Choose a username before uploading.",
+    };
+  }
+
   if (!session.user.emailConfirmed) {
     return { success: false as const, error: VERIFY_EMAIL_ACTION_ERROR };
   }

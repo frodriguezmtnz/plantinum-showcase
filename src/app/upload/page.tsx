@@ -13,6 +13,9 @@ export default async function UploadPage() {
   if (!session?.user) {
     redirect('/login?callbackUrl=/upload');
   }
+  if (!session.user.name) {
+    redirect('/welcome?callbackUrl=/upload');
+  }
 
   return <UploadForm emailVerified={Boolean(session.user.emailConfirmed)} />;
 }

@@ -2,83 +2,22 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Check, Loader2, X } from "lucide-react";
-import { registerAction, checkUsernameAvailability, type RegisterState } from "./actions";
+import { Loader2 } from "lucide-react";
+import { registerAction, type RegisterState } from "./actions";
 import { useAuth } from "@/hooks/use-auth";
+import { useUsernameAvailability } from "@/hooks/use-username-availability";
 import { AuthShell } from "@/components/shared/auth-shell";
 import { PasswordInput } from "@/components/shared/password-input";
 import { PasswordRules } from "@/components/shared/password-rules";
+import { UsernameHint } from "@/components/shared/username-hint";
 import { PASSWORD_MIN_LENGTH, passwordPolicyError } from "@/lib/password";
-import { cn } from "@/lib/utils";
 
 const initialState: RegisterState = {};
-
-const USERNAME_PATTERN = /^[a-zA-Z0-9_-]+$/;
-
-type UsernameStatus =
-  | { state: 'idle' }
-  | { state: 'checking' }
-  | { state: 'available' }
-  | { state: 'invalid' | 'reserved' | 'taken' | 'rate-limited' };
-
-function UsernameHint({ status, username }: { status: UsernameStatus; username: string }) {
-  const base = 'flex items-center gap-1.5 text-xs';
-
-  switch (status.state) {
-    case 'checking':
-      return (
-        <p className={cn(base, 'text-muted-foreground')}>
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Checking availability…
-        </p>
-      );
-    case 'available':
-      return (
-        <p className={cn(base, 'text-emerald-500')}>
-          <Check className="h-3.5 w-3.5" />
-          {username} is available
-        </p>
-      );
-    case 'taken':
-      return (
-        <p className={cn(base, 'text-destructive')}>
-          <X className="h-3.5 w-3.5" />
-          That username is already taken.
-        </p>
-      );
-    case 'reserved':
-      return (
-        <p className={cn(base, 'text-destructive')}>
-          <X className="h-3.5 w-3.5" />
-          That username is reserved.
-        </p>
-      );
-    case 'rate-limited':
-      return (
-        <p className={cn(base, 'text-muted-foreground')}>
-          <X className="h-3.5 w-3.5" />
-          Too many checks — wait a moment and try again.
-        </p>
-      );
-    case 'invalid':
-      return (
-        <p className={cn(base, 'text-muted-foreground')}>
-          <X className="h-3.5 w-3.5" />
-          Use 3–20 characters: letters, numbers, dashes or underscores.
-        </p>
-      );
-    default:
-      return (
-        <p className={cn(base, 'text-muted-foreground')}>
-          3–20 characters — letters, numbers, dashes and underscores.
-        </p>
-      );
-  }
-}
 
 export default function RegisterPage() {
   const [state, formAction, isPending] = useActionState(registerAction, initialState);
@@ -101,45 +40,18 @@ export default function RegisterPage() {
       .catch(() => undefined)
       .finally(() => router.push(target));
   }, [state.redirectTo, refresh, router]);
-  const [checkResult, setCheckResult] = useState<{ forUsername: string; status: UsernameStatus } | null>(
-    null,
-  );
-  const requestId = useRef(0);
 
-  // Only the async probe lives in the effect; the fast "empty/invalid/checking"
-  // states are derived below so no setState runs synchronously in an effect.
-  useEffect(() => {
-    const value = username.trim();
-    if (value.length < 3 || value.length > 20 || !USERNAME_PATTERN.test(value)) return;
+  const usernameStatus = useUsernameAvailability(username);
 
-    const id = (requestId.current += 1);
-    const timer = setTimeout(async () => {
-      try {
-        const result = await checkUsernameAvailability(value);
-        if (requestId.current !== id) return; // a newer keystroke already won
-        setCheckResult({
-          forUsername: value,
-          status: result.available ? { state: 'available' } : { state: result.reason ?? 'taken' },
-        });
-      } catch {
-        if (requestId.current === id) setCheckResult(null);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [username]);
-
-  const trimmed = username.trim();
-  const shapeValid =
-    trimmed.length >= 3 && trimmed.length <= 20 && USERNAME_PATTERN.test(trimmed);
-  const usernameStatus: UsernameStatus =
-    trimmed.length === 0
-      ? { state: 'idle' }
-      : !shapeValid
-        ? { state: 'invalid' }
-        : checkResult && checkResult.forUsername === trimmed
-          ? checkResult.status
-          : { state: 'checking' };
+  const [googlePending, setGooglePending] = useState(false);
+  async function handleGoogleSignUp() {
+    setGooglePending(true);
+    try {
+      await signIn("google", { callbackUrl: "/" });
+    } catch {
+      setGooglePending(false);
+    }
+  }
 
   const passwordIssue = password ? passwordPolicyError(password) : null;
   const passwordsMatch =
@@ -236,8 +148,15 @@ export default function RegisterPage() {
           <span className="bg-background px-2">or</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" type="button" disabled title="Coming soon">
-        Sign up with Google
+      <Button
+        variant="outline"
+        className="w-full"
+        type="button"
+        onClick={handleGoogleSignUp}
+        disabled={googlePending || isPending}
+      >
+        {googlePending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {googlePending ? 'Redirecting to Google...' : 'Sign up with Google'}
       </Button>
     </AuthShell>
   );

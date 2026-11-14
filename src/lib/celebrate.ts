@@ -1,8 +1,9 @@
 /**
- * One-shot celebration for account milestones (today: confirming the email).
- * Kept out of the React tree on purpose — the canvas-confetti chunk only loads
- * when the action actually succeeds, and the motion guards match the rest of
- * the site (`prefers-reduced-motion` and `?motion=off`).
+ * One-shot celebration for account milestones (verifying the email, finishing
+ * the Google onboarding). Kept out of the React tree on purpose — the
+ * canvas-confetti chunk only loads when the milestone actually succeeds, and
+ * the motion guards match the rest of the site (`prefers-reduced-motion` and
+ * `?motion=off`).
  */
 
 const FALLBACK_COLORS = ['#e0008e', '#22c55e', '#f8fafc'];
@@ -27,7 +28,7 @@ function brandColors(): string[] {
   return [...tokens, '#f8fafc'];
 }
 
-export async function fireVerificationConfetti(): Promise<void> {
+export async function fireAccountReadyConfetti(): Promise<void> {
   if (!shouldCelebrate()) return;
 
   try {

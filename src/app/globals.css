@@ -868,6 +868,23 @@ input[type='search']::-webkit-search-decoration {
   }
 }
 
+/* One-shot farewell for the deleted-account screen: the trophy lifts and
+   dissolves once, instead of looping like the ambient pieces. */
+@keyframes farewell-trophy {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.01);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.94);
+  }
+}
+
 .ambient-float,
 .ambient-halo,
 .ambient-ghost,
@@ -904,6 +921,12 @@ input[type='search']::-webkit-search-decoration {
   animation-delay: 1.8s;
 }
 
+.farewell-trophy {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: farewell-trophy 1.5s ease-in forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cta-trophy,
   .cta-trophy-icon,
@@ -914,6 +937,12 @@ input[type='search']::-webkit-search-decoration {
   .ambient-breathe,
   .ambient-drift {
     animation: none;
+  }
+
+  /* Keep the farewell readable without motion: dim, do not vanish. */
+  .farewell-trophy {
+    animation: none;
+    opacity: 0.4;
   }
 }
 

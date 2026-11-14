@@ -7,7 +7,9 @@ export type EmailKind =
   | 'email-change-confirm'
   | 'email-change-requested'
   | 'email-changed'
-  | 'email-change-active';
+  | 'email-change-active'
+  | 'account-delete-confirm'
+  | 'account-deleted';
 
 export interface EmailMessage {
   kind: EmailKind;
