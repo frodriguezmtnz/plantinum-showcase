@@ -74,3 +74,55 @@ export async function fireAccountReadyConfetti(): Promise<void> {
     // Decoration only: never break the success screen over it.
   }
 }
+
+/**
+ * Confetti for a plate that just cleared the screener on the upload screen.
+ * Fires from the bottom corners upwards like a trophy reveal, with the same
+ * palette and motion guards as the account milestones.
+ */
+export async function firePlatinumPublishedConfetti(): Promise<void> {
+  if (!shouldCelebrate()) return;
+
+  try {
+    const { default: confetti } = await import('canvas-confetti');
+    const common = {
+      colors: brandColors(),
+      disableForReducedMotion: true,
+      zIndex: 60,
+      ticks: 240,
+    };
+
+    void confetti({
+      ...common,
+      particleCount: 90,
+      spread: 100,
+      startVelocity: 45,
+      angle: 90,
+      scalar: 1,
+      origin: { x: 0.5, y: 0.72 },
+    });
+
+    window.setTimeout(() => {
+      void confetti({
+        ...common,
+        particleCount: 60,
+        spread: 70,
+        startVelocity: 38,
+        angle: 60,
+        scalar: 0.85,
+        origin: { x: 0.12, y: 0.78 },
+      });
+      void confetti({
+        ...common,
+        particleCount: 60,
+        spread: 70,
+        startVelocity: 38,
+        angle: 120,
+        scalar: 0.85,
+        origin: { x: 0.88, y: 0.78 },
+      });
+    }, 160);
+  } catch {
+    // Decoration only: never break the success screen over it.
+  }
+}

@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2, Rocket, MailWarning } from "lucide-react"
+import { CalendarIcon, UploadCloud, ImagePlus, ShieldCheck, AlertTriangle, CheckCircle2, PartyPopper, Rocket, MailWarning } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -31,12 +31,17 @@ import { useToast } from "@/hooks/use-toast"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import imageCompression from "browser-image-compression"
-import { uploadPlatinum, getUploadQuota } from "@/app/actions"
+import {
+  uploadPlatinum,
+  getUploadQuota,
+  getPlatinumModerationStatus,
+} from "@/app/actions"
 import { pixelateImage } from "@/lib/pixelate-client"
 import { platinumMetaSchema, watermarkPositionSchema } from "@/lib/schemas"
 import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-position"
 import { ResendVerificationButton } from "@/components/settings/resend-verification-button"
 import { GameNameField } from "@/components/shared/game-name-field"
+import { firePlatinumPublishedConfetti } from "@/lib/celebrate"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -75,12 +80,19 @@ type UploadFormValues = z.output<typeof uploadFormSchema>
 
 type UploadStage = 'idle' | 'compressing' | 'uploading'
 
+type SubmittedStatus = 'UNDER_REVIEW' | 'PUBLISHED' | 'HIDDEN';
+
 interface SubmittedPlate {
   id: string;
   title: string;
   gameName: string;
-  /** True when the screenshot was caught by the flag list and never went public. */
-  blocked: boolean;
+  /** Local data URL of the original, revealed once the screener publishes it. */
+  preview: string | null;
+  /**
+   * The plate is created as UNDER_REVIEW; the screener flips it to PUBLISHED
+   * (or HIDDEN when the bytes are on the disallowed list) within seconds.
+   */
+  status: SubmittedStatus;
 }
 
 export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
@@ -104,6 +116,50 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
       alive = false;
     };
   }, []);
+
+  // A plate is created as UNDER_REVIEW and the screener settles it within a few
+  // seconds, so poll it (owner-only action) and update the success screen in
+  // place instead of making the uploader refresh to find out what happened.
+  useEffect(() => {
+    if (!submitted || submitted.status !== 'UNDER_REVIEW') return;
+
+    let alive = true;
+    let tries = 0;
+
+    const check = async () => {
+      tries += 1;
+      try {
+        const status = await getPlatinumModerationStatus(submitted.id);
+        if (!alive || !status || status === 'UNDER_REVIEW') return;
+        setSubmitted((current) =>
+          current && current.id === submitted.id ? { ...current, status } : current,
+        );
+        if (status === 'PUBLISHED') {
+          void firePlatinumPublishedConfetti();
+          toast({
+            title: 'It\u2019s on the wall!',
+            description: `\u201c${submitted.title}\u201d is now public.`,
+          });
+        }
+      } catch {
+        // Network hiccup: the next tick tries again.
+      }
+    };
+
+    void check();
+    const timer = window.setInterval(() => {
+      if (tries >= 60) {
+        window.clearInterval(timer);
+        return;
+      }
+      void check();
+    }, 2000);
+
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [submitted, toast]);
 
   const form = useForm<UploadFormInputValues, unknown, UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -207,17 +263,18 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
         id: result.platinumId,
         title: data.title,
         gameName: data.gameName,
-        blocked,
+        preview,
+        status: blocked ? 'HIDDEN' : 'UNDER_REVIEW',
       });
       form.reset();
       setGameId(null);
       setPreview(null);
 
       toast({
-        title: blocked ? "Screenshot not accepted" : "Sent for review",
+        title: blocked ? "Screenshot not accepted" : "Checking your screenshot",
         description: blocked
           ? "That screenshot is on the disallowed list and was not published."
-          : `“${data.title}” is being checked by the screener.`,
+          : `“${data.title}” is going through the screener — it usually hits the wall in seconds.`,
         variant: blocked ? "destructive" : undefined,
       });
     } catch {
@@ -244,46 +301,73 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
     form.formState.isSubmitting ? 'Uploading\u2026' : 'Upload Platinum';
 
   if (submitted) {
+    const hidden = submitted.status === 'HIDDEN';
+    const published = submitted.status === 'PUBLISHED';
+    // While the plate is not public the owner sees the mosaic the gallery is
+    // showing; the moment the screener clears it, the real screenshot appears.
+    const shownPreview = published ? (submitted.preview ?? pixelPreview) : pixelPreview;
+
     return (
       <div className="container max-w-2xl py-8 md:py-12">
         <Card>
           <CardContent className="space-y-5 p-6">
             <div className="flex items-center gap-3">
-              {submitted.blocked ? (
+              {hidden ? (
                 <AlertTriangle className="h-7 w-7 shrink-0 text-destructive" aria-hidden />
+              ) : published ? (
+                <PartyPopper className="h-7 w-7 shrink-0 text-live" aria-hidden />
               ) : (
                 <CheckCircle2 className="h-7 w-7 shrink-0 text-live" aria-hidden />
               )}
               <div>
                 <h2 className="text-xl font-bold font-headline">
-                  {submitted.blocked ? 'Screenshot not accepted' : 'Sent for review'}
+                  {hidden
+                    ? 'Screenshot not accepted'
+                    : published
+                      ? 'It\u2019s on the wall!'
+                      : 'Checking your screenshot'}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {submitted.blocked
+                  {hidden
                     ? 'This image is on the disallowed list, so it was taken down on arrival and never appears in the gallery.'
-                    : 'Every upload starts here while the screener checks it — it does not mean your screenshot was rejected. Most plates clear in seconds and join the gallery on their own; nothing else for you to do, and you will get a notice here either way.'}
+                    : published
+                      ? 'The screener cleared it \u2014 your platinum is public and already in the gallery.'
+                      : 'The screener usually clears plates in seconds. Stay on this page and it will update as soon as the plate is public.'}
                 </p>
               </div>
             </div>
 
-            {pixelPreview && (
+            {shownPreview && (
               <figure className="space-y-2">
                 <div className="relative overflow-hidden rounded-lg border border-border">
                   <Image
-                    src={pixelPreview}
-                    alt={`Pixelated preview of ${submitted.title}`}
+                    src={shownPreview}
+                    alt={
+                      published
+                        ? `Platinum screenshot for ${submitted.title}`
+                        : `Pixelated preview of ${submitted.title}`
+                    }
                     width={640}
                     height={360}
                     className="h-auto w-full"
                     unoptimized
                   />
-                  <div className="absolute inset-x-0 top-0 bg-destructive py-1 text-center text-[0.7rem] font-bold uppercase tracking-[0.22em] text-destructive-foreground">
-                    {submitted.blocked ? 'Hidden' : 'Under review'}
+                  <div
+                    role="status"
+                    className={cn(
+                      'absolute inset-x-0 top-0 py-1 text-center text-[0.7rem] font-bold uppercase tracking-[0.22em]',
+                      published
+                        ? 'bg-[var(--live)] text-background'
+                        : 'bg-destructive text-destructive-foreground',
+                    )}
+                  >
+                    {hidden ? 'Hidden' : published ? 'Published' : 'Under review'}
                   </div>
                 </div>
                 <figcaption className="text-xs text-muted-foreground">
-                  This is what everyone else sees while the plate is not public. Moderators see
-                  the full screenshot.
+                  {published
+                    ? 'This is exactly what the gallery is showing.'
+                    : 'This is what everyone else sees while the plate is not public. Moderators see the full screenshot.'}
                 </figcaption>
               </figure>
             )}
@@ -303,6 +387,19 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                 Upload another
               </Button>
             </div>
+
+            {!hidden && !published && (
+              <p
+                className="flex items-center gap-2 text-xs text-muted-foreground"
+                aria-live="polite"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                </span>
+                Waiting for the screener…
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

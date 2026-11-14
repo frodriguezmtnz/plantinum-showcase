@@ -104,6 +104,28 @@ const uploadSchema = platinumMetaInputSchema.extend({
 });
 
 /**
+ * Lightweight status probe for the post-upload screen. A plate starts as
+ * UNDER_REVIEW and the screener publishes it a few seconds later, so the owner
+ * polls this until it settles. Only the owner (or a moderator) can read it.
+ */
+export async function getPlatinumModerationStatus(id: string) {
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+
+  const plate = await prisma.platinum.findUnique({
+    where: { id },
+    select: { userId: true, moderationStatus: true },
+  });
+  if (!plate) return null;
+  if (plate.userId !== userId) {
+    const { isModerator } = await getModeratorAccess(userId);
+    if (!isModerator) return null;
+  }
+  return plate.moderationStatus;
+}
+
+/**
  * Post-upload AI screening. The plate is created as UNDER_REVIEW, so it is never
  * public until cleared: only an explicit SAFE verdict publishes it, while
  * REVIEW, UNSAFE or any classifier failure (refusal, timeout, unparseable) keeps
