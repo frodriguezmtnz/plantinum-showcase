@@ -357,6 +357,34 @@ export async function getPlatinumById(
   return view;
 }
 
+/**
+ * Other published plates for the same game, best-voted first. The RAWG
+ * `gameId` is the stable identity, so it wins when present; unlinked plates
+ * (typed by hand or uploaded before the picker existed) still match on an
+ * exact, case-insensitive title.
+ */
+export async function getPlatinumsForSameGame(
+  { gameId, gameName }: { gameId?: number | null; gameName: string },
+  excludeId: string,
+  currentUserId?: string,
+  limit = 6,
+): Promise<Platinum[]> {
+  const nameMatch = {
+    gameName: { equals: gameName.trim(), mode: 'insensitive' as const },
+  };
+
+  const platinums = await prisma.platinum.findMany({
+    where: {
+      ...PUBLISHED_ONLY,
+      id: { not: excludeId },
+      ...(gameId ? { OR: [{ gameId }, nameMatch] } : nameMatch),
+    },
+    orderBy: [{ votes: 'desc' }, { platinumDate: 'desc' }, { id: 'desc' }],
+    take: limit,
+  });
+  return attachVoteStatus(platinums, currentUserId);
+}
+
 export async function getPlatinumsByUserId(
   userId: string,
   currentUserId?: string,

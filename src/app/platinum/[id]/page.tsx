@@ -19,6 +19,7 @@ import { JsonLd } from '@/components/shared/json-ld';
 import { absoluteAssetUrl, canonicalUrl } from '@/lib/seo';
 import { cn } from '@/lib/utils';
 import { SocialShare } from './SocialShare';
+import { RelatedPlatinums } from '@/components/shared/related-platinums';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -256,6 +257,12 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
             </div>
         </div>
       </div>
+
+      <RelatedPlatinums
+        platinumId={platinum.id}
+        gameId={platinum.gameId ?? null}
+        gameName={platinum.gameName}
+      />
     </div>
   );
 }
