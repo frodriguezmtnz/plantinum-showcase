@@ -3,6 +3,10 @@ import { REPORT_REASON_LABELS } from '@/lib/report-labels';
 
 const TELEGRAM_API = 'https://api.telegram.org';
 const REQUEST_TIMEOUT_MS = 10_000;
+/** Telegram rejects messages longer than 4096 characters (HTML included). */
+const MAX_MESSAGE_LENGTH = 4096;
+/** Cap the wait for a 429 retry so server actions never block for long. */
+const MAX_RETRY_AFTER_S = 5;
 
 export interface TelegramConfig {
   botToken: string;
@@ -205,11 +209,51 @@ export function parseCallbackData(data: string | undefined): ParsedCallback | nu
   return null;
 }
 
-async function callTelegram(
+interface TelegramApiBody {
+  ok?: boolean;
+  description?: string;
+  error_code?: number;
+  parameters?: { retry_after?: number };
+}
+
+interface TelegramCallResult {
+  ok: boolean;
+  status: number;
+  description?: string;
+  retryAfterS?: number;
+}
+
+/**
+ * Trims the notice to Telegram's 4096-char limit without cutting through an
+ * HTML entity (`&amp;`) or an opening tag, which would fail the whole send.
+ */
+export function truncateMessage(
+  text: string,
+  limit = MAX_MESSAGE_LENGTH,
+): string {
+  if (text.length <= limit) return text;
+
+  const suffix = '…';
+  let cut = text.slice(0, limit - suffix.length);
+
+  const amp = cut.lastIndexOf('&');
+  if (amp !== -1 && !cut.slice(amp).includes(';')) cut = cut.slice(0, amp);
+
+  if (cut.lastIndexOf('<') > cut.lastIndexOf('>')) {
+    cut = cut.slice(0, cut.lastIndexOf('<'));
+  }
+
+  const lastNewline = cut.lastIndexOf('\n');
+  if (lastNewline > 0) cut = cut.slice(0, lastNewline);
+
+  return `${cut}${suffix}`;
+}
+
+async function callTelegramOnce(
   config: TelegramConfig,
   method: string,
   payload: Record<string, unknown>,
-): Promise<boolean> {
+): Promise<TelegramCallResult> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -222,17 +266,58 @@ async function callTelegram(
         signal: controller.signal,
       },
     );
-    if (!response.ok) {
-      console.warn(`[telegram] ${method} responded ${response.status}`);
-      return false;
-    }
-    return true;
+    const body = (await response.json().catch(() => null)) as
+      | TelegramApiBody
+      | null;
+    return {
+      ok: response.ok && body?.ok !== false,
+      status: response.status,
+      description: body?.description,
+      retryAfterS: body?.parameters?.retry_after,
+    };
   } catch (error) {
-    console.warn(`[telegram] ${method} failed`, error);
-    return false;
+    return {
+      ok: false,
+      status: 0,
+      description: error instanceof Error ? error.message : 'network error',
+    };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Best-effort Bot API call; never throws. On 429 it retries once, honouring
+ * `retry_after` (capped) so bursts of flagged uploads are not lost.
+ */
+async function callTelegram(
+  config: TelegramConfig,
+  method: string,
+  payload: Record<string, unknown>,
+): Promise<boolean> {
+  let result = await callTelegramOnce(config, method, payload);
+
+  if (!result.ok && result.status === 429) {
+    const waitS = Math.min(result.retryAfterS ?? 1, MAX_RETRY_AFTER_S);
+    console.warn(
+      `[telegram] ${method} hit the rate limit; retrying in ${waitS}s`,
+    );
+    await sleep(waitS * 1000);
+    result = await callTelegramOnce(config, method, payload);
+  }
+
+  if (!result.ok) {
+    const detail = result.description ? `: ${result.description}` : '';
+    console.warn(
+      `[telegram] ${method} failed (${result.status || 'network'})${detail}`,
+    );
+    return false;
+  }
+  return true;
 }
 
 /** Best-effort alert to the moderator chat; never throws. */
@@ -242,13 +327,19 @@ export async function sendModerationNotice(
   const config = getTelegramConfig();
   if (!config) return false;
   const { text, keyboard } = buildModerationNotice(notice);
-  return callTelegram(config, 'sendMessage', {
+  const sent = await callTelegram(config, 'sendMessage', {
     chat_id: config.chatId,
-    text,
+    text: truncateMessage(text),
     parse_mode: 'HTML',
     disable_web_page_preview: true,
     reply_markup: keyboard,
   });
+  if (!sent) {
+    console.warn(
+      `[telegram] notice not delivered (source=${notice.source}, platinum=${notice.platinumId})`,
+    );
+  }
+  return sent;
 }
 
 export async function answerCallbackQuery(

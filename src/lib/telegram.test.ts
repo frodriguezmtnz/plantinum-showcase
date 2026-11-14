@@ -1,8 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildModerationNotice,
   getTelegramConfig,
   parseCallbackData,
+  sendModerationNotice,
+  truncateMessage,
+  type ModerationNotice,
 } from '@/lib/telegram';
 
 const ENV_KEYS = [
@@ -191,6 +194,147 @@ describe('buildModerationNotice', () => {
         expect.objectContaining({ callback_data: 'MOD:p3:hide' }),
       ]),
     );
+  });
+});
+
+describe('truncateMessage', () => {
+  it('leaves short messages untouched', () => {
+    expect(truncateMessage('hola')).toBe('hola');
+    expect(truncateMessage('a'.repeat(4096))).toHaveLength(4096);
+  });
+
+  it('cuts long messages below the limit and marks the cut', () => {
+    const text = ['line one', 'x'.repeat(5000), 'line three'].join('\n');
+    const result = truncateMessage(text);
+    expect(result.length).toBeLessThanOrEqual(4096);
+    expect(result.endsWith('…')).toBe(true);
+    expect(result.startsWith('line one')).toBe(true);
+  });
+
+  it('never cuts through an HTML entity or an opening tag', () => {
+    const entity = `${'a'.repeat(4085)} &amp; rest`;
+    const entityResult = truncateMessage(entity);
+    expect(entityResult).not.toMatch(/&[a-z]*$/);
+
+    const tag = `${'a'.repeat(4080)} <b>bold text</b>`;
+    const tagResult = truncateMessage(tag);
+    expect(tagResult).not.toMatch(/<[^>]*$/);
+  });
+});
+
+describe('sendModerationNotice', () => {
+  const notice: ModerationNotice = {
+    source: 'upload',
+    platinumId: 'p1',
+    gameName: 'Elden Ring',
+    ownerUsername: 'alice',
+    label: 'UNSAFE',
+    category: 'spam',
+    confidence: 0.9,
+    summary: 'Looks like an ad.',
+    moderationStatus: 'UNDER_REVIEW',
+  };
+
+  beforeEach(() => {
+    configureTelegram();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('posts an HTML message and reports success', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true, result: { message_id: 1 } }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(sendModerationNotice(notice)).resolves.toBe(true);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(url).toContain('/bottoken/sendMessage');
+    const body = JSON.parse(init.body as string);
+    expect(body.chat_id).toBe('42');
+    expect(body.parse_mode).toBe('HTML');
+  });
+
+  it('logs the Telegram description and returns false on rejection', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          ok: false,
+          error_code: 400,
+          description: 'Bad Request: chat not found',
+        }),
+      })),
+    );
+
+    await expect(sendModerationNotice(notice)).resolves.toBe(false);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('Bad Request: chat not found'),
+    );
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('platinum=p1'),
+    );
+    warn.mockRestore();
+  });
+
+  it('retries once when Telegram rate limits the send', async () => {
+    vi.useFakeTimers();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({
+          ok: false,
+          error_code: 429,
+          description: 'Too Many Requests: retry after 1',
+          parameters: { retry_after: 1 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ ok: true, result: { message_id: 2 } }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const promise = sendModerationNotice(notice);
+    await vi.advanceTimersByTimeAsync(1000);
+    await expect(promise).resolves.toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it('truncates very long notices before sending', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await sendModerationNotice({ ...notice, summary: 'y'.repeat(6000) });
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    const body = JSON.parse(init.body as string);
+    expect(body.text.length).toBeLessThanOrEqual(4096);
   });
 });
 

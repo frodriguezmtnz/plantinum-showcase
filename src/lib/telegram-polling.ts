@@ -75,11 +75,13 @@ async function callTelegramApi(
 
 /**
  * Telegram rejects getUpdates while a webhook is registered (409). Clear it
- * first so switching prod -> local never needs manual steps.
+ * first so switching prod -> local never needs manual steps. Pending updates
+ * are preserved: button presses that happened while the server was down are
+ * delivered on the first getUpdates instead of being silently dropped.
  */
 async function dropWebhook(config: TelegramConfig): Promise<void> {
   const result = await callTelegramApi(config, 'deleteWebhook', {
-    drop_pending_updates: true,
+    drop_pending_updates: false,
   });
   if (!result.ok) {
     console.warn(
@@ -87,6 +89,8 @@ async function dropWebhook(config: TelegramConfig): Promise<void> {
         result.description ?? 'unknown'
       }`,
     );
+  } else {
+    console.info('[telegram-poll] webhook cleared; pending updates kept.');
   }
 }
 
