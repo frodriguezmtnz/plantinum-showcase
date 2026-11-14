@@ -366,7 +366,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                 </div>
                 <figcaption className="text-xs text-muted-foreground">
                   {published
-                    ? 'This is exactly what the gallery is showing.'
+                    ? 'Your platinum is live — this is the screenshot you uploaded; the gallery shows its watermarked version.'
                     : 'This is what everyone else sees while the plate is not public. Moderators see the full screenshot.'}
                 </figcaption>
               </figure>
