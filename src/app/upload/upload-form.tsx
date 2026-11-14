@@ -77,6 +77,7 @@ type UploadStage = 'idle' | 'compressing' | 'uploading'
 
 interface SubmittedPlate {
   id: string;
+  title: string;
   gameName: string;
   /** True when the screenshot was caught by the flag list and never went public. */
   blocked: boolean;
@@ -110,6 +111,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
     // disabled until every field, screenshot and rule checkbox is in.
     mode: 'onChange',
     defaultValues: {
+      title: "",
       gameName: "",
       isSpoiler: false,
       comment: "",
@@ -170,6 +172,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
       setStage('uploading');
 
       const formData = new FormData();
+      formData.set("title", data.title);
       formData.set("gameName", data.gameName);
       if (gameId !== null) {
         formData.set("gameId", String(gameId));
@@ -200,7 +203,12 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
       const mosaic = preview ? await pixelateImage(preview) : null;
 
       setPixelPreview(mosaic);
-      setSubmitted({ id: result.platinumId, gameName: data.gameName, blocked });
+      setSubmitted({
+        id: result.platinumId,
+        title: data.title,
+        gameName: data.gameName,
+        blocked,
+      });
       form.reset();
       setGameId(null);
       setPreview(null);
@@ -209,7 +217,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
         title: blocked ? "Screenshot not accepted" : "Sent for review",
         description: blocked
           ? "That screenshot is on the disallowed list and was not published."
-          : `Your platinum for ${data.gameName} is being checked by the screener.`,
+          : `“${data.title}” is being checked by the screener.`,
         variant: blocked ? "destructive" : undefined,
       });
     } catch {
@@ -263,7 +271,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                 <div className="relative overflow-hidden rounded-lg border border-border">
                   <Image
                     src={pixelPreview}
-                    alt={`Pixelated preview of ${submitted.gameName}`}
+                    alt={`Pixelated preview of ${submitted.title}`}
                     width={640}
                     height={360}
                     className="h-auto w-full"
@@ -360,6 +368,27 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platinum Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Platinum #1 - Tomb Raider"
+                        {...field}
+                        disabled={busy}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Your own headline for this plate, shown on the card and the
+                      platinum page.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="gameName"

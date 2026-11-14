@@ -24,6 +24,8 @@ const PUBLISHED_ONLY = { moderationStatus: 'PUBLISHED' as const };
 export interface Platinum {
   id: string;
   hash: string;
+  /** Hunter's own headline; older plates have none and fall back to gameName. */
+  title: string | null;
   gameName: string;
   gameId?: number | null;
   platform: 'PS3' | 'PS4' | 'PS5';
@@ -50,6 +52,7 @@ export interface User {
 interface PlatinumRecord {
   id: string;
   hash: string;
+  title: string | null;
   gameName: string;
   gameId?: number | null;
   platform: string;
@@ -76,6 +79,7 @@ interface UserRecord {
 const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   id: p.id,
   hash: p.hash,
+  title: p.title,
   gameName: p.gameName,
   gameId: p.gameId ?? null,
   platform: p.platform as 'PS3' | 'PS4' | 'PS5',

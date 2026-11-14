@@ -112,7 +112,12 @@ export function PlatinumCard({ platinum, user, showComment = false, canDelete = 
       </CardContent>
       <div className={cn('p-4', isList && 'flex flex-1 flex-col justify-between sm:p-5')}>
         <div className="flex justify-between items-start gap-2">
-            <h3 className="font-semibold truncate pr-2">{platinum.gameName}</h3>
+            <div className="min-w-0 pr-2">
+              <h3 className="font-semibold truncate">{platinum.title ?? platinum.gameName}</h3>
+              {platinum.title && platinum.title !== platinum.gameName && (
+                <p className="truncate text-xs text-muted-foreground">{platinum.gameName}</p>
+              )}
+            </div>
             <Badge variant="outline" className="shrink-0">{platinum.platform}</Badge>
         </div>
         {showComment && platinum.comment && (

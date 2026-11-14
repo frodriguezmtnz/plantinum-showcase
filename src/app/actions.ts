@@ -304,6 +304,7 @@ export async function uploadPlatinum(formData: FormData) {
   }
 
   const parsed = uploadSchema.safeParse({
+    title: formData.get("title"),
     gameName: formData.get("gameName"),
     platform: formData.get("platform"),
     platinumDate: formData.get("platinumDate"),
@@ -412,6 +413,7 @@ export async function uploadPlatinum(formData: FormData) {
     const platinum = await prisma.platinum.create({
       data: {
         hash,
+        title: parsed.data.title,
         gameName: parsed.data.gameName,
         gameId,
         platform: parsed.data.platform,
@@ -498,6 +500,7 @@ export async function uploadPlatinum(formData: FormData) {
 }
 
 export interface EditPlatinumInput {
+  title: string;
   gameName: string;
   gameId?: number | null;
   platform: string;
@@ -527,6 +530,7 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
   }
 
   const parsed = platinumMetaInputSchema.safeParse({
+    title: input.title,
     gameName: input.gameName,
     platform: input.platform,
     platinumDate: input.platinumDate,
@@ -572,6 +576,7 @@ export async function editPlatinum(id: string, input: EditPlatinumInput) {
   await prisma.platinum.update({
     where: { id },
     data: {
+      title: parsed.data.title,
       gameName: parsed.data.gameName,
       ...(nextGameId !== undefined ? { gameId: nextGameId } : {}),
       platform: parsed.data.platform,

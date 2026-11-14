@@ -40,8 +40,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const user = await getUserById(platinum.userId);
 
-  const title = `${platinum.gameName} Platinum by ${user?.username || 'a user'} | Platinum Showcase`;
-  const description = `Check out the platinum trophy screenshot for ${platinum.gameName}, achieved by ${user?.username}.`;
+  const plateTitle = platinum.title ?? platinum.gameName;
+  const title = `${plateTitle} Platinum by ${user?.username || 'a user'} | Platinum Showcase`;
+  const description = `Check out “${plateTitle}”, the ${platinum.gameName} platinum trophy screenshot achieved by ${user?.username}.`;
 
   const isPublic = platinum.moderationStatus === 'PUBLISHED';
 
@@ -186,8 +187,13 @@ export default async function PlatinumDetailPage({ params }: { params: Promise<{
         <div className="md:col-span-2 min-w-0">
             <div className="panel-solid p-6 rounded-2xl overflow-hidden">
                 <div className="mb-4 flex flex-wrap items-center gap-3">
-                  <h2 className="text-2xl font-bold font-headline break-words">{platinum.gameName}</h2>
+                  <h2 className="text-2xl font-bold font-headline break-words">{platinum.title ?? platinum.gameName}</h2>
                 </div>
+                {platinum.title && platinum.title !== platinum.gameName && (
+                  <p className="-mt-3 mb-4 text-sm text-muted-foreground break-words">
+                    {platinum.gameName}
+                  </p>
+                )}
                 {user && (
                   <div className="mb-6 flex min-w-0 items-center gap-4">
                     <Avatar className="h-12 w-12 shrink-0">
