@@ -387,17 +387,19 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                 />
               )}
             </div>
-            <Button
-              type="button"
-              variant="link"
-              className="h-auto justify-start px-0 text-sm text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setSubmitted(null);
-                setPixelPreview(null);
-              }}
-            >
-              {published ? 'Post another win' : 'Upload another'}
-            </Button>
+            {!published && (
+              <Button
+                type="button"
+                variant="link"
+                className="h-auto justify-start px-0 text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setSubmitted(null);
+                  setPixelPreview(null);
+                }}
+              >
+                Upload another
+              </Button>
+            )}
 
             {!hidden && !published && (
               <p
