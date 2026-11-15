@@ -42,7 +42,7 @@ import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-pos
 import { ResendVerificationButton } from "@/components/settings/resend-verification-button"
 import { GameNameField } from "@/components/shared/game-name-field"
 import { firePlatinumPublishedConfetti } from "@/lib/celebrate"
-import { ShareWinButton } from "@/app/upload/share-win-button"
+import { ShareButton } from "@/components/shared/share-button"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -373,24 +373,30 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
               </figure>
             )}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
               <Button asChild>
                 <Link href={`/platinum/${submitted.id}`}>View your platinum</Link>
               </Button>
               {published && (
-                <ShareWinButton platinumId={submitted.id} gameName={submitted.gameName} />
+                <ShareButton
+                  platinumId={submitted.id}
+                  gameName={submitted.gameName}
+                  voice="owner"
+                  variant="secondary"
+                />
               )}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setSubmitted(null);
-                  setPixelPreview(null);
-                }}
-              >
-                Upload another
-              </Button>
             </div>
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto justify-start px-0 text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setSubmitted(null);
+                setPixelPreview(null);
+              }}
+            >
+              {published ? 'Post another win' : 'Upload another'}
+            </Button>
 
             {!hidden && !published && (
               <p
