@@ -374,7 +374,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
             )}
 
             <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              <Button asChild>
+              <Button asChild className="min-w-0 flex-1">
                 <Link href={`/platinum/${submitted.id}`}>View your platinum</Link>
               </Button>
               {published && (
@@ -383,6 +383,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                   gameName={submitted.gameName}
                   voice="owner"
                   variant="secondary"
+                  className="shrink-0 max-sm:w-full"
                 />
               )}
             </div>
