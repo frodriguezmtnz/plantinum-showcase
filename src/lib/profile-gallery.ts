@@ -57,3 +57,35 @@ export function parseProfilePlatform(value?: string): ProfilePlatformFilter {
     ? (value as ProfilePlatformFilter)
     : DEFAULT_PROFILE_PLATFORM;
 }
+
+export interface ProfileGalleryExtraPages<T> {
+  total: number;
+  items: T[];
+  hasMore: boolean;
+}
+
+export interface ProfileGalleryPages<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * Combines the server-rendered first page with the offset pages pulled by
+ * "load more". The server props stay authoritative: the extras are only used
+ * while they were loaded against the same total, so a refresh after a delete
+ * (total changes) shows the fresh page one and drops the stale offsets.
+ */
+export function resolveProfileGalleryPages<T>(
+  initialItems: T[],
+  initialTotal: number,
+  initialHasMore: boolean,
+  extraPages: ProfileGalleryExtraPages<T> | null,
+): ProfileGalleryPages<T> {
+  const extra = extraPages?.total === initialTotal ? extraPages : null;
+  return {
+    items: extra ? [...initialItems, ...extra.items] : initialItems,
+    total: initialTotal,
+    hasMore: extra ? extra.hasMore : initialHasMore,
+  };
+}
