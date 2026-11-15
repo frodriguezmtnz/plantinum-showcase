@@ -1,14 +1,29 @@
 'use client';
 
 import { useState, useSyncExternalStore, type SVGProps } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, type ButtonProps } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from '@/hooks/use-toast';
 import { Facebook, Instagram, Link2, Share2 } from 'lucide-react';
 
-interface ShareWinButtonProps {
+type ShareVoice = 'owner' | 'viewer';
+
+interface ShareButtonProps {
   platinumId: string;
   gameName: string;
+  /**
+   * Who is sharing: the owner gets first-person copy ("I just earned…"),
+   * a visitor gets third-person ("Check out…").
+   */
+  voice?: ShareVoice;
+  /** Attributed in the native sheet title on visitor shares. */
+  username?: string;
+  size?: ButtonProps['size'];
+  variant?: ButtonProps['variant'];
+  /** Renders the trigger as the icon alone (with an aria-label). */
+  iconOnly?: boolean;
+  align?: 'start' | 'center' | 'end';
+  className?: string;
 }
 
 function XIcon(props: SVGProps<SVGSVGElement>) {
@@ -21,7 +36,17 @@ function XIcon(props: SVGProps<SVGSVGElement>) {
 
 const emptySubscribe = () => () => {};
 
-export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
+export function ShareButton({
+  platinumId,
+  gameName,
+  voice = 'viewer',
+  username,
+  size = 'default',
+  variant = 'outline',
+  iconOnly = false,
+  align = 'start',
+  className,
+}: ShareButtonProps) {
   const [open, setOpen] = useState(false);
   const canNativeShare = useSyncExternalStore(
     emptySubscribe,
@@ -29,8 +54,13 @@ export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
     () => false,
   );
 
+  const isOwner = voice === 'owner';
   const getShareUrl = () => `${window.location.origin}/platinum/${platinumId}`;
-  const shareText = `I just earned the platinum trophy for ${gameName} on Platinum Showcase!`;
+  const shareText = isOwner
+    ? `I just earned the platinum trophy for ${gameName} \u2014 now on my wall at Platinum Showcase.`
+    : `Check out this platinum trophy for ${gameName} on Platinum Showcase!`;
+  const shareTitle = isOwner ? `Platinum: ${gameName}` : `Platinum: ${gameName} by ${username || 'a user'}`;
+  const label = isOwner ? 'Share the win' : 'Share';
 
   const copyLink = async () => {
     try {
@@ -73,11 +103,7 @@ export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
   const shareNative = async () => {
     setOpen(false);
     try {
-      await navigator.share({
-        title: `Platinum: ${gameName}`,
-        text: shareText,
-        url: getShareUrl(),
-      });
+      await navigator.share({ title: shareTitle, text: shareText, url: getShareUrl() });
     } catch (error) {
       // Dismissing the share sheet is not a failure — only fall back on real errors.
       if ((error as DOMException | undefined)?.name !== 'AbortError') {
@@ -86,28 +112,32 @@ export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
     }
   };
 
+  const trigger = (
+    <Button
+      type="button"
+      variant={variant}
+      size={size}
+      className={className}
+      aria-label={iconOnly ? 'Share platinum' : undefined}
+      onClick={canNativeShare ? shareNative : undefined}
+    >
+      <Share2 />
+      {!iconOnly && label}
+    </Button>
+  );
+
   if (canNativeShare) {
-    return (
-      <Button type="button" variant="outline" onClick={shareNative}>
-        <Share2 />
-        Share the win
-      </Button>
-    );
+    return trigger;
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline">
-          <Share2 />
-          Share the win
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent side="top" align="start" sideOffset={8} className="w-56 p-1.5">
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent side="top" align={align} sideOffset={8} className="w-56 p-1.5">
         <div className="flex flex-col gap-0.5">
           <Button
             variant="ghost"
-            className="h-9 w-full justify-start gap-3 rounded-lg px-2 font-medium"
+            className="h-10 w-full justify-start gap-3 rounded-lg px-2 font-medium"
             onClick={shareToX}
           >
             <XIcon />
@@ -115,7 +145,7 @@ export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
           </Button>
           <Button
             variant="ghost"
-            className="h-9 w-full justify-start gap-3 rounded-lg px-2 font-medium"
+            className="h-10 w-full justify-start gap-3 rounded-lg px-2 font-medium"
             onClick={shareToFacebook}
           >
             <Facebook />
@@ -123,7 +153,7 @@ export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
           </Button>
           <Button
             variant="ghost"
-            className="h-9 w-full justify-start gap-3 rounded-lg px-2 font-medium"
+            className="h-10 w-full justify-start gap-3 rounded-lg px-2 font-medium"
             onClick={shareToInstagram}
           >
             <Instagram />
@@ -132,7 +162,7 @@ export function ShareWinButton({ platinumId, gameName }: ShareWinButtonProps) {
           <div className="my-1 h-px bg-border" />
           <Button
             variant="ghost"
-            className="h-9 w-full justify-start gap-3 rounded-lg px-2 font-medium"
+            className="h-10 w-full justify-start gap-3 rounded-lg px-2 font-medium"
             onClick={copyLink}
           >
             <Link2 />
