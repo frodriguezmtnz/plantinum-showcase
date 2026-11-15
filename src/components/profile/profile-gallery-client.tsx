@@ -101,21 +101,29 @@ export function ProfileGalleryClient({
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
-  const [items, setItems] = useState(initialItems);
-  const [total, setTotal] = useState(initialTotal);
-  const [hasMore, setHasMore] = useState(initialHasMore);
+  // The first page always comes straight from the server props, so a
+  // router.refresh() after deleting or editing a platinum lands immediately.
+  // Only the offset pages fetched by "load more" live in local state; they are
+  // dropped when the server total changes because that means a platinum was
+  // removed and the offsets no longer line up.
+  const [extraPages, setExtraPages] = useState<{
+    total: number;
+    items: Platinum[];
+    hasMore: boolean;
+  } | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [platformFilter, setPlatformFilter] = useState(platform);
   const [sortOrder, setSortOrder] = useState(sort);
 
-  const serverKey = `${platform}|${sort}`;
-  const [syncedKey, setSyncedKey] = useState(serverKey);
-  if (syncedKey !== serverKey) {
-    setSyncedKey(serverKey);
-    setItems(initialItems);
-    setTotal(initialTotal);
-    setHasMore(initialHasMore);
+  if (extraPages && extraPages.total !== initialTotal) {
+    setExtraPages(null);
   }
+
+  const items = extraPages
+    ? [...initialItems, ...extraPages.items]
+    : initialItems;
+  const total = initialTotal;
+  const hasMore = extraPages ? extraPages.hasMore : initialHasMore;
 
   const updateUrl = useCallback(
     (next: {
@@ -184,9 +192,11 @@ export function ProfileGalleryClient({
         sort: sortOrder,
         offset: items.length,
       });
-      setItems((prev) => [...prev, ...result.items]);
-      setTotal(result.total);
-      setHasMore(result.hasMore);
+      setExtraPages((prev) => ({
+        total: result.total,
+        items: [...(prev?.items ?? []), ...result.items],
+        hasMore: result.hasMore,
+      }));
     } catch {
       toast({
         title: 'Could not load more platinums',
