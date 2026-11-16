@@ -243,6 +243,22 @@ test.describe('authenticated', () => {
       .not.toBe(before);
   });
 
+  test('upload quota spells out used and remaining', async ({ page }) => {
+    await page.goto('/upload');
+
+    const blocked = page.getByText(/You've used all \d+ uploads this month\./);
+    test.skip((await blocked.count()) > 0, 'Quota exhausted for the E2E account');
+
+    const quota = page.locator('p[aria-live="polite"]', { hasText: 'left this month' }).first();
+    await expect(quota).toHaveText(/\d+ of \d+ used · \d+ uploads? left this month\.$/);
+
+    const counts = (await quota.innerText())
+      .match(/(\d+) of (\d+) used · (\d+)/)!
+      .slice(1)
+      .map(Number);
+    expect(counts[0]! + counts[2]!).toBe(counts[1]!);
+  });
+
   test('notification filters are linkable and keep the URL', async ({ page }) => {
     await page.goto('/notifications?filter=all');
 
