@@ -524,9 +524,6 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
   const plan = planConfig(user.plan);
   const upgrade = nextPlan(user.plan);
   const remaining = uploadsRemaining(user.uploadsUsed, user.plan);
-  const remainingLabel = Number.isFinite(remaining)
-    ? `${remaining} left this month`
-    : 'Unlimited';
 
   const availabilityCopy: Record<Availability, string | null> = {
     same: null,
@@ -1178,7 +1175,22 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
             <div className="rounded-xl border border-border/70 p-4">
               <dt className="field-mark">Uploads</dt>
               <dd className="mt-1 text-sm">
-                {user.uploadsUsed} used · {remainingLabel}
+                {plan.monthlyUploadLimit === Infinity ? (
+                  <>Unlimited uploads this month</>
+                ) : (
+                  <>
+                    <span className="tabular">{user.uploadsUsed}</span> of{' '}
+                    <span className="tabular">{plan.monthlyUploadLimit}</span>{' '}
+                    used{' '}
+                    <span className="text-muted-foreground/60" aria-hidden>
+                      ·
+                    </span>{' '}
+                    <span className="tabular font-semibold text-live">
+                      {remaining}
+                    </span>{' '}
+                    {remaining === 1 ? 'upload' : 'uploads'} left this month
+                  </>
+                )}
               </dd>
             </div>
             <div className="rounded-xl border border-border/70 p-4">
