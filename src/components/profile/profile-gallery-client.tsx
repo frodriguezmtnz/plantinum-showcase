@@ -23,6 +23,8 @@ import {
   DEFAULT_PROFILE_VIEW,
   PROFILE_PLATFORM_FILTERS,
   PROFILE_SORTS,
+  resolveProfileGalleryPages,
+  type ProfileGalleryExtraPages,
   type ProfilePlatformFilter,
   type ProfileSort,
   type ProfileView,
@@ -106,11 +108,8 @@ export function ProfileGalleryClient({
   // Only the offset pages fetched by "load more" live in local state; they are
   // dropped when the server total changes because that means a platinum was
   // removed and the offsets no longer line up.
-  const [extraPages, setExtraPages] = useState<{
-    total: number;
-    items: Platinum[];
-    hasMore: boolean;
-  } | null>(null);
+  const [extraPages, setExtraPages] =
+    useState<ProfileGalleryExtraPages<Platinum> | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [platformFilter, setPlatformFilter] = useState(platform);
   const [sortOrder, setSortOrder] = useState(sort);
@@ -119,11 +118,12 @@ export function ProfileGalleryClient({
     setExtraPages(null);
   }
 
-  const items = extraPages
-    ? [...initialItems, ...extraPages.items]
-    : initialItems;
-  const total = initialTotal;
-  const hasMore = extraPages ? extraPages.hasMore : initialHasMore;
+  const { items, total, hasMore } = resolveProfileGalleryPages(
+    initialItems,
+    initialTotal,
+    initialHasMore,
+    extraPages,
+  );
 
   const updateUrl = useCallback(
     (next: {
