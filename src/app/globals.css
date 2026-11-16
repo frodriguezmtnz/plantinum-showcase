@@ -67,6 +67,13 @@
     --cloud-mat: hsl(206 45% 94%);
     --dusk-amber: hsl(38 88% 42%);
     --dusk-amber-bright: hsl(38 88% 45%);
+
+    /* Semantic warning family (toasts, incomplete-profile notes, AI verdict
+       chips). The dusk amber is the crown metal; this one is a state, so it
+       gets its own token instead of borrowing the podium family. */
+    --warning: hsl(38 92% 50%);
+    --warning-foreground: hsl(32 95% 38%);
+    --warning-ink: hsl(26 83% 14%);
   }
 
   * {
@@ -132,6 +139,9 @@
   --color-mat: var(--cloud-mat);
   --color-dusk: var(--dusk-amber);
   --color-dusk-bright: var(--dusk-amber-bright);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-ink: var(--warning-ink);
   --shadow-champion: var(--champion-aura);
   --shadow-bloom: var(--bloom);
   --shadow-glow: var(--glow);
@@ -747,6 +757,7 @@ input[type='search']::-webkit-search-decoration {
     transform: none;
   }
 
+  .animate-ping,
   .animate-pulse,
   .animate-in {
     animation: none;
@@ -984,6 +995,9 @@ input[type='search']::-webkit-search-decoration {
   --grid-line: hsl(210 18% 70% / 0.08);
   --glow-pink: hsl(322 100% 44% / 0.12);
   --glow-green: hsl(147 100% 32% / 0.1);
+  /* Warning lifts one step on night ground so its borders and text clear AA. */
+  --warning: hsl(43 96% 56%);
+  --warning-foreground: hsl(43 96% 56%);
 }
 
 .dark .panel {

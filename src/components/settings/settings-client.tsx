@@ -869,7 +869,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 </Button>
               )}
               {isProfileDirty && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-1 text-xs font-semibold text-warning-foreground">
                   <CircleAlert className="h-3.5 w-3.5" aria-hidden />
                   Unsaved changes
                 </span>
@@ -981,7 +981,7 @@ export function SettingsClient({ user }: { user: SettingsUser }) {
                 </span>
               ) : (
                 <>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-warning-foreground">
                     <CircleAlert className="h-3.5 w-3.5" aria-hidden />
                     Not verified
                   </span>
