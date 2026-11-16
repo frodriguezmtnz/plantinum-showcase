@@ -28,7 +28,7 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import imageCompression from "browser-image-compression"
 import {
@@ -42,6 +42,7 @@ import { WATERMARK_POSITIONS, type WatermarkPosition } from "@/lib/watermark-pos
 import { ResendVerificationButton } from "@/components/settings/resend-verification-button"
 import { GameNameField } from "@/components/shared/game-name-field"
 import { firePlatinumPublishedConfetti } from "@/lib/celebrate"
+import { ShareButton } from "@/components/shared/share-button"
 
 const uploadFormSchema = platinumMetaSchema.extend({
   screenshot: z.custom<FileList>((files) => files instanceof FileList, {
@@ -95,6 +96,17 @@ interface SubmittedPlate {
   status: SubmittedStatus;
 }
 
+/** How long the success screen keeps asking the screener for a verdict. */
+const POLL_BUDGET_MS = 90_000;
+
+/** Fast while a verdict is likely imminent, then back off. */
+function pollDelay(elapsedMs: number) {
+  if (elapsedMs < 15_000) return 1_000;
+  if (elapsedMs < 30_000) return 2_000;
+  if (elapsedMs < 60_000) return 4_000;
+  return 8_000;
+}
+
 export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
   const { toast } = useToast()
   const [preview, setPreview] = useState<string | null>(null);
@@ -106,6 +118,14 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [quota, setQuota] = useState<Awaited<ReturnType<typeof getUploadQuota>>>(null);
   const [gameId, setGameId] = useState<number | null>(null);
+  const [pollExhausted, setPollExhausted] = useState(false);
+  // Survives effect re-runs (HMR, StrictMode): the poll budget belongs to the
+  // plate, not to the mount that happens to be watching it.
+  const pollBudgetRef = useRef<{
+    id: string;
+    startedAt: number;
+    deadline: number;
+  } | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -120,19 +140,28 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
   // A plate is created as UNDER_REVIEW and the screener settles it within a few
   // seconds, so poll it (owner-only action) and update the success screen in
   // place instead of making the uploader refresh to find out what happened.
+  // The budget lives in a ref so hot reloads cannot restart it, and the cadence
+  // starts fast (1s) then backs off to keep the server log and the DB quiet.
   useEffect(() => {
-    if (!submitted || submitted.status !== 'UNDER_REVIEW') return;
+    if (!submitted || submitted.status !== 'UNDER_REVIEW' || pollExhausted) return;
+
+    const plateId = submitted.id;
+    const now = Date.now();
+    const budget =
+      pollBudgetRef.current?.id === plateId
+        ? pollBudgetRef.current
+        : { id: plateId, startedAt: now, deadline: now + POLL_BUDGET_MS };
+    pollBudgetRef.current = budget;
 
     let alive = true;
-    let tries = 0;
+    let timer: number | undefined;
 
     const check = async () => {
-      tries += 1;
       try {
-        const status = await getPlatinumModerationStatus(submitted.id);
+        const status = await getPlatinumModerationStatus(plateId);
         if (!alive || !status || status === 'UNDER_REVIEW') return;
         setSubmitted((current) =>
-          current && current.id === submitted.id ? { ...current, status } : current,
+          current && current.id === plateId ? { ...current, status } : current,
         );
         if (status === 'PUBLISHED') {
           void firePlatinumPublishedConfetti();
@@ -146,20 +175,61 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
       }
     };
 
-    void check();
-    const timer = window.setInterval(() => {
-      if (tries >= 60) {
-        window.clearInterval(timer);
+    const schedule = (delayMs: number) => {
+      if (!alive) return;
+      timer = window.setTimeout(async () => {
+        if (!alive) return;
+        // Background tabs throttle timers: skip the call and retry on return.
+        if (document.visibilityState !== 'visible') {
+          schedule(1_000);
+          return;
+        }
+        if (Date.now() >= budget.deadline) {
+          setPollExhausted(true);
+          return;
+        }
+        await check();
+        if (!alive || pollBudgetRef.current?.id !== plateId) return;
+        schedule(pollDelay(Date.now() - budget.startedAt));
+      }, delayMs);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible' || !alive) return;
+      window.clearTimeout(timer);
+      if (Date.now() >= budget.deadline) {
+        setPollExhausted(true);
         return;
       }
-      void check();
-    }, 2000);
+      void check().then(() => {
+        if (alive && pollBudgetRef.current?.id === plateId) {
+          schedule(pollDelay(Date.now() - budget.startedAt));
+        }
+      });
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    // Give the screener a beat before the first probe.
+    schedule(pollDelay(0));
 
     return () => {
       alive = false;
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [submitted, toast]);
+  }, [submitted, pollExhausted, toast]);
+
+  const restartScreeningPoll = () => {
+    if (submitted) {
+      const now = Date.now();
+      pollBudgetRef.current = {
+        id: submitted.id,
+        startedAt: now,
+        deadline: now + POLL_BUDGET_MS,
+      };
+    }
+    setPollExhausted(false);
+  };
 
   const form = useForm<UploadFormInputValues, unknown, UploadFormValues>({
     resolver: zodResolver(uploadFormSchema),
@@ -372,13 +442,25 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
               </figure>
             )}
 
-            <div className="flex flex-wrap gap-2">
-              <Button asChild>
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <Button asChild className="min-w-0 flex-1">
                 <Link href={`/platinum/${submitted.id}`}>View your platinum</Link>
               </Button>
+              {published && (
+                <ShareButton
+                  platinumId={submitted.id}
+                  gameName={submitted.gameName}
+                  voice="owner"
+                  variant="secondary"
+                  className="shrink-0 max-sm:w-full"
+                />
+              )}
+            </div>
+            {!published && (
               <Button
                 type="button"
-                variant="outline"
+                variant="link"
+                className="h-auto justify-start px-0 text-sm text-muted-foreground hover:text-foreground"
                 onClick={() => {
                   setSubmitted(null);
                   setPixelPreview(null);
@@ -386,19 +468,38 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
               >
                 Upload another
               </Button>
-            </div>
+            )}
 
             {!hidden && !published && (
-              <p
-                className="flex items-center gap-2 text-xs text-muted-foreground"
-                aria-live="polite"
+              <div
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground"
+                role="status"
               >
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                </span>
-                Waiting for the screener…
-              </p>
+                {pollExhausted ? (
+                  <>
+                    <span>
+                      Still screening… this is taking longer than usual — your
+                      plate stays in the review queue.
+                    </span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto px-0 text-xs font-semibold text-foreground underline-offset-4 hover:underline"
+                      onClick={restartScreeningPoll}
+                    >
+                      Check again
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                    </span>
+                    Waiting for the screener…
+                  </>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

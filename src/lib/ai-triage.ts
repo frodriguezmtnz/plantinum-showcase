@@ -17,7 +17,7 @@ import {
 const DEFAULT_API_URL = 'https://api.nan.builders/v1';
 const DEFAULT_MODEL = 'NaN';
 const DEFAULT_TIMEOUT_MS = 20_000;
-const MAX_PREVIEW_EDGE = 1024;
+const MAX_PREVIEW_EDGE = 768;
 
 export type ImageKind = 'screenshot' | 'avatar';
 
@@ -131,6 +131,7 @@ export async function classifyImage(input: {
       body: JSON.stringify({
         model: config.model,
         temperature: 0,
+        max_tokens: 120,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: systemPrompt },
