@@ -39,10 +39,17 @@ async function main() {
   // Keep the fixture deterministic when the script runs more than once.
   await prisma.platinum.deleteMany({ where: { userId: user.id } });
 
+  // Backdate createdAt so the gallery volume does not burn this month's upload
+  // quota: /upload must still show its quota line (not the blocked banner) so
+  // the wording can be asserted. Gallery order comes from platinumDate, not this.
+  const seededAt = new Date();
+  seededAt.setDate(seededAt.getDate() - 60);
+
   const base = {
     userId: user.id,
     platform: "PS5",
     platinumDate: new Date(),
+    createdAt: seededAt,
     imageUrl: "/apple-icon.png",
     imageHint: "e2e fixture",
     width: 1024,
