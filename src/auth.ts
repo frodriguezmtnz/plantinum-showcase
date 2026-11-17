@@ -3,9 +3,11 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
+import { consumeLoginAttempt } from "@/lib/login-rate-limit";
 import { isSessionVersionStale } from "@/lib/session-revocation";
 import { verifyTwoFactorLogin } from "@/lib/two-factor";
 import bcrypt from "bcrypt";
@@ -36,6 +38,15 @@ const credentialsProvider = Credentials({
     const password = credentials?.password as string | undefined;
 
     if (!email || !password) return null;
+
+    // Brute-force barrier lives here (not only in the login Server Action) so
+    // direct calls to /api/auth/callback/credentials are also capped per
+    // account and per client address. Checked before the DB lookup so
+    // non-existent emails consume the budget too (no limit-based enumeration).
+    const headerList = await headers();
+    const ip =
+      headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+    await consumeLoginAttempt(email, ip);
 
     const user = await prisma.user.findUnique({ where: { email } });
 
