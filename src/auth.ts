@@ -2,6 +2,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers";
+import type { Adapter } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -83,6 +84,28 @@ const credentialsProvider = Credentials({
 
 const providers: Provider[] = [credentialsProvider];
 
+// The Google access/refresh/id tokens are dead weight: the session strategy is
+// JWT and the app never calls Google APIs on the user's behalf. Persisting
+// them anyway (the @auth/prisma-adapter default) only widens the blast radius
+// of a database read compromise, so they are dropped before the Account row
+// is created — omitting the fields leaves the nullable columns null.
+const baseAdapter = PrismaAdapter(prisma);
+const adapter: Adapter = {
+  ...baseAdapter,
+  async linkAccount(account) {
+    // Destructure-drop the token fields: omitting them leaves the nullable
+    // columns null instead of persisting credentials nobody consumes. The
+    // return value is discarded by @auth/core, so void suffices here.
+    const safeAccount = { ...account };
+    delete safeAccount.access_token;
+    delete safeAccount.refresh_token;
+    delete safeAccount.id_token;
+    delete safeAccount.expires_at;
+    delete safeAccount.session_state;
+    await baseAdapter.linkAccount?.(safeAccount);
+  },
+};
+
 if (googleOAuthConfigured) {
   providers.push(
     Google({
@@ -96,7 +119,7 @@ if (googleOAuthConfigured) {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter,
   session: { strategy: "jwt" },
   // Trust the request host (and x-forwarded-*) so the app works behind a
   // proxy/tunnel as well as on localhost and Vercel. Needed because an empty
