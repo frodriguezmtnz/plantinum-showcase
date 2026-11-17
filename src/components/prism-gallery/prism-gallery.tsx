@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { usePrismRenderer } from "./renderer-context";
 import { PrismWall, type PrismParams } from "./prism-wall";
+import { isStoredImage } from "@/lib/utils";
 import styles from "./prism-gallery.module.css";
 
 const AUTOPLAY_SECONDS = 6;
@@ -22,6 +24,8 @@ export interface PrismGalleryProps {
   fov?: number;
   params?: Partial<PrismParams>;
   autoplay?: boolean;
+  animateInitial?: boolean;
+  clipToViewport?: boolean;
   aspectRatio?: string;
   className?: string;
 }
@@ -56,6 +60,8 @@ export function PrismGallery({
   fov,
   params,
   autoplay = true,
+  animateInitial = false,
+  clipToViewport = true,
   aspectRatio = DEFAULT_ASPECT,
   className,
 }: PrismGalleryProps) {
@@ -95,6 +101,8 @@ export function PrismGallery({
         margin: renderer.overscanPx,
         fov,
         params: paramsRef.current,
+        animateInitial,
+        clipToViewport,
         initializedClass: styles.sceneReady,
       });
     } catch (error) {
@@ -110,7 +118,7 @@ export function PrismGallery({
       wall.destroy();
       wallRef.current = null;
     };
-  }, [renderer, contextLost, motionOff, items, fov]);
+  }, [renderer, contextLost, motionOff, items, fov, animateInitial, clipToViewport]);
 
   useEffect(() => {
     const wall = wallRef.current;
@@ -179,10 +187,12 @@ export function PrismGallery({
               }
               aria-hidden={i !== index}
             >
-              <img
+              <Image
                 src={item.image}
                 alt={item.alt}
-                crossOrigin="anonymous"
+                fill
+                sizes="100vw"
+                unoptimized={isStoredImage(item.image)}
                 loading={i === 0 ? "eager" : "lazy"}
               />
             </div>
@@ -217,7 +227,13 @@ export function PrismGallery({
               aria-current={i === index}
               onClick={() => goTo(i, i >= index ? 1 : -1)}
             >
-              <img src={item.thumb ?? item.image} alt="" />
+              <Image
+                src={item.thumb ?? item.image}
+                alt=""
+                width={80}
+                height={50}
+                unoptimized={isStoredImage(item.thumb ?? item.image)}
+              />
               {showAutoplay && i === index && (
                 <span
                   className={styles.autoplay}
