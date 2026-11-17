@@ -5,10 +5,18 @@ import { getImage, isStorageConfigured } from "@/lib/b2";
 import { isModerator } from "@/lib/roles";
 import { canServeStoredImage } from "@/lib/image-access";
 import { pixelateBuffer } from "@/lib/pixelate";
+import { getCachedMosaic, setCachedMosaic } from "@/lib/pixelate-cache";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 const IMAGE_KEY_PATTERN = /^platinums\/[a-f0-9]{64}\.avif$/;
+
+// Pixelation is a CPU-heavy sharp pipeline plus a B2 read, reachable without a
+// session on published plates. Cap it per client and reuse the computed
+// mosaic across requests (it only depends on the content hash).
+const PIXEL_REQUESTS_PER_MINUTE = 30;
+const PIXEL_WINDOW_MS = 60_000;
 
 export async function GET(
   request: NextRequest,
@@ -55,6 +63,24 @@ export async function GET(
   // Moderators always keep the untouched screenshot so they can judge it.
   const pixelateResponse = wantsPixel && !viewerIsModerator;
 
+  if (pixelateResponse) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      "local";
+    const limit = await checkRateLimit(
+      `pixel:${ip}`,
+      PIXEL_REQUESTS_PER_MINUTE,
+      PIXEL_WINDOW_MS,
+    );
+    if (!limit.ok) {
+      return new NextResponse("Too many requests", {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfterSeconds) },
+      });
+    }
+  }
+
   const image = await getImage(key);
   if (!image) {
     return new NextResponse("Not found", { status: 404 });
@@ -71,10 +97,14 @@ export async function GET(
   let contentLength = image.contentLength;
 
   if (pixelateResponse) {
-    const buffer = Buffer.from(await new Response(image.stream).arrayBuffer());
-    const mosaic = await pixelateBuffer(buffer);
+    let mosaic = getCachedMosaic(hash);
     if (!mosaic) {
-      return new NextResponse("Not found", { status: 404 });
+      const buffer = Buffer.from(await new Response(image.stream).arrayBuffer());
+      mosaic = (await pixelateBuffer(buffer)) ?? undefined;
+      if (!mosaic) {
+        return new NextResponse("Not found", { status: 404 });
+      }
+      setCachedMosaic(hash, mosaic);
     }
     body = new Uint8Array(mosaic);
     contentType = "image/avif";
