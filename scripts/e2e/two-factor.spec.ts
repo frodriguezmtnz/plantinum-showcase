@@ -12,6 +12,14 @@ test.describe.configure({ mode: 'serial' });
 let secret = '';
 let recoveryCodes: string[] = [];
 
+const STEP_SECONDS = 30;
+
+// 2FA codes are one-shot server-side: the timestep consumed by a successful
+// verification (setup, sign-in or disable) is recorded, so codes from an
+// earlier or equal step are rejected. Track the newest step used by this
+// suite and wait for a fresh window when the current one is already spent.
+let lastUsedStep = 0;
+
 async function submitPassword(page: Page) {
   await page.goto('/login');
   await page.fill('#email', EMAIL);
@@ -19,7 +27,17 @@ async function submitPassword(page: Page) {
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
 }
 
-async function currentCode() {
+async function currentCode(page: Page) {
+  const nowMs = Date.now();
+  const currentStep = Math.floor(nowMs / 1000 / STEP_SECONDS);
+  if (currentStep <= lastUsedStep) {
+    // Step at least one window past lastUsedStep, plus a small grace so the
+    // auto-submit lands safely inside the new window.
+    const waitMs =
+      (lastUsedStep + 1) * STEP_SECONDS * 1000 - nowMs + 1_500;
+    await page.waitForTimeout(Math.max(0, waitMs));
+  }
+  lastUsedStep = Math.floor(Date.now() / 1000 / STEP_SECONDS);
   return generate({ secret });
 }
 
@@ -41,7 +59,7 @@ test('enables 2FA and shows one-time recovery codes', async ({ page }) => {
   expect(secret.length).toBeGreaterThan(0);
 
   // Filling the six digits triggers the 300 ms auto-submit.
-  await page.fill('#two-factor-setup-code', await currentCode());
+  await page.fill('#two-factor-setup-code', await currentCode(page));
   const recoveryCodeEls = page.locator('#security div.font-mono span');
   await expect(recoveryCodeEls.first()).toBeVisible({ timeout: 15_000 });
   recoveryCodes = (await recoveryCodeEls.allInnerTexts()).map((code) =>
@@ -57,7 +75,7 @@ test('signs in with a current authenticator code', async ({ page }) => {
   await submitPassword(page);
 
   // Filling the six digits auto-submits after the debounce.
-  await page.fill('#otp', await currentCode());
+  await page.fill('#otp', await currentCode(page));
   await page.waitForURL(`${baseURL}/`, { timeout: 15_000 });
   await expect(
     page.locator('header button[aria-label^="Account menu"]'),
@@ -82,7 +100,7 @@ test('signs in with a recovery code', async ({ page }) => {
 test('disables 2FA and signs out', async ({ page }) => {
   await submitPassword(page);
   await expect(page.locator('#otp')).toBeVisible({ timeout: 15_000 });
-  await page.fill('#otp', await currentCode());
+  await page.fill('#otp', await currentCode(page));
   await page.waitForURL(`${baseURL}/`, { timeout: 15_000 });
 
   await page.goto('/settings#security');
@@ -91,7 +109,7 @@ test('disables 2FA and signs out', async ({ page }) => {
     .getByRole('button', { name: 'Disable 2FA', exact: true })
     .click();
   await page.fill('#two-factor-password', PASSWORD);
-  await page.fill('#two-factor-confirm-code', await currentCode());
+  await page.fill('#two-factor-confirm-code', await currentCode(page));
   await page
     .getByRole('button', { name: /Disable 2FA and sign out/i })
     .click();

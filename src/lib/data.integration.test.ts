@@ -27,6 +27,8 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     d: `it-${stamp}-plate-d`,
     e: `it-${stamp}-plate-e`,
     f: `it-${stamp}-plate-f`, // hidden (moderation)
+    g: `it-${stamp}-plate-g`, // under review, screener still running
+    h: `it-${stamp}-plate-h`, // under review, waiting on a human
   };
   const period = getCurrentPeriod();
   // A far-past, test-only period: never collides with real history and is
@@ -430,6 +432,32 @@ describe.skipIf(!url)('data.ts — Postgres integration', () => {
     });
 
     expect(await data.getOpenReportForUser(p.e, u.bob)).toBe(false);
+  });
+
+  it('splits the under-review queue between the screener and humans', async () => {
+    await prisma.platinum.createMany({
+      data: [
+        {
+          ...platinum(p.g, u.alice, 'Screening Integration', 'PS5', 0, 0, null, '2026-06-01'),
+          moderationStatus: 'UNDER_REVIEW',
+          reviewReason: 'SCREENING',
+        },
+        {
+          ...platinum(p.h, u.bob, 'Human Queue Integration', 'PS5', 0, 0, null, '2026-06-02'),
+          moderationStatus: 'UNDER_REVIEW',
+          reviewReason: 'AI_REVIEW',
+        },
+      ],
+    });
+
+    const human = await data.getUnderReviewPlatinums({ queue: 'human' });
+    expect(human.items.map((x) => x.id)).toContain(p.h);
+    expect(human.items.map((x) => x.id)).not.toContain(p.g);
+    expect(human.items.find((x) => x.id === p.h)?.reviewReason).toBe('AI_REVIEW');
+
+    const screening = await data.getUnderReviewPlatinums({ queue: 'screening' });
+    expect(screening.items.map((x) => x.id)).toContain(p.g);
+    expect(screening.items.map((x) => x.id)).not.toContain(p.h);
   });
 
   it('lists hidden plates with owner and report count', async () => {

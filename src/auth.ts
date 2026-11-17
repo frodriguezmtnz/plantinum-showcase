@@ -2,10 +2,14 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import type { Provider } from "next-auth/providers";
+import type { Adapter } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
+import { resolvePinnedAuthBaseUrl } from "@/lib/auth-base-url";
+import { consumeLoginAttempt } from "@/lib/login-rate-limit";
 import { isSessionVersionStale } from "@/lib/session-revocation";
 import { verifyTwoFactorLogin } from "@/lib/two-factor";
 import bcrypt from "bcrypt";
@@ -36,6 +40,15 @@ const credentialsProvider = Credentials({
     const password = credentials?.password as string | undefined;
 
     if (!email || !password) return null;
+
+    // Brute-force barrier lives here (not only in the login Server Action) so
+    // direct calls to /api/auth/callback/credentials are also capped per
+    // account and per client address. Checked before the DB lookup so
+    // non-existent emails consume the budget too (no limit-based enumeration).
+    const headerList = await headers();
+    const ip =
+      headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+    await consumeLoginAttempt(email, ip);
 
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -72,6 +85,28 @@ const credentialsProvider = Credentials({
 
 const providers: Provider[] = [credentialsProvider];
 
+// The Google access/refresh/id tokens are dead weight: the session strategy is
+// JWT and the app never calls Google APIs on the user's behalf. Persisting
+// them anyway (the @auth/prisma-adapter default) only widens the blast radius
+// of a database read compromise, so they are dropped before the Account row
+// is created — omitting the fields leaves the nullable columns null.
+const baseAdapter = PrismaAdapter(prisma);
+const adapter: Adapter = {
+  ...baseAdapter,
+  async linkAccount(account) {
+    // Destructure-drop the token fields: omitting them leaves the nullable
+    // columns null instead of persisting credentials nobody consumes. The
+    // return value is discarded by @auth/core, so void suffices here.
+    const safeAccount = { ...account };
+    delete safeAccount.access_token;
+    delete safeAccount.refresh_token;
+    delete safeAccount.id_token;
+    delete safeAccount.expires_at;
+    delete safeAccount.session_state;
+    await baseAdapter.linkAccount?.(safeAccount);
+  },
+};
+
 if (googleOAuthConfigured) {
   providers.push(
     Google({
@@ -84,12 +119,23 @@ if (googleOAuthConfigured) {
   );
 }
 
+// Pin the base URL before the Auth.js config is built: parseUrl() prefers the
+// environment AUTH_URL over request Host headers, so in production a spoofed
+// Host/x-forwarded-host can no longer drive OAuth callbacks, redirects or
+// cookie attributes (in development the request host keeps being trusted).
+// Always write the resolved value back — Vercel can expose AUTH_URL as an
+// empty string, and empty is not nullish, which would defeat the precedence.
+const pinnedAuthBaseUrl = resolvePinnedAuthBaseUrl();
+if (pinnedAuthBaseUrl) process.env.AUTH_URL = pinnedAuthBaseUrl;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter,
   session: { strategy: "jwt" },
   // Trust the request host (and x-forwarded-*) so the app works behind a
   // proxy/tunnel as well as on localhost and Vercel. Needed because an empty
   // AUTH_URL ("") is not nullish and would otherwise flip this to false.
+  // Production host-header injection is neutralised by the pinned base URL
+  // above, not by this flag (Auth.js rejects every request when it is false).
   trustHost: true,
   pages: {
     signIn: "/login",

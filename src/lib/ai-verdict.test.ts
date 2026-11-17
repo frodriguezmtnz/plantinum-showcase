@@ -6,6 +6,7 @@ import {
   parseTriageResponse,
   readFinishReason,
   reviewFallback,
+  reviewReasonForSettledVerdict,
   type TriageVerdict,
 } from '@/lib/ai-verdict';
 
@@ -93,6 +94,17 @@ describe('moderationStatusForVerdict', () => {
   it('only auto-hides unsafe plates when the operator opts in', () => {
     expect(moderationStatusForVerdict(verdict('UNSAFE'), true)).toBe('HIDDEN');
     expect(moderationStatusForVerdict(verdict('REVIEW'), true)).toBe('UNDER_REVIEW');
+  });
+});
+
+describe('reviewReasonForSettledVerdict', () => {
+  it('splits unsafe verdicts from the rest of the human queue', () => {
+    expect(reviewReasonForSettledVerdict(verdict('UNSAFE'))).toBe('AI_UNSAFE');
+    expect(reviewReasonForSettledVerdict(verdict('REVIEW'))).toBe('AI_REVIEW');
+  });
+
+  it('treats a safe verdict stuck under review as a human decision', () => {
+    expect(reviewReasonForSettledVerdict(verdict('SAFE'))).toBe('AI_REVIEW');
   });
 });
 

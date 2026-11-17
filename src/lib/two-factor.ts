@@ -112,12 +112,17 @@ export function buildTotpQrDataUrl(uri: string): Promise<string> {
   });
 }
 
-export async function verifyTotpCode(
+/**
+ * Verifies a TOTP code and returns the absolute time step it matched, or
+ * null. Exposed so callers can persist the consumed step for replay
+ * prevention (a code is one-shot: earlier or equal steps are rejected).
+ */
+export async function verifyTotpTimestep(
   secret: string,
   code: string,
-): Promise<boolean> {
+): Promise<number | null> {
   const token = code.replace(/\s+/g, '');
-  if (!new RegExp(`^\\d{${TOTP_DIGITS}}$`).test(token)) return false;
+  if (!new RegExp(`^\\d{${TOTP_DIGITS}}$`).test(token)) return null;
 
   const result = await verify({
     secret,
@@ -127,7 +132,17 @@ export async function verifyTotpCode(
     epochTolerance: TOTP_TOLERANCE_SECONDS,
     algorithm: 'sha1',
   });
-  return result.valid;
+  if (!result.valid) return null;
+
+  const currentTimestep = Math.floor(Date.now() / 1000 / TOTP_PERIOD_SECONDS);
+  return currentTimestep + result.delta;
+}
+
+export async function verifyTotpCode(
+  secret: string,
+  code: string,
+): Promise<boolean> {
+  return (await verifyTotpTimestep(secret, code)) !== null;
 }
 
 export function normalizeRecoveryCode(code: string): string {
@@ -183,7 +198,13 @@ export async function consumeRecoveryCode(
   return result.count === 1;
 }
 
-/** Verifies a TOTP or recovery code without rate limiting. */
+/**
+ * Verifies a TOTP or recovery code without rate limiting.
+ *
+ * TOTP codes are one-shot: the consumed time step is claimed atomically
+ * (monotonic), so the same code — or one from an already-used step — cannot
+ * be replayed within the acceptance window.
+ */
 export async function verifyTwoFactorCode(
   userId: string,
   encryptedSecret: string | null,
@@ -194,13 +215,40 @@ export async function verifyTwoFactorCode(
   if (new RegExp(`^\\d{${TOTP_DIGITS}}$`).test(normalized)) {
     if (!encryptedSecret) return false;
     try {
-      return verifyTotpCode(decryptTwoFactorSecret(encryptedSecret), normalized);
+      const timestep = await verifyTotpTimestep(
+        decryptTwoFactorSecret(encryptedSecret),
+        normalized,
+      );
+      if (timestep === null) return false;
+      return await consumeTotpTimestep(userId, timestep);
     } catch {
       return false;
     }
   }
 
   return consumeRecoveryCode(userId, normalized);
+}
+
+/**
+ * Claims a TOTP time step atomically: only strictly newer steps than any
+ * previously consumed one are accepted. Two concurrent verifications of the
+ * same code can therefore never both succeed.
+ */
+export async function consumeTotpTimestep(
+  userId: string,
+  timestep: number,
+): Promise<boolean> {
+  const claimed = await prisma.user.updateMany({
+    where: {
+      id: userId,
+      OR: [
+        { lastUsedTotpTimestep: null },
+        { lastUsedTotpTimestep: { lt: timestep } },
+      ],
+    },
+    data: { lastUsedTotpTimestep: timestep },
+  });
+  return claimed.count === 1;
 }
 
 /**

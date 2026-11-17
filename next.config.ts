@@ -16,6 +16,13 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
   },
+  {
+    // Vercel does not inject HSTS on custom domains; without it a first
+    // visit (or a MITM) can be downgraded to http. One year with
+    // includeSubDomains; skip preload until the domain posture is audited.
+    key: 'Strict-Transport-Security',
+    value: 'max-age=31536000; includeSubDomains',
+  },
 ];
 
 const nextConfig: NextConfig = {

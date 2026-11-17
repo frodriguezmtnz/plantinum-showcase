@@ -205,7 +205,7 @@ export async function applyReportDecision(
     await prisma.$transaction([
       prisma.platinum.update({
         where: { id: report.platinumId },
-        data: { moderationStatus: 'HIDDEN' },
+        data: { moderationStatus: 'HIDDEN', reviewReason: null },
       }),
       prisma.report.updateMany({
         where: { platinumId: report.platinumId },
@@ -267,7 +267,7 @@ export async function applyPlatinumModeration(
     await prisma.$transaction([
       prisma.platinum.update({
         where: { id: platinumId },
-        data: { moderationStatus: 'HIDDEN' },
+        data: { moderationStatus: 'HIDDEN', reviewReason: null },
       }),
       prisma.report.updateMany({
         where: { platinumId, status: 'OPEN' },
@@ -281,7 +281,7 @@ export async function applyPlatinumModeration(
   } else {
     await prisma.platinum.update({
       where: { id: platinumId },
-      data: { moderationStatus: 'PUBLISHED' },
+      data: { moderationStatus: 'PUBLISHED', reviewReason: null },
     });
     // A human approving a first-time upload is a real publication; restoring a
     // plate that was only hidden must not ping followers again.
