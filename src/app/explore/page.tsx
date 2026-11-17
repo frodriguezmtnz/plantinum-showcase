@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { ExploreClient } from '@/components/explore/explore-client';
 import { MonthlyRace } from '@/components/explore/monthly-race';
 import { PrismGallerySection } from '@/components/prism-gallery/loader';
+import { PRISM_PRESETS } from '@/components/prism-gallery/presets';
 
 export const metadata = {
   title: 'Explore Gallery | Platinum Showcase',
@@ -73,8 +74,13 @@ export default async function ExplorePage({ searchParams }: Props) {
           <PrismGallerySection
             items={featuredWall}
             label="Featured plates"
-            aspectRatio="21 / 9"
-            autoplay
+            params={PRISM_PRESETS.explore.params}
+            aspectRatio={PRISM_PRESETS.explore.aspectRatio}
+            className={PRISM_PRESETS.explore.className}
+            animateInitial={PRISM_PRESETS.explore.animateInitial}
+            clipToViewport={PRISM_PRESETS.explore.clipToViewport}
+            autoplay={PRISM_PRESETS.explore.autoplay}
+            fov={PRISM_PRESETS.explore.fov}
           />
         </div>
       )}
