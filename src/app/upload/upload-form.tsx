@@ -50,8 +50,8 @@ const uploadFormSchema = platinumMetaSchema.extend({
   })
     .refine((files) => {
       const size = files[0]?.size;
-      return size !== undefined && size <= 6 * 1024 * 1024;
-    }, 'Max file size is 6MB.')
+      return size !== undefined && size <= 4 * 1024 * 1024;
+    }, 'Max file size is 4MB.')
     .refine((files) => {
       const type = files[0]?.type;
       return type !== undefined && ["image/jpeg", "image/png", "image/webp"].includes(type);
@@ -126,6 +126,9 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
     startedAt: number;
     deadline: number;
   } | null>(null);
+  // The timer and the visibilitychange probe can overlap when the screener
+  // settles the plate; the confetti/toast pair must only fire once per plate.
+  const announcedRef = useRef<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -164,6 +167,8 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
           current && current.id === plateId ? { ...current, status } : current,
         );
         if (status === 'PUBLISHED') {
+          if (announcedRef.current === plateId) return;
+          announcedRef.current = plateId;
           void firePlatinumPublishedConfetti();
           toast({
             title: 'It\u2019s on the wall!',
@@ -510,8 +515,8 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
   return (
     <div className="container max-w-2xl py-8 md:py-12">
       {!emailVerified && (
-        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
-          <MailWarning className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+          <MailWarning className="h-5 w-5 shrink-0 text-warning-foreground" aria-hidden />
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-foreground">
               Verify your email to upload
@@ -703,7 +708,7 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                               onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
                               onDrop={handleDrop}
                               className={cn(
-                                "flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200",
+                                "flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition-colors duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
                                 dragActive
                                   ? "border-primary bg-primary/5"
                                   : "border-border hover:bg-muted/50",
@@ -723,10 +728,13 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                                         {dragActive ? <ImagePlus className="w-8 h-8" /> : <UploadCloud className="w-8 h-8 text-muted-foreground" />}
                                       </div>
                                       <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold text-primary">Click to upload</span> or drag and drop</p>
-                                      <p className="text-xs text-muted-foreground">PNG, JPG or WEBP (MAX. 6MB)</p>
+                                      <p className="text-xs text-muted-foreground">PNG, JPG or WEBP (MAX. 4MB)</p>
                                   </div>
                                 )}
-                                <Input id="dropzone-file" type="file" className="hidden" accept=".jpg,.png,.webp" onChange={handleFileChange} disabled={busy} />
+                                {/* sr-only (not hidden): display:none would take the
+                                    picker out of the tab order. Focus lands on the
+                                    input and the label lights up via focus-within. */}
+                                <Input id="dropzone-file" type="file" className="sr-only" accept=".jpg,.png,.webp" onChange={handleFileChange} disabled={busy} />
                             </label>
                         </div> 
                       </FormControl>

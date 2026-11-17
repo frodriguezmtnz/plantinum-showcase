@@ -117,7 +117,7 @@ function AiVerdictBadge({ verdict }: { verdict?: ImageVerdictView }) {
       ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400'
       : verdict.label === 'UNSAFE'
         ? 'border-destructive/50 text-destructive'
-        : 'border-amber-500/50 text-amber-600 dark:text-amber-400';
+        : 'border-warning/50 text-warning-foreground';
   const label =
     verdict.label === 'SAFE'
       ? 'AI: looks fine'
@@ -413,7 +413,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                     </Link>
                     <Badge
                       variant="outline"
-                      className="border-amber-500/50 text-amber-600 dark:text-amber-400"
+                      className="border-warning/50 text-warning-foreground"
                     >
                       Under review
                     </Badge>

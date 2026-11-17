@@ -61,7 +61,7 @@ import {
 
 export type { ModerationDecision, PlatinumModerationOp } from "@/lib/moderation-core";
 
-const MAX_FILE_BYTES = 6 * 1024 * 1024;
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_EDGE = 1600;
 
@@ -351,7 +351,7 @@ export async function uploadPlatinum(formData: FormData) {
   if (file.size > MAX_FILE_BYTES) {
     return {
       success: false as const,
-      error: "The image exceeds the 6 MB size limit.",
+      error: "The image exceeds the 4 MB size limit.",
     };
   }
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {

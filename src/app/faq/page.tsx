@@ -65,7 +65,7 @@ const faqGroups: { title: string; faqs: Faq[] }[] = [
       {
         question: 'Which formats and sizes can I upload?',
         answer:
-          'JPG, PNG or WEBP up to 6 MB. Your browser compresses the file before sending it, and the server re-encodes it to AVIF (max 1600px on the long edge) so the gallery stays fast.',
+          'JPG, PNG or WEBP up to 4 MB. Your browser compresses the file before sending it, and the server re-encodes it to AVIF (max 1600px on the long edge) so the gallery stays fast.',
       },
       {
         question: 'What is the watermark on my screenshot?',

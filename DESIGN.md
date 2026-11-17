@@ -28,6 +28,9 @@ colors:
   alert-red: "hsl(4 100% 45%)"
   dusk-amber: "hsl(38 88% 42%)"
   dusk-amber-bright: "hsl(38 88% 45%)"
+  warning: "hsl(38 92% 50%)"
+  warning-foreground: "hsl(32 95% 38%)"
+  warning-ink: "hsl(26 83% 14%)"
   sunrise-cream: "hsl(44 92% 90%)"
   champion-ink: "hsl(30 72% 32%)"
   runner-silver: "hsl(211 30% 55%)"
@@ -204,7 +207,7 @@ The palette is paper-derived: white and frost neutrals as ground, near-black ink
 - **Sky White** (`hsl(0 0% 98%)`, `--primary-foreground`): text on ink-black fills.
 
 ### Secondary
-- **Dusk Amber** (`hsl(38 88% 42%)` and bright sibling `hsl(38 88% 45%)`): the crown family — Hall of Fame award icon, champion ring (0.65 alpha) and avatar border (0.8 alpha). Chrome gold exists only at the podium; the race clock's amber lives in the field itself, not on surfaces.
+- **Dusk Amber** (`hsl(38 88% 42%)` and bright sibling `hsl(38 88% 45%)`): the crown family — Hall of Fame award icon, champion ring (0.65 alpha) and avatar border (0.8 alpha). Chrome gold exists only at the podium; the race clock's amber lives in the field itself, not on surfaces. States that need amber but are not the podium wear the separate **Warning** family (`--warning` `hsl(38 92% 50%)`, readable step `--warning-foreground` `hsl(32 95% 38%)`, ink `--warning-ink` `hsl(26 83% 14%)` for text on the solid fill): toasts (`warning` variant), unsaved-changes and unverified-email notes, low recovery-code counts and AI `REVIEW` chips. Night lifts `--warning`/`--warning-foreground` to `hsl(43 96% 56%)`; `--warning-ink` is fixed because it always sits on the solid amber fill.
 - **Circle Red** (`hsl(4 100% 45%)`, `--destructive`): the vote heart and destructive actions only. Nothing else wears red. The vote control reads `--vote-red` (the same hue, one step brighter on the Night Console so it clears AA on navy).
 - **Triangle Green** (`hsl(147 100% 32%)`, `--ps-green` / `.text-live`): only live counts and states — vote totals, "polls close in…", podium vote figures. Green means "this number is moving". Small text uses the darker `--live` step (`hsl(147 100% 24%)`) to clear WCAG AA on paper; Night keeps the luminous `hsl(147 70% 55%)` pair.
 

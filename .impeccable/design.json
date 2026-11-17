@@ -227,6 +227,24 @@
         "canonical": "hsl(38 88% 45%)",
         "note": "Champion ring at 0.65, champion avatar border at 0.8."
       },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Warning Amber",
+        "canonical": "hsl(38 92% 50%)",
+        "note": "Semantic warning state (--warning), separate from the dusk-amber crown family: warning toasts, unsaved/unverified notes, low recovery codes and AI REVIEW chips. Borders and fills use alpha steps; night lifts to hsl(43 96% 56%)."
+      },
+      "warning-foreground": {
+        "role": "secondary",
+        "displayName": "Warning Foreground",
+        "canonical": "hsl(32 95% 38%)",
+        "note": "Readable amber text step on paper (night twin hsl(43 96% 56%))."
+      },
+      "warning-ink": {
+        "role": "secondary",
+        "displayName": "Warning Ink",
+        "canonical": "hsl(26 83% 14%)",
+        "note": "Text and progress-bar tint on the solid --warning fill (warning toast). Fixed in both themes."
+      },
       "sunrise-cream": {
         "role": "tertiary",
         "displayName": "Sunrise Cream",

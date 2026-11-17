@@ -42,11 +42,11 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['*.trycloudflare.com'],
   experimental: {
     // Server Action bodies default to 1 MB, which a compressed screenshot can
-    // easily exceed. The upload form caps the file at 4 MB client-side, so 6 MB
-    // gives multipart headroom. Note: on Vercel the platform caps request
-    // bodies at ~4.5 MB regardless (see BACKLOG, Fase 2).
+    // easily exceed. The upload form caps the file at 4 MB client-side and the
+    // action enforces the same cap server-side; 4.5 MB gives multipart
+    // headroom without crossing Vercel's ~4.5 MB request-body limit.
     serverActions: {
-      bodySizeLimit: '6mb',
+      bodySizeLimit: '4500kb',
     },
   },
   async headers() {

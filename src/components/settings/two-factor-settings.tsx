@@ -186,7 +186,7 @@ export function TwoFactorSettings({
   if (recoveryCodes) {
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-amber-600/30 bg-amber-500/10 p-4">
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-4">
           <p className="text-sm font-semibold">Save these recovery codes now.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             They are shown once. Each code works a single time if you lose your
@@ -359,7 +359,7 @@ export function TwoFactorSettings({
     return (
       <div className="space-y-4">
         {required && (
-          <div className="rounded-xl border border-amber-600/30 bg-amber-500/10 p-4 text-sm">
+          <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm">
             <p className="font-semibold">Required for moderators and admins.</p>
             <p className="mt-1 text-muted-foreground">
               Enable two-factor authentication to access moderation again.
@@ -434,7 +434,7 @@ export function TwoFactorSettings({
           noCodes
             ? 'border-destructive/40 bg-destructive/10 text-destructive'
             : lowCodes
-              ? 'border-amber-600/30 bg-amber-500/10 text-amber-700 dark:text-amber-400'
+              ? 'border-warning/30 bg-warning/10 text-warning-foreground'
               : 'border-border/70 bg-muted/30 text-muted-foreground',
         )}
       >

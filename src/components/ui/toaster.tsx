@@ -140,7 +140,7 @@ export function Toaster() {
                   variant === "default"
                     ? "bg-foreground/25"
                     : variant === "warning"
-                      ? "bg-amber-950/40"
+                      ? "bg-warning-ink/40"
                       : "bg-white/60",
                   paused && "[animation-play-state:paused]",
                 )}
