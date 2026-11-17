@@ -126,6 +126,7 @@ export interface PrismWallOptions {
   fov?: number;
   params?: Partial<PrismParams>;
   animateInitial?: boolean;
+  clipToViewport?: boolean;
   initializedClass?: string;
 }
 
@@ -163,6 +164,7 @@ export class PrismWall {
       fov = DEFAULT_FOV,
       params = {},
       animateInitial = false,
+      clipToViewport = true,
       initializedClass,
     }: PrismWallOptions,
   ) {
@@ -179,7 +181,7 @@ export class PrismWall {
       camera: this.camera,
       margin,
       useViewport: false,
-      clipToViewport: true,
+      clipToViewport,
       elementSpace: true,
       initializedClass,
       onBeforeRender: (delta, rect) => this.frame(delta, rect),

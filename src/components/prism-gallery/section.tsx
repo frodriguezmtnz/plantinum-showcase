@@ -8,6 +8,8 @@ export interface PrismGallerySectionProps {
   items: PrismGalleryItem[];
   label: string;
   autoplay?: boolean;
+  animateInitial?: boolean;
+  clipToViewport?: boolean;
   aspectRatio?: string;
   fov?: number;
   params?: Partial<PrismParams>;
