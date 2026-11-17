@@ -88,8 +88,22 @@ export async function GET(
 
   const etag = pixelateResponse ? `"${hash}-pixel"` : `"${hash}"`;
 
+  // Cache headers are shared by 200 and 304: a private response must stay
+  // no-store even when the browser already has the bytes.
+  const headers: Record<string, string> = {
+    "Cache-Control": isPublic
+      ? "public, max-age=31536000, immutable"
+      : "private, no-store",
+    "Content-Disposition": "inline",
+    "X-Robots-Tag": "noindex",
+    ETag: etag,
+  };
+  if (!isPublic) {
+    headers["Vary"] = "Cookie";
+  }
+
   if (request.headers.get("if-none-match") === etag) {
-    return new NextResponse(null, { status: 304, headers: { ETag: etag } });
+    return new NextResponse(null, { status: 304, headers });
   }
 
   let body: BodyInit = image.stream;
@@ -111,18 +125,7 @@ export async function GET(
     contentLength = mosaic.byteLength;
   }
 
-  const headers: Record<string, string> = {
-    "Content-Type": contentType,
-    "Cache-Control": isPublic
-      ? "public, max-age=31536000, immutable"
-      : "private, no-store",
-    "Content-Disposition": "inline",
-    "X-Robots-Tag": "noindex",
-    ETag: etag,
-  };
-  if (!isPublic) {
-    headers["Vary"] = "Cookie";
-  }
+  headers["Content-Type"] = contentType;
   if (contentLength > 0) {
     headers["Content-Length"] = String(contentLength);
   }

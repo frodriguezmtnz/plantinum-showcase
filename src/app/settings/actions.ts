@@ -385,7 +385,7 @@ export async function updateAvatar(
   if (file.size > MAX_AVATAR_BYTES) {
     return { success: false, error: "The image exceeds the 4 MB size limit." };
   }
-  if (file.type && !ALLOWED_AVATAR_TYPES.includes(file.type)) {
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
     return { success: false, error: "Unsupported format. Use JPG, PNG or WEBP." };
   }
 
