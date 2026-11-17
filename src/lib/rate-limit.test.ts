@@ -102,4 +102,35 @@ describe('checkRateLimit with Upstash configured', () => {
 
     consoleError.mockRestore();
   });
+
+  it('refuses to run in production without Upstash configured', async () => {
+    vi.resetModules();
+    vi.stubEnv('NODE_ENV', 'production');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { checkRateLimit: check } = await import('@/lib/rate-limit');
+    // The unconfigured-production path must fail loudly: per-process counters
+    // would silently multiply every limit by the serverless instance count.
+    await expect(check('prod-unconfigured', 3, 60_000)).rejects.toThrow(
+      /UPSTASH_REDIS_REST_URL/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('still degrades on a Redis outage in production', async () => {
+    vi.resetModules();
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://example.upstash.io');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { checkRateLimit: check } = await import('@/lib/rate-limit');
+    expect((await check('redis-prod', 1, 60_000)).ok).toBe(true);
+    expect((await check('redis-prod', 1, 60_000)).ok).toBe(false);
+    expect(consoleError).toHaveBeenCalledTimes(1);
+
+    consoleError.mockRestore();
+  });
 });

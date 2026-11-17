@@ -1,14 +1,8 @@
 "use server";
 
 import { AuthError, CredentialsSignin } from "next-auth";
-import { headers } from "next/headers";
 import { signIn } from "@/auth";
-import { checkRateLimit } from "@/lib/rate-limit";
 import { safeRelativeCallback } from "@/lib/callback-url";
-
-const MAX_ATTEMPTS_PER_EMAIL = 8;
-const MAX_ATTEMPTS_PER_IP = 20;
-const WINDOW_MS = 5 * 60_000;
 
 export interface LoginState {
   error?: string;
@@ -32,15 +26,8 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
     formData.get("callbackUrl") as string | undefined,
   );
 
-  // Brute-force barrier: cap attempts per account and per client address.
-  const headerList = await headers();
-  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const perEmail = await checkRateLimit(`login:${email}`, MAX_ATTEMPTS_PER_EMAIL, WINDOW_MS);
-  const perIp = await checkRateLimit(`login-ip:${ip}`, MAX_ATTEMPTS_PER_IP, WINDOW_MS);
-  if (!perEmail.ok || !perIp.ok) {
-    return { error: "Too many sign-in attempts. Please wait a few minutes and try again." };
-  }
-
+  // Brute-force limits are enforced inside authorize() (src/auth.ts) so both
+  // this action and direct calls to the Auth.js endpoint share the budget.
   try {
     // `redirect: false` keeps the navigation on the client so the page can
     // refresh the session provider before moving on; letting next-auth redirect
@@ -54,6 +41,9 @@ export async function loginAction(_state: LoginState, formData: FormData): Promi
   } catch (error) {
     if (error instanceof CredentialsSignin) {
       if (error.code === "2fa_required") return { requiresTwoFactor: true };
+      if (error.code === "login_rate_limited") {
+        return { error: "Too many sign-in attempts. Please wait a few minutes and try again." };
+      }
       if (error.code === "2fa_rate_limited") {
         return {
           error:

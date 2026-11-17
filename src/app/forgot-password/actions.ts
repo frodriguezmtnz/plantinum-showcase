@@ -2,6 +2,7 @@
 
 import { after } from "next/server";
 import { headers } from "next/headers";
+import { getClientIp } from "@/lib/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { emailFormatProblem, normalizeEmail } from "@/lib/email/address";
 import { requestPasswordReset } from "@/lib/email/password-reset";
@@ -23,11 +24,7 @@ export async function requestPasswordResetAction(
   const format = emailFormatProblem(email);
   if (format) return { error: format };
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
 
   const perEmail = await checkRateLimit(`reset:${email}`, 3, 3_600_000);
   const perIp = await checkRateLimit(`reset-ip:${ip}`, 10, 3_600_000);

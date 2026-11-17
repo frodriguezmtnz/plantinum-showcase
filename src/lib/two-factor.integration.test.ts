@@ -13,6 +13,13 @@ describe.skipIf(!url)('two-factor — Postgres integration', () => {
     email: `it-2fa-${stamp}@test.local`,
     username: `it_2fa_${stamp}`,
   };
+  // Dedicated row: its lastUsedTotpTimestep starts clean so the replay
+  // assertions are not affected by the timestep consumed by other tests.
+  const replayUser = {
+    id: `it-2fa-replay-${stamp}`,
+    email: `it-2fa-replay-${stamp}@test.local`,
+    username: `it_2fa_replay_${stamp}`,
+  };
 
   beforeAll(async () => {
     process.env.DATABASE_URL = url;
@@ -29,11 +36,20 @@ describe.skipIf(!url)('two-factor — Postgres integration', () => {
         passwordHash: 'hash',
       },
     });
+    await prisma.user.create({
+      data: {
+        id: replayUser.id,
+        email: replayUser.email,
+        username: replayUser.username,
+        passwordHash: 'hash',
+      },
+    });
   });
 
   afterAll(async () => {
     await prisma.twoFactorRecoveryCode.deleteMany({ where: { userId: user.id } });
     await prisma.user.deleteMany({ where: { id: user.id } });
+    await prisma.user.deleteMany({ where: { id: replayUser.id } });
     await prisma.$disconnect();
   });
 
@@ -79,5 +95,30 @@ describe.skipIf(!url)('two-factor — Postgres integration', () => {
       true,
     );
     expect(results[5]).toBe('rate-limited');
+  });
+
+  it('rejects a replayed TOTP code but accepts a strictly newer timestep', async () => {
+    const secret = twoFactor.generateTwoFactorSecret();
+    const encrypted = twoFactor.encryptTwoFactorSecret(secret);
+    const token = await generate({ secret });
+
+    // First use claims the timestep...
+    expect(
+      await twoFactor.verifyTwoFactorCode(replayUser.id, encrypted, token),
+    ).toBe(true);
+    // ...so the same code cannot be replayed.
+    expect(
+      await twoFactor.verifyTwoFactorCode(replayUser.id, encrypted, token),
+    ).toBe(false);
+
+    // A code from the next timestep is still accepted (monotonic, not a
+    // global lockout).
+    const nextStepToken = await generate({
+      secret,
+      epoch: Math.floor(Date.now() / 1000) + 31,
+    });
+    expect(
+      await twoFactor.verifyTwoFactorCode(replayUser.id, encrypted, nextStepToken),
+    ).toBe(true);
   });
 });

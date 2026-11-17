@@ -14,7 +14,7 @@ import {
   generateTwoFactorSecret,
   hashRecoveryCode,
   TwoFactorConfigError,
-  verifyTotpCode,
+  verifyTotpTimestep,
   verifyTwoFactorCode,
 } from '@/lib/two-factor';
 
@@ -144,7 +144,8 @@ export async function confirmTwoFactorSetup(
 
   try {
     const secret = decryptTwoFactorSecret(user.twoFactorSecret);
-    if (!(await verifyTotpCode(secret, code))) {
+    const timestep = await verifyTotpTimestep(secret, code);
+    if (timestep === null) {
       return { success: false, error: INVALID_CODE };
     }
 
@@ -157,6 +158,9 @@ export async function confirmTwoFactorSetup(
           twoFactorEnabled: true,
           twoFactorEnabledAt: new Date(),
           sessionVersion: { increment: 1 },
+          // The setup code is consumed here so it cannot be replayed at the
+          // next sign-in within the acceptance window.
+          lastUsedTotpTimestep: timestep,
         },
       });
       await tx.twoFactorRecoveryCode.createMany({

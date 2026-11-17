@@ -13,7 +13,7 @@ import {
   type ProfilePlatformFilter,
   type ProfileSort,
 } from "@/lib/profile-gallery";
-import type { ReportReason } from "@/generated/prisma/enums";
+import type { ReportReason, ReviewReason } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 
 export type ModerationStatus = 'PUBLISHED' | 'UNDER_REVIEW' | 'HIDDEN';
@@ -838,6 +838,8 @@ export interface ModerationPlateItem {
   isSpoiler: boolean;
   ownerUsername: string;
   reportCount: number;
+  /** Why an UNDER_REVIEW plate is queued; null once moderation settles it. */
+  reviewReason: ReviewReason | null;
 }
 
 export interface ModerationPlatePage {
@@ -853,6 +855,21 @@ export type UnderReviewPlatinumItem = ModerationPlateItem;
 /** Narrow a moderation list by the cached AI label of the screenshot. */
 export type ModerationVerdictFilter = 'all' | 'unsafe' | 'review' | 'safe';
 
+/**
+ * Split the UNDER_REVIEW queue by who owns the next step: `screening` is the
+ * short window where the classifier is still running; `human` is everything a
+ * moderator has to decide (AI asked for a look, the screener errored, or none
+ * is configured). Legacy rows without a reason count as human work.
+ */
+export type ModerationQueueFilter = 'all' | 'human' | 'screening';
+
+const HUMAN_QUEUE_REASONS: ReviewReason[] = [
+  'AI_REVIEW',
+  'AI_UNSAFE',
+  'SCREEN_FAILED',
+  'NO_SCREENING',
+];
+
 const VERDICT_FILTER_LABEL = {
   unsafe: 'UNSAFE',
   review: 'REVIEW',
@@ -865,9 +882,15 @@ async function getPlatinumsByModerationStatus(
     offset?: number;
     limit?: number;
     verdict?: ModerationVerdictFilter;
+    queue?: ModerationQueueFilter;
   } = {},
 ): Promise<ModerationPlatePage> {
-  const { offset = 0, limit = MODERATION_PAGE_SIZE, verdict = 'all' } = options;
+  const {
+    offset = 0,
+    limit = MODERATION_PAGE_SIZE,
+    verdict = 'all',
+    queue = 'all',
+  } = options;
 
   let hashes: string[] | null = null;
   if (verdict !== 'all') {
@@ -884,6 +907,16 @@ async function getPlatinumsByModerationStatus(
   const where = {
     moderationStatus: status,
     ...(hashes ? { hash: { in: hashes } } : {}),
+    ...(queue === 'screening'
+      ? { reviewReason: 'SCREENING' as const }
+      : queue === 'human'
+        ? {
+            OR: [
+              { reviewReason: { in: HUMAN_QUEUE_REASONS } },
+              { reviewReason: null },
+            ],
+          }
+        : {}),
   };
 
   const [plates, total] = await Promise.all([
@@ -909,6 +942,7 @@ async function getPlatinumsByModerationStatus(
     isSpoiler: plate.isSpoiler,
     ownerUsername: plate.user.username ?? 'Unknown',
     reportCount: plate._count.reports,
+    reviewReason: plate.reviewReason,
   }));
 
   return { items, total, hasMore };
@@ -931,6 +965,7 @@ export function getUnderReviewPlatinums(
     offset?: number;
     limit?: number;
     verdict?: ModerationVerdictFilter;
+    queue?: ModerationQueueFilter;
   } = {},
 ): Promise<ModerationPlatePage> {
   return getPlatinumsByModerationStatus('UNDER_REVIEW', options);

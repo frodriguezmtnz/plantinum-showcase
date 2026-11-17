@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { getClientIp } from "@/lib/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { consumeEmailChange } from "@/lib/email/change-email";
 
@@ -18,11 +19,7 @@ export async function confirmEmailChangeAction(
 ): Promise<ConfirmEmailChangeState> {
   const token = String(formData.get("token") ?? "");
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
   if (!(await checkRateLimit(`email-change-confirm:${ip}`, 20, 3_600_000)).ok) {
     return { error: "Too many attempts. Please wait a few minutes and try again." };
   }

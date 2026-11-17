@@ -2,6 +2,7 @@
 
 import { after } from "next/server";
 import { headers } from "next/headers";
+import { getClientIp } from "@/lib/client-ip";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { passwordPolicyError } from "@/lib/password";
 import { PASSWORD_REUSE_ERROR } from "@/lib/password-history";
@@ -27,11 +28,7 @@ export async function resetPasswordAction(
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirmPassword") ?? "");
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
   if (!(await checkRateLimit(`reset-submit:${ip}`, 10, 3_600_000)).ok) {
     return { error: TOO_MANY };
   }

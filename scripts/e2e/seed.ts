@@ -123,6 +123,7 @@ async function main() {
       twoFactorEnabled: false,
       twoFactorSecret: null,
       twoFactorEnabledAt: null,
+      lastUsedTotpTimestep: null,
     },
     create: {
       email: twoFactorEmail,

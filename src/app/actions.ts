@@ -30,7 +30,10 @@ import { platinumMetaInputSchema, reportSchema, watermarkPositionSchema } from "
 import { buildImageHint } from "@/lib/image-hint";
 import { getModeratorAccess } from "@/lib/roles";
 import { getAiTriageConfig, isAiTriageConfigured, triageImageHash } from "@/lib/ai-triage";
-import { moderationStatusForVerdict } from "@/lib/ai-verdict";
+import {
+  moderationStatusForVerdict,
+  reviewReasonForSettledVerdict,
+} from "@/lib/ai-verdict";
 import { applyStrikePolicy, isUploadBlocked } from "@/lib/moderation-policy";
 import {
   countUnreadNotifications,
@@ -125,6 +128,18 @@ export async function getPlatinumModerationStatus(id: string) {
   return plate.moderationStatus;
 }
 
+/** The classifier never produced a verdict, so a human has to decide. */
+async function markScreeningFailed(platinumId: string) {
+  try {
+    await prisma.platinum.updateMany({
+      where: { id: platinumId, moderationStatus: "UNDER_REVIEW" },
+      data: { reviewReason: "SCREEN_FAILED" },
+    });
+  } catch (error) {
+    console.warn("[ai-triage] could not mark screening failure", error);
+  }
+}
+
 /**
  * Post-upload AI screening. The plate is created as UNDER_REVIEW, so it is never
  * public until cleared: only an explicit SAFE verdict publishes it, while
@@ -146,11 +161,13 @@ async function screenPlatinumUpload(
     });
 
     if (!verdict) {
-      // Fail closed: without a verdict the plate stays UNDER_REVIEW.
+      // Fail closed: without a verdict the plate stays UNDER_REVIEW, but the
+      // queue must say why (screener failed) instead of "still screening".
       console.warn(
         "[ai-triage] no verdict for upload; leaving plate under review",
         platinumId,
       );
+      await markScreeningFailed(platinumId);
       return;
     }
 
@@ -172,7 +189,15 @@ async function screenPlatinumUpload(
 
     const updated = await prisma.platinum.updateMany({
       where: { id: platinumId, moderationStatus: "UNDER_REVIEW" },
-      data: { moderationStatus: status },
+      data: {
+        moderationStatus: status,
+        // The queue only needs a reason while the plate is still under review;
+        // published or hidden plates are settled.
+        reviewReason:
+          status === "UNDER_REVIEW"
+            ? reviewReasonForSettledVerdict(verdict)
+            : null,
+      },
     });
     if (updated.count === 0) return;
 
@@ -225,6 +250,7 @@ async function screenPlatinumUpload(
     }
   } catch (error) {
     console.warn("[upload] ai screening failed", error);
+    await markScreeningFailed(platinumId);
   }
 }
 
@@ -454,6 +480,13 @@ export async function uploadPlatinum(formData: FormData) {
         // SAFE verdict publishes it (screening below); otherwise, including when
         // the AI is not configured at all, a human decides.
         moderationStatus: flagged ? "HIDDEN" : "UNDER_REVIEW",
+        // Distinguishes "the screener is still working" from "a human has to
+        // look at this" in the moderation queue.
+        reviewReason: flagged
+          ? null
+          : screeningEnabled
+            ? "SCREENING"
+            : "NO_SCREENING",
       },
     });
 

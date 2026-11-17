@@ -112,6 +112,12 @@ jobs:
       E2E_2FA_USERNAME: e2e-2fa
       # CI-only 32-byte key so enabling 2FA works during the E2E run.
       TOTP_ENCRYPTION_KEY: BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
+      # Production builds now refuse to rate-limit without Upstash configured
+      # (per-process counters are unsafe on serverless). Point E2E at an
+      # unreachable endpoint so it exercises the outage fallback (in-memory,
+      # like a Redis outage) instead of the fail-fast path.
+      UPSTASH_REDIS_REST_URL: http://127.0.0.1:1
+      UPSTASH_REDIS_REST_TOKEN: ci-e2e-only
       PW_CHANNEL: chromium
 
     steps:
