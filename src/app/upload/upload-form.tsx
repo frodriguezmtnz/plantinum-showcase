@@ -553,10 +553,15 @@ export function UploadForm({ emailVerified }: { emailVerified: boolean }) {
                   <>Unlimited uploads this month.</>
                 ) : (
                   <>
-                    <span className="tabular font-semibold text-live">
-                      {quota.remaining} of {quota.limit}
+                    <span className="tabular">{quota.used}</span> of{' '}
+                    <span className="tabular">{quota.limit}</span> used{' '}
+                    <span className="text-muted-foreground/60" aria-hidden>
+                      ·
                     </span>{' '}
-                    uploads left this month.
+                    <span className="tabular font-semibold text-live">
+                      {quota.remaining}
+                    </span>{' '}
+                    {quota.remaining === 1 ? 'upload' : 'uploads'} left this month.
                   </>
                 )}
               </p>
