@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
-import { getFollowingFeedPage, getPlatinumsPage } from '@/lib/data';
+import { getFollowingFeedPage, getMostVotedPlatinums, getPlatinumsPage } from '@/lib/data';
 import { auth } from '@/auth';
 import { ExploreClient } from '@/components/explore/explore-client';
 import { MonthlyRace } from '@/components/explore/monthly-race';
+import { PrismGallerySection } from '@/components/prism-gallery/loader';
 
 export const metadata = {
   title: 'Explore Gallery | Platinum Showcase',
@@ -50,6 +51,13 @@ export default async function ExplorePage({ searchParams }: Props) {
           currentUserId: userId,
         });
 
+  const featured = await getMostVotedPlatinums(6, [], userId);
+  const featuredWall = featured.map((plate) => ({
+    id: plate.id,
+    image: plate.imageUrl,
+    alt: `Platinum screenshot for ${plate.gameName}`,
+  }));
+
   return (
     <section className="container py-8 md:py-12">
       <div className="text-center mb-8">
@@ -59,6 +67,17 @@ export default async function ExplorePage({ searchParams }: Props) {
           you&apos;re looking for.
         </p>
       </div>
+
+      {featuredWall.length >= 2 && (
+        <div className="mb-8">
+          <PrismGallerySection
+            items={featuredWall}
+            label="Featured plates"
+            aspectRatio="21 / 9"
+            autoplay
+          />
+        </div>
+      )}
 
       <div className="mb-8">
         <MonthlyRace />
