@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/generated/prisma/enums";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
+import { resolvePinnedAuthBaseUrl } from "@/lib/auth-base-url";
 import { consumeLoginAttempt } from "@/lib/login-rate-limit";
 import { isSessionVersionStale } from "@/lib/session-revocation";
 import { verifyTwoFactorLogin } from "@/lib/two-factor";
@@ -118,12 +119,23 @@ if (googleOAuthConfigured) {
   );
 }
 
+// Pin the base URL before the Auth.js config is built: parseUrl() prefers the
+// environment AUTH_URL over request Host headers, so in production a spoofed
+// Host/x-forwarded-host can no longer drive OAuth callbacks, redirects or
+// cookie attributes (in development the request host keeps being trusted).
+// Always write the resolved value back — Vercel can expose AUTH_URL as an
+// empty string, and empty is not nullish, which would defeat the precedence.
+const pinnedAuthBaseUrl = resolvePinnedAuthBaseUrl();
+if (pinnedAuthBaseUrl) process.env.AUTH_URL = pinnedAuthBaseUrl;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter,
   session: { strategy: "jwt" },
   // Trust the request host (and x-forwarded-*) so the app works behind a
   // proxy/tunnel as well as on localhost and Vercel. Needed because an empty
   // AUTH_URL ("") is not nullish and would otherwise flip this to false.
+  // Production host-header injection is neutralised by the pinned base URL
+  // above, not by this flag (Auth.js rejects every request when it is false).
   trustHost: true,
   pages: {
     signIn: "/login",
