@@ -36,6 +36,17 @@ enum ModerationStatus {
   HIDDEN
 }
 
+// Why a plate sits in the UNDER_REVIEW queue: SCREENING is the short window
+// where the classifier is still working, everything else is waiting on a human
+// (the AI asked for a look, the screener errored, or none is configured).
+enum ReviewReason {
+  SCREENING
+  AI_REVIEW
+  AI_UNSAFE
+  SCREEN_FAILED
+  NO_SCREENING
+}
+
 enum ReportReason {
   SEXUAL
   VIOLENT
@@ -265,6 +276,8 @@ model Platinum {
   height            Int
   watermarked       Boolean          @default(true)
   moderationStatus  ModerationStatus @default(PUBLISHED)
+  // Only meaningful while UNDER_REVIEW; cleared when moderation settles it.
+  reviewReason      ReviewReason?
   createdAt         DateTime         @default(now())
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -1,4 +1,4 @@
-import type { AiVerdictLabel } from '@/generated/prisma/enums';
+import type { AiVerdictLabel, ReviewReason } from '@/generated/prisma/enums';
 
 export const AI_TRIAGE_PROVIDER = 'nan';
 
@@ -150,10 +150,20 @@ export function moderationStatusForVerdict(
 }
 
 /**
+ * Why a plate that stayed UNDER_REVIEW after screening is waiting: UNSAFE only
+ * auto-hides when the operator opts in, so otherwise a human decides both
+ * buckets. A SAFE verdict stuck here (strike ladder) is also a human's call.
+ */
+export function reviewReasonForSettledVerdict(verdict: {
+  label: AiVerdictLabel;
+}): ReviewReason {
+  return verdict.label === 'UNSAFE' ? 'AI_UNSAFE' : 'AI_REVIEW';
+}
+
+/**
  * Local testing helper: `NAN_FAKE_VERDICT=SAFE|REVIEW|UNSAFE` makes the whole
  * screening flow runnable without a real vision API.
- */
-export function parseFakeVerdict(value: string | undefined): TriageVerdict | null {
+ */export function parseFakeVerdict(value: string | undefined): TriageVerdict | null {
   const raw = value?.trim().toUpperCase();
   if (raw === 'SAFE' || raw === 'REVIEW' || raw === 'UNSAFE') {
     return {

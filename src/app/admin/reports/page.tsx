@@ -7,10 +7,11 @@ import {
   getOpenReports,
   getUnderReviewPlatinums,
   MODERATION_PAGE_SIZE,
+  type ModerationQueueFilter,
   type ModerationVerdictFilter,
 } from '@/lib/data';
 import { REPORT_REASON_LABELS, MODERATION_REPORT_REASONS } from '@/lib/report-labels';
-import { ReportReason } from '@/generated/prisma/enums';
+import { ReportReason, type ReviewReason } from '@/generated/prisma/enums';
 import { getCachedVerdicts, type ImageVerdictView } from '@/lib/verdicts';
 import { isStoredImage } from '@/lib/utils';
 import {
@@ -39,6 +40,52 @@ const VERDICT_FILTERS: { value: ModerationVerdictFilter; label: string }[] = [
 
 const VERDICT_VALUES = VERDICT_FILTERS.map((filter) => filter.value);
 
+const QUEUE_FILTERS: { value: ModerationQueueFilter; label: string }[] = [
+  { value: 'all', label: 'Any stage' },
+  { value: 'human', label: 'Your call' },
+  { value: 'screening', label: 'Screening' },
+];
+
+const QUEUE_VALUES = QUEUE_FILTERS.map((filter) => filter.value);
+
+function parseQueue(value?: string): ModerationQueueFilter {
+  return QUEUE_VALUES.includes(value as ModerationQueueFilter)
+    ? (value as ModerationQueueFilter)
+    : 'all';
+}
+
+/** Human-facing reason for a plate that is not settled yet. */
+const QUEUE_BADGE: Record<
+  ReviewReason,
+  { label: string; title: string; tone: 'human' | 'screening' }
+> = {
+  SCREENING: {
+    label: 'Screening…',
+    title: 'The AI screener is still checking this plate.',
+    tone: 'screening',
+  },
+  AI_REVIEW: {
+    label: 'Your call',
+    title: 'The AI asked for a human look.',
+    tone: 'human',
+  },
+  AI_UNSAFE: {
+    label: 'Your call',
+    title: 'The AI flagged this plate as unsafe.',
+    tone: 'human',
+  },
+  SCREEN_FAILED: {
+    label: 'Your call',
+    title: 'The screener failed; decide by hand.',
+    tone: 'human',
+  },
+  NO_SCREENING: {
+    label: 'Your call',
+    title: 'AI screening is not configured.',
+    tone: 'human',
+  },
+};
+
 function parseVerdict(value?: string): ModerationVerdictFilter {
   return VERDICT_VALUES.includes(value as ModerationVerdictFilter)
     ? (value as ModerationVerdictFilter)
@@ -52,6 +99,7 @@ type AdminReportsSearchParams = {
   reason?: string;
   uverdict?: string;
   hverdict?: string;
+  uqueue?: string;
 };
 
 type Props = {
@@ -70,6 +118,7 @@ function buildHref(params: {
   hpage?: number;
   uverdict?: ModerationVerdictFilter;
   hverdict?: ModerationVerdictFilter;
+  uqueue?: ModerationQueueFilter;
 }): string {
   const search = new URLSearchParams();
   if (params.reason && params.reason !== 'all') search.set('reason', params.reason);
@@ -78,6 +127,8 @@ function buildHref(params: {
   if (params.hpage && params.hpage > 1) search.set('hpage', String(params.hpage));
   if (params.uverdict && params.uverdict !== 'all')
     search.set('uverdict', params.uverdict);
+  if (params.uqueue && params.uqueue !== 'all')
+    search.set('uqueue', params.uqueue);
   if (params.hverdict && params.hverdict !== 'all')
     search.set('hverdict', params.hverdict);
   const query = search.toString();
@@ -137,6 +188,24 @@ function AiVerdictBadge({ verdict }: { verdict?: ImageVerdictView }) {
     <Badge variant="outline" className={styles} title={title || undefined}>
       {label}
       <span className="tabular ml-1 opacity-70">{confidence}</span>
+    </Badge>
+  );
+}
+
+function ReviewQueueBadge({ reason }: { reason: ReviewReason | null }) {
+  // Legacy rows without a reason are human work: someone has to decide.
+  const badge = reason ? QUEUE_BADGE[reason] : QUEUE_BADGE.SCREEN_FAILED;
+  return (
+    <Badge
+      variant="outline"
+      className={
+        badge.tone === 'human'
+          ? 'border-warning/50 text-warning-foreground'
+          : 'border-border text-muted-foreground'
+      }
+      title={badge.title}
+    >
+      {badge.label}
     </Badge>
   );
 }
@@ -232,6 +301,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
   const hiddenPage = parsePage(params.hpage);
   const underReviewVerdict = parseVerdict(params.uverdict);
   const hiddenVerdict = parseVerdict(params.hverdict);
+  const underReviewQueue = parseQueue(params.uqueue);
 
   const [reports, underReview, hidden] = await Promise.all([
     getOpenReports({
@@ -241,6 +311,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     getUnderReviewPlatinums({
       offset: (underReviewPage - 1) * MODERATION_PAGE_SIZE,
       verdict: underReviewVerdict,
+      queue: underReviewQueue,
     }),
     getHiddenPlatinums({
       offset: (hiddenPage - 1) * MODERATION_PAGE_SIZE,
@@ -374,6 +445,25 @@ export default async function AdminReportsPage({ searchParams }: Props) {
 
       <section className="mb-12">
         <h2 className="mb-4 text-xl font-bold font-headline">Under review</h2>
+        <div className="mb-2 flex flex-wrap gap-2">
+          {QUEUE_FILTERS.map((filter) => (
+            <FilterPill
+              key={filter.value}
+              active={underReviewQueue === filter.value}
+              href={buildHref({
+                reason,
+                upage: 1,
+                rpage: reportsPage,
+                hpage: hiddenPage,
+                uverdict: underReviewVerdict,
+                hverdict: hiddenVerdict,
+                uqueue: filter.value,
+              })}
+            >
+              {filter.label}
+            </FilterPill>
+          ))}
+        </div>
         <VerdictFilterPills
           active={underReviewVerdict}
           hrefFor={(verdict) =>
@@ -384,6 +474,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               hpage: hiddenPage,
               uverdict: verdict,
               hverdict: hiddenVerdict,
+              uqueue: underReviewQueue,
             })
           }
         />
@@ -391,7 +482,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           <EmptyState
             icon={SearchCheck}
             title="Nothing flagged"
-            description="No plates are waiting on an AI or upload review."
+            description="No plates match these filters. Plates waiting on you, or on the screener, show up here."
           />
         ) : (
           <ul className="space-y-3">
@@ -411,12 +502,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                     >
                       {plate.gameName}
                     </Link>
-                    <Badge
-                      variant="outline"
-                      className="border-warning/50 text-warning-foreground"
-                    >
-                      Under review
-                    </Badge>
+                    <ReviewQueueBadge reason={plate.reviewReason} />
                     <AiVerdictBadge verdict={verdicts[plate.hash]} />
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -445,6 +531,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               hpage: hiddenPage,
               uverdict: underReviewVerdict,
               hverdict: hiddenVerdict,
+              uqueue: underReviewQueue,
             })
           }
         />
