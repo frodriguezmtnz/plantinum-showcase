@@ -1,19 +1,11 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/client-ip';
 import { isGameSearchConfigured, searchGamesWithStatus } from '@/lib/game-search';
 
 export const dynamic = 'force-dynamic';
 
 const MAX_QUERY_LENGTH = 80;
-
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  return (
-    forwarded?.split(',')[0]?.trim() ||
-    request.headers.get('x-real-ip')?.trim() ||
-    'local'
-  );
-}
 
 /**
  * Server-side proxy for RAWG autocomplete. The API key never reaches the
@@ -36,7 +28,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ results: [], configured: false });
   }
 
-  const limit = await checkRateLimit(`games:${clientIp(request)}`, 60, 60_000);
+  const limit = await checkRateLimit(`games:${getClientIp(request.headers)}`, 60, 60_000);
   if (!limit.ok) {
     return NextResponse.json(
       {

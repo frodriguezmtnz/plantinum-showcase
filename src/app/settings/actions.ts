@@ -7,6 +7,7 @@ import { after } from "next/server";
 import bcrypt from "bcrypt";
 import sharp from "sharp";
 import { auth } from "@/auth";
+import { getClientIp } from "@/lib/client-ip";
 import { prisma } from "@/lib/prisma";
 import { repointNotificationLinks } from "@/lib/notifications";
 import { requestEmailVerification } from "@/lib/email/verification";
@@ -210,11 +211,7 @@ export async function resendVerificationEmail(): Promise<ResendVerificationResul
   const userId = await requireUserId();
   if (!userId) return { success: false, error: "You need to sign in first." };
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
   const perUser = await checkRateLimit(
     `verify-resend:${userId}`,
     3,
@@ -249,11 +246,7 @@ export async function requestEmailChange(
   const userId = await requireUserId();
   if (!userId) return { success: false, error: "You need to sign in first." };
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
   const perUser = await checkRateLimit(
     `email-change:${userId}`,
     5,

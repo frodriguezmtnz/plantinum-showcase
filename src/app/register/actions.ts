@@ -3,6 +3,7 @@
 import { after } from "next/server";
 import { AuthError } from "next-auth";
 import { headers } from "next/headers";
+import { getClientIp } from "@/lib/client-ip";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -47,11 +48,7 @@ export async function checkUsernameAvailability(
     };
   }
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
   if (!(await checkRateLimit(`username-check:${ip}`, 60, 60_000)).ok) {
     return { available: false, reason: "rate-limited" };
   }
@@ -72,11 +69,7 @@ export async function registerAction(_state: RegisterState, formData: FormData):
     return { error: USERNAME_PROBLEM_MESSAGE[problem] };
   }
 
-  const headerList = await headers();
-  const ip =
-    headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "local";
+  const ip = getClientIp(await headers());
   if (!(await checkRateLimit(`register:${ip}`, 5, 3_600_000)).ok) {
     return { error: "Too many sign-up attempts. Please wait a bit and try again." };
   }
