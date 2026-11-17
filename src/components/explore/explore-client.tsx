@@ -68,6 +68,12 @@ export function ExploreClient({
 
   // Sync server results into state only when they come from a navigation
   // (filter change); "load more" never touches the URL, so it keeps the list.
+  //
+  // Intentional, unlike the profile gallery: every vote calls router.refresh()
+  // and infinite scroll is always on, so re-syncing page one from props would
+  // duplicate plates that jump between pages when the vote order changes.
+  // This page also has no delete/edit UI, so the stale-after-mutation bug the
+  // profile fixed cannot happen here.
   const serverKey = `${q}|${platform}|${sort}|${source}`;
   const [syncedKey, setSyncedKey] = useState(serverKey);
   if (syncedKey !== serverKey) {
