@@ -107,7 +107,7 @@ type PrismUniforms = TimelineUniforms & {
 };
 
 type Span = [row: number, start: number, end: number];
-type Transition = { index: number; direction: 1 | -1 };
+type Transition = { index: number; direction: 1 | -1; animate: boolean };
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -125,6 +125,7 @@ export interface PrismWallOptions {
   margin?: number;
   fov?: number;
   params?: Partial<PrismParams>;
+  animateInitial?: boolean;
   initializedClass?: string;
 }
 
@@ -161,6 +162,7 @@ export class PrismWall {
       margin = 0,
       fov = DEFAULT_FOV,
       params = {},
+      animateInitial = false,
       initializedClass,
     }: PrismWallOptions,
   ) {
@@ -177,7 +179,7 @@ export class PrismWall {
       camera: this.camera,
       margin,
       useViewport: false,
-      clipToViewport: false,
+      clipToViewport: true,
       elementSpace: true,
       initializedClass,
       onBeforeRender: (delta, rect) => this.frame(delta, rect),
@@ -258,7 +260,7 @@ export class PrismWall {
           console.warn(`PrismGallery: couldn't load ${src}`);
         });
     });
-    this.transition(startIndex, 1);
+    this.transition(startIndex, 1, animateInitial);
   }
 
   get fov(): number {
@@ -296,8 +298,12 @@ export class PrismWall {
     this.resize(...this.size);
   }
 
-  transition(index: number, direction: number): void {
-    const request: Transition = { index, direction: direction ? 1 : -1 };
+  transition(index: number, direction: number, animate = true): void {
+    const request: Transition = {
+      index,
+      direction: direction ? 1 : -1,
+      animate,
+    };
     if (this.target || !this.textures[index]) this.pending = request;
     else this.start(request);
   }
@@ -305,6 +311,10 @@ export class PrismWall {
   private start(request: Transition): void {
     this.pending = null;
     if (request.index === this.current) return;
+    if (!request.animate) {
+      this.settle(request);
+      return;
+    }
     this.target = request;
     this.uniforms.u_to.value = this.textures[request.index] ?? this.blank;
     this.uniforms.u_toAspect.value = this.aspects[request.index] ?? 1;
@@ -313,6 +323,18 @@ export class PrismWall {
     this.timeline.u_duration.value = duration;
     this.timeline.u_stagger.value = stagger;
     this.timeline.u_clock.value = 0;
+  }
+
+  private settle(request: Transition): void {
+    const texture = this.textures[request.index] ?? this.blank;
+    const aspect = this.aspects[request.index] ?? 1;
+    this.current = request.index;
+    this.target = null;
+    this.uniforms.u_from.value = texture;
+    this.uniforms.u_fromAspect.value = aspect;
+    this.uniforms.u_to.value = texture;
+    this.uniforms.u_toAspect.value = aspect;
+    this.timeline.u_clock.value = -1;
   }
 
   private finish(): void {

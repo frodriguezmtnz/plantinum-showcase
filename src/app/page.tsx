@@ -9,6 +9,7 @@ import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { RaceRow, type RaceEntry } from '@/components/shared/race-row';
 import { PrismGallerySection } from '@/components/prism-gallery/loader';
+import type { PrismParams } from '@/components/prism-gallery/prism-wall';
 import { HeroTrophySkyline } from '@/components/shared/hero-trophy-skyline';
 import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,23 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
+};
+
+const HOME_PRISM_PARAMS: Partial<PrismParams> = {
+  cellWidth: 34,
+  cellHeight: 12,
+  depth: 0.8,
+  duration: 0.7,
+  stagger: 0.25,
+  flowScale: 0.45,
+  flowSpeed: 0.55,
+  evolve: 0.3,
+  steer: 6,
+  explode: 0.75,
+  drift: -0.2,
+  tether: 2,
+  stretch: 0.2,
+  gloss: 0.7,
 };
 
 export default async function Home() {
@@ -126,6 +144,9 @@ export default async function Home() {
           <PrismGallerySection
             items={featuredWall}
             label="Most loved plates"
+            aspectRatio="16 / 9"
+            className="mx-auto max-w-3xl"
+            params={HOME_PRISM_PARAMS}
             autoplay
           />
         </section>

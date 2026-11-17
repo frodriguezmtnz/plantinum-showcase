@@ -2,6 +2,7 @@
 
 import { PrismGalleryProvider } from "./renderer-context";
 import { PrismGallery, type PrismGalleryItem } from "./prism-gallery";
+import type { PrismParams } from "./prism-wall";
 
 export interface PrismGallerySectionProps {
   items: PrismGalleryItem[];
@@ -9,6 +10,7 @@ export interface PrismGallerySectionProps {
   autoplay?: boolean;
   aspectRatio?: string;
   fov?: number;
+  params?: Partial<PrismParams>;
   className?: string;
 }
 

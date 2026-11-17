@@ -65,6 +65,7 @@ export function PrismGallery({
   const wallRef = useRef<PrismWall | null>(null);
   const indexRef = useRef(0);
   const paramsRef = useRef<Partial<PrismParams> | undefined>(params);
+  const skipInitialTransitionRef = useRef(true);
 
   const [motionOff, setMotionOff] = useState<boolean | null>(null);
   const [index, setIndex] = useState(0);
@@ -122,6 +123,10 @@ export function PrismGallery({
   useEffect(() => {
     indexRef.current = index;
     if (wallRef.current && fov !== undefined) wallRef.current.fov = fov;
+    if (skipInitialTransitionRef.current) {
+      skipInitialTransitionRef.current = false;
+      return;
+    }
     wallRef.current?.transition(index, direction);
   }, [index, direction, fov]);
 
