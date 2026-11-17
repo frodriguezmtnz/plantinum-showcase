@@ -3,8 +3,14 @@
  *
  * When UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are configured the
  * counters live in Upstash Redis (HTTP REST), so every serverless instance
- * shares them. Without those variables it falls back to a per-process map,
- * which is enough for local dev and a single-instance deployment.
+ * shares them.
+ *
+ * Two failure modes, treated differently on purpose:
+ * - Missing configuration in production fails fast: on serverless every
+ *   instance would keep independent in-memory counters, silently multiplying
+ *   every limit by the instance count. Refusing is better than pretending.
+ * - A transient Upstash outage degrades to the per-process map (with a
+ *   one-time console error) instead of locking everyone out.
  */
 
 interface Bucket {
@@ -98,12 +104,16 @@ export async function checkRateLimit(
     try {
       return await checkRedis(key, limit, windowMs);
     } catch (error) {
-      // Never let a Redis outage lock everyone out: fall back per-process.
+      // Transient outage: degrade per-process rather than lock everyone out.
       if (!warnedAboutRedis) {
         warnedAboutRedis = true;
         console.error('[rate-limit] Upstash unavailable, using in-memory fallback:', error);
       }
     }
+  } else if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'Rate limiting requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in production.',
+    );
   }
 
   return checkMemory(key, limit, windowMs);
