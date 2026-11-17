@@ -1,6 +1,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { headers } from 'next/headers';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -75,11 +76,16 @@ export const viewport: Viewport = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The per-request CSP nonce issued by src/middleware.ts: next-themes uses
+  // it on its anti-FOUC inline script so the production CSP (which no longer
+  // allows inline scripts) keeps executing it.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
   return (
     <html lang="en" className={cn(fontBody.variable)} suppressHydrationWarning>
       <head>
@@ -91,7 +97,7 @@ export default function RootLayout({
         <JsonLd data={websiteJsonLd} />
         <SessionProvider>
           <SessionRefresh />
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange nonce={nonce}>
             <div className="sky-field" aria-hidden />
             <SiteChrome header={<Header />} footer={<Footer />}>
               {children}
