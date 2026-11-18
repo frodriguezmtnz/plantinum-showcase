@@ -10,6 +10,11 @@ import type { Role } from "@/generated/prisma/enums";
 import { generatedAvatarUrl } from "@/lib/generated-avatar";
 import { resolvePinnedAuthBaseUrl } from "@/lib/auth-base-url";
 import { consumeLoginAttempt } from "@/lib/login-rate-limit";
+import {
+  clearFailedPasswordAttempts,
+  isAccountLocked,
+  registerFailedPasswordAttempt,
+} from "@/lib/account-lockout";
 import { isSessionVersionStale } from "@/lib/session-revocation";
 import { verifyTwoFactorLogin } from "@/lib/two-factor";
 import bcrypt from "bcrypt";
@@ -25,6 +30,12 @@ class TwoFactorRequiredError extends CredentialsSignin {
 class TwoFactorRateLimitedError extends CredentialsSignin {
   code = "2fa_rate_limited";
 }
+
+// Valid bcrypt hash (cost 12) of a throwaway string. Compared against when
+// the account does not exist so the "no such user" and "wrong password"
+// branches take the same time and cannot be told apart by response latency.
+const DUMMY_PASSWORD_HASH =
+  "$2b$12$3qJxXPrwQTdQh7p0pGuepeFo6di5kEMD77.iumqazC/E65FwtbDXC";
 
 const credentialsProvider = Credentials({
   name: "credentials",
@@ -52,11 +63,33 @@ const credentialsProvider = Credentials({
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !user.passwordHash) return null;
+    if (!user || !user.passwordHash) {
+      // Burn the same bcrypt work factor as a real compare (see the dummy
+      // hash above): timing must not reveal whether the email exists.
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
+      return null;
+    }
+
+    // Persistent lockout (survives the 5-minute sliding windows): once the
+    // threshold is crossed the account rejects even the correct password
+    // until the progressive backoff expires or the password is reset.
+    if (isAccountLocked(user.lockedUntil)) return null;
 
     const isValid = await bcrypt.compare(password, user.passwordHash);
 
-    if (!isValid) return null;
+    if (!isValid) {
+      await registerFailedPasswordAttempt(
+        user.id,
+        user.failedLoginAttempts,
+      );
+      return null;
+    }
+
+    // The password itself was the brute-force target, so a correct guess
+    // clears the counters (the 2FA step keeps its own OTP budget).
+    if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+      await clearFailedPasswordAttempts(user.id);
+    }
 
     if (user.twoFactorEnabled) {
       const otp = (credentials?.otp as string | undefined)?.trim();

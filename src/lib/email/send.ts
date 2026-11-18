@@ -68,6 +68,12 @@ function fromAddress(): string {
   return process.env.EMAIL_FROM?.trim() || 'Platinum Showcase <no-reply@localhost>';
 }
 
+/** Masks `?token=…` values: console output keeps the URL shape but never the
+ * credential inside it (used by every verification/reset email link). */
+function redactTokens(text: string): string {
+  return text.replace(/([?&]token=)[^\s'"]+/g, '$1[redacted]');
+}
+
 let smtpTransport: Transporter | null = null;
 
 function getSmtpTransport(): Transporter {
@@ -121,10 +127,23 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
   }
 
   if (kind === 'console') {
+    // Fail-closed: silently "sending" in production would leak reset and
+    // verification links into the Vercel logs where anyone with log access
+    // could read them. Refuse instead of printing.
+    if (process.env.NODE_ENV === 'production') {
+      console.error(
+        '[email] EMAIL_TRANSPORT=console is not allowed in production; refusing to log',
+        { kind: message.kind, to: message.to },
+      );
+      return {
+        ok: false,
+        error: 'Console email transport is not allowed in production',
+      };
+    }
     console.info(
       `[email:console] kind=${message.kind} to=${message.to} subject="${message.subject}"`,
     );
-    console.info(message.text);
+    console.info(redactTokens(message.text));
     return { ok: true };
   }
 
