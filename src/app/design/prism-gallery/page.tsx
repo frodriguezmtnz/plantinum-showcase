@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { getLatestPlatinums, getMostVotedPlatinums } from '@/lib/data';
+import { designPreviewsEnabled } from '@/lib/design-previews';
 import { PrismGalleryPreview } from './preview';
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PrismGalleryPreviewPage() {
-  if (process.env.NODE_ENV === 'production') notFound();
+  if (!designPreviewsEnabled()) notFound();
 
   const featured = await getMostVotedPlatinums(8);
   const plates = featured.length >= 2 ? featured : await getLatestPlatinums(8);
