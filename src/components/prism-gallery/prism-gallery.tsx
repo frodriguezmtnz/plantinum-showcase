@@ -158,11 +158,10 @@ export function PrismGallery({
     indexRef.current = normalized;
     setIndex(normalized);
     setDirection(nextDirection);
-    wallRef.current?.transition(normalized, nextDirection);
   };
 
-  const next = () => goTo(index + 1, 1);
-  const previous = () => goTo(index - 1, -1);
+  const next = () => goTo(indexRef.current + 1, 1);
+  const previous = () => goTo(indexRef.current - 1, -1);
   const showAutoplay = autoplay && motionOff === false;
 
   return (
@@ -226,7 +225,7 @@ export function PrismGallery({
               type="button"
               className={styles.thumbButton}
               aria-current={i === index}
-              onClick={() => goTo(i, i >= index ? 1 : -1)}
+              onClick={() => goTo(i, i >= indexRef.current ? 1 : -1)}
             >
               <Image
                 src={item.thumb ?? item.image}
