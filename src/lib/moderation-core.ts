@@ -164,6 +164,31 @@ export async function removePlatinumRecord(
 export type ModerationDecision = 'dismiss' | 'hide' | 'delete';
 
 /**
+ * Runtime guards for the moderation enums. Server Action arguments are
+ * deserialized JSON, not the compiled types: a tampered client can send any
+ * string. Every apply* branch must fail closed on unknown values instead of
+ * falling through to a default (the report fall-through used to delete).
+ */
+const REPORT_DECISIONS = new Set<string>(['dismiss', 'hide', 'delete']);
+const PLATINUM_MODERATION_OPS = new Set<string>([
+  'PUBLISHED',
+  'HIDDEN',
+  'DELETE',
+]);
+
+export function isModerationDecision(
+  value: unknown,
+): value is ModerationDecision {
+  return typeof value === 'string' && REPORT_DECISIONS.has(value);
+}
+
+export function isPlatinumModerationOp(
+  value: unknown,
+): value is PlatinumModerationOp {
+  return typeof value === 'string' && PLATINUM_MODERATION_OPS.has(value);
+}
+
+/**
  * Applies a moderator's decision on an open report. Authorization lives in the
  * caller (server action or the Telegram webhook), not here.
  */
@@ -171,6 +196,9 @@ export async function applyReportDecision(
   reportId: string,
   decision: ModerationDecision,
 ): Promise<ModerationResult> {
+  if (!isModerationDecision(decision)) {
+    return { success: false, error: 'Unknown moderation decision.' };
+  }
   const report = await prisma.report.findUnique({
     where: { id: reportId },
     select: {
@@ -221,6 +249,12 @@ export async function applyReportDecision(
     return { success: true };
   }
 
+  // The delete branch is explicit, never a fall-through: an unknown decision
+  // must not reach the destructive path.
+  if (decision !== 'delete') {
+    return { success: false, error: 'Unknown moderation decision.' };
+  }
+
   await recordConfirmedHit(
     report.platinum,
     'A moderator removed it for breaking the content rules.',
@@ -237,6 +271,9 @@ export async function applyPlatinumModeration(
   platinumId: string,
   op: PlatinumModerationOp,
 ): Promise<ModerationResult> {
+  if (!isPlatinumModerationOp(op)) {
+    return { success: false, error: 'Unknown moderation operation.' };
+  }
   const platinum = await prisma.platinum.findUnique({
     where: { id: platinumId },
     select: {
@@ -278,7 +315,7 @@ export async function applyPlatinumModeration(
       platinum,
       'A moderator confirmed it breaks the content rules.',
     );
-  } else {
+  } else if (op === 'PUBLISHED') {
     await prisma.platinum.update({
       where: { id: platinumId },
       data: { moderationStatus: 'PUBLISHED', reviewReason: null },
@@ -289,6 +326,9 @@ export async function applyPlatinumModeration(
       await notifyFollowersAboutPublishedPlate(platinumId);
     }
     await recordRestore(platinum);
+  } else {
+    // Unknown op: no default branch publishes anything by accident.
+    return { success: false, error: 'Unknown moderation operation.' };
   }
 
   revalidateVotePaths(platinumId, platinum.user.username);

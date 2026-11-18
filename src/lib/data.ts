@@ -15,6 +15,7 @@ import {
 } from "@/lib/profile-gallery";
 import type { ReportReason, ReviewReason } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
+import { PLATINUM_PLATFORMS } from "@/lib/schemas";
 
 export type ModerationStatus = 'PUBLISHED' | 'UNDER_REVIEW' | 'HIDDEN';
 
@@ -222,6 +223,27 @@ export interface PlatinumPageResult {
 
 export const PLATINUMS_PAGE_SIZE = 24;
 
+/** Deep-paging ceiling: no list exposes more than this many rows of offset. */
+const MAX_PAGE_OFFSET = 10_000;
+
+/**
+ * Server Action arguments arrive as client-controlled JSON, so page inputs are
+ * sanitized before they reach Prisma: a non-integer or negative offset would
+ * throw a Prisma validation error (500) and a huge one forces deep paging,
+ * while an unknown platform filter would just query garbage.
+ */
+function sanitizePageOffset(offset: number | undefined): number {
+  if (typeof offset !== 'number' || !Number.isFinite(offset)) return 0;
+  return Math.min(Math.max(Math.trunc(offset), 0), MAX_PAGE_OFFSET);
+}
+
+function sanitizePlatformFilter(platform: string | undefined): string {
+  if (!platform) return 'all';
+  return platform === 'all' || PLATINUM_PLATFORMS.includes(platform as never)
+    ? platform
+    : 'all';
+}
+
 /** Shared sort for the gallery-style lists (Explore and the follow feed). */
 function platinumListOrderBy(
   sort: string,
@@ -245,18 +267,18 @@ export async function getPlatinumsPage(options: {
 }): Promise<PlatinumPageResult> {
   const {
     q = '',
-    platform = 'all',
     sort = 'recent',
-    offset = 0,
     limit = PLATINUMS_PAGE_SIZE,
     currentUserId,
   } = options;
+  const platform = sanitizePlatformFilter(options.platform);
+  const offset = sanitizePageOffset(options.offset);
 
   const search = q.trim();
 
   const where = {
     ...PUBLISHED_ONLY,
-    ...(platform && platform !== 'all' ? { platform } : {}),
+    ...(platform !== 'all' ? { platform } : {}),
     ...(search
       ? { gameName: { contains: search, mode: 'insensitive' as const } }
       : {}),
@@ -299,12 +321,12 @@ export async function getFollowingFeedPage(options: {
   const {
     followerId,
     q = '',
-    platform = 'all',
     sort = 'recent',
-    offset = 0,
     limit = PLATINUMS_PAGE_SIZE,
     currentUserId,
   } = options;
+  const platform = sanitizePlatformFilter(options.platform);
+  const offset = sanitizePageOffset(options.offset);
 
   const search = q.trim();
 
@@ -312,7 +334,7 @@ export async function getFollowingFeedPage(options: {
     ...PUBLISHED_ONLY,
     // The plate's author is followed by the viewer.
     user: { followers: { some: { followerId } } },
-    ...(platform && platform !== 'all' ? { platform } : {}),
+    ...(platform !== 'all' ? { platform } : {}),
     ...(search
       ? { gameName: { contains: search, mode: 'insensitive' as const } }
       : {}),
@@ -586,9 +608,9 @@ export async function getProfileGalleryItems(options: {
     currentUserId,
     platform = 'all',
     sort = 'newest',
-    offset = 0,
     limit = PROFILE_PAGE_SIZE,
   } = options;
+  const offset = sanitizePageOffset(options.offset);
 
   const where = {
     userId,
