@@ -1,5 +1,13 @@
 export const PASSWORD_MIN_LENGTH = 15;
-export const PASSWORD_MAX_LENGTH = 128;
+
+// bcrypt silently truncates its input at 72 bytes, so bytes beyond that would
+// give a false sense of extra entropy. The cap is in bytes (not characters)
+// because a 128-char password with multibyte characters crosses it sooner.
+export const PASSWORD_MAX_BYTES = 72;
+
+// OWASP-recommended minimum cost for bcrypt (10 is cheap to brute-force
+// offline on modern GPUs). Every hash call site must use this constant.
+export const BCRYPT_COST = 12;
 
 export type PasswordRuleId = 'length' | 'lower' | 'upper' | 'number' | 'symbol';
 
@@ -17,7 +25,7 @@ export function passwordRuleResults(
   return {
     length:
       value.length >= PASSWORD_MIN_LENGTH &&
-      value.length <= PASSWORD_MAX_LENGTH,
+      Buffer.byteLength(value, 'utf8') <= PASSWORD_MAX_BYTES,
     lower: /[a-z]/.test(value),
     upper: /[A-Z]/.test(value),
     number: /\d/.test(value),
@@ -26,7 +34,7 @@ export function passwordRuleResults(
 }
 
 const PASSWORD_RULE_MESSAGE: Record<PasswordRuleId, string> = {
-  length: `Password must be between ${PASSWORD_MIN_LENGTH} and ${PASSWORD_MAX_LENGTH} characters.`,
+  length: `Password must be between ${PASSWORD_MIN_LENGTH} characters and ${PASSWORD_MAX_BYTES} bytes.`,
   lower: 'Password must include a lowercase letter.',
   upper: 'Password must include an uppercase letter.',
   number: 'Password must include a number.',

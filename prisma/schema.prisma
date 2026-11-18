@@ -103,6 +103,10 @@ model User {
   // Newest TOTP timestep already consumed (any flow): codes from earlier or
   // equal timesteps are rejected, which makes each code one-shot.
   lastUsedTotpTimestep  Int?
+  // Persistent brute-force lockout: failed password attempts accumulate
+  // across rate-limit windows and lock the account with progressive backoff.
+  failedLoginAttempts   Int       @default(0)
+  lockedUntil           DateTime?
   plan                  Plan      @default(FREE)
   role                  Role      @default(USER)
   // Public profile extras, edited from /settings.

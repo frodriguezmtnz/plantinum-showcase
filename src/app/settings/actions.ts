@@ -51,7 +51,7 @@ import {
   bioProblem,
   sanitizeBio,
 } from "@/lib/bio";
-import { passwordPolicyError } from "@/lib/password";
+import { BCRYPT_COST, passwordPolicyError } from "@/lib/password";
 import {
   parseProfileLinks,
   type ProfileLinkInput,
@@ -385,7 +385,7 @@ export async function updateAvatar(
   if (file.size > MAX_AVATAR_BYTES) {
     return { success: false, error: "The image exceeds the 4 MB size limit." };
   }
-  if (file.type && !ALLOWED_AVATAR_TYPES.includes(file.type)) {
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
     return { success: false, error: "Unsupported format. Use JPG, PNG or WEBP." };
   }
 
@@ -537,7 +537,7 @@ export async function changePassword(
     return { success: false, error: PASSWORD_REUSE_ERROR };
   }
 
-  const passwordHash = await bcrypt.hash(next, 10);
+  const passwordHash = await bcrypt.hash(next, BCRYPT_COST);
   await prisma.$transaction(async (tx) => {
     await rememberPassword({
       db: tx,
@@ -547,7 +547,13 @@ export async function changePassword(
     await tx.user.update({
       where: { id: userId },
       // Invalidates every JWT issued before this change, including this tab.
-      data: { passwordHash, sessionVersion: { increment: 1 } },
+      // The password is proven fresh, so any pending lockout is lifted too.
+      data: {
+        passwordHash,
+        sessionVersion: { increment: 1 },
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
     });
   });
 

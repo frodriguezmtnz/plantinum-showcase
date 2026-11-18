@@ -31,6 +31,9 @@ const globalForTelegram = globalThis as unknown as {
 };
 
 export function isTelegramPollingEnabled(): boolean {
+  // The polling loop calls deleteWebhook, which would knock the production
+  // webhook offline. TELEGRAM_POLLING alone must never be enough in prod.
+  if (process.env.NODE_ENV === 'production') return false;
   return process.env.TELEGRAM_POLLING === 'true';
 }
 

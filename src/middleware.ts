@@ -33,7 +33,9 @@ export function middleware(request: NextRequest) {
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
     "connect-src 'self'",
-    "frame-ancestors 'self'",
+    // Aligned with X-Frame-Options: DENY (next.config.ts): nothing may embed
+    // this site, not even itself.
+    "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",
   ].join("; ");

@@ -12,7 +12,7 @@ import {
   usernameProblem,
 } from "@/lib/usernames";
 import { usernameIsTaken } from "@/lib/username-registry";
-import { passwordPolicyError } from "@/lib/password";
+import { BCRYPT_COST, passwordPolicyError } from "@/lib/password";
 import { registrationEmailProblem } from "@/lib/email/address";
 import { requestEmailVerification } from "@/lib/email/verification";
 import { signIn } from "@/auth";
@@ -99,7 +99,7 @@ export async function registerAction(_state: RegisterState, formData: FormData):
       return { error: "That username is already taken." };
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
 
     const created = await prisma.user.create({
       data: {

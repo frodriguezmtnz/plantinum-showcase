@@ -56,6 +56,8 @@ import {
   applyPlatinumModeration,
   applyReportDecision,
   confirmPlateAsBad,
+  isModerationDecision,
+  isPlatinumModerationOp,
   removePlatinumRecord,
   revalidateVotePaths,
   type ModerationDecision,
@@ -686,6 +688,11 @@ export async function deletePlatinum(id: string) {
  * role from the database, so it applies the moment it is granted.
  */
 export async function moderateReport(reportId: string, decision: ModerationDecision) {
+  // Server Action arguments are plain JSON from the client: validate the enum
+  // before spending auth checks or the rate-limit budget on it.
+  if (!isModerationDecision(decision)) {
+    return { success: false as const, error: "Unknown moderation decision." };
+  }
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {
@@ -712,6 +719,9 @@ export async function moderatePlatinum(
   platinumId: string,
   op: PlatinumModerationOp,
 ) {
+  if (!isPlatinumModerationOp(op)) {
+    return { success: false as const, error: "Unknown moderation operation." };
+  }
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) {

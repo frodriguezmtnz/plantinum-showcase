@@ -30,4 +30,14 @@ describe('password policy', () => {
   it('caps the maximum length', () => {
     expect(passwordPolicyError(`Aa1!${'x'.repeat(130)}`)).toContain('between');
   });
+
+  it('caps the maximum at 72 bytes (bcrypt truncation)', () => {
+    expect(passwordPolicyError(`Aa1!${'x'.repeat(68)}`)).toBeNull();
+    expect(passwordPolicyError(`Aa1!${'x'.repeat(69)}`)).toContain('between');
+  });
+
+  it('counts multibyte characters towards the byte cap', () => {
+    // 4 ASCII bytes + 35 two-byte characters = 74 bytes.
+    expect(passwordPolicyError(`Aa1!${'ñ'.repeat(35)}`)).toContain('between');
+  });
 });

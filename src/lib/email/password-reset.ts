@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
 import { normalizeEmail } from '@/lib/email/address';
+import { BCRYPT_COST } from '@/lib/password';
 import { isRecentPassword, rememberPassword } from '@/lib/password-history';
 import { sendEmail } from '@/lib/email/send';
 import {
@@ -116,7 +117,7 @@ export async function consumePasswordReset({
     return { ok: false, reason: 'invalid' };
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
 
   return prisma.$transaction(async (tx) => {
     // Checked before claiming the token, so a rejected password does not burn
@@ -154,8 +155,14 @@ export async function consumePasswordReset({
 
     await tx.user.update({
       where: { id: row.userId },
-      // Invalidates every JWT issued before the reset.
-      data: { passwordHash, sessionVersion: { increment: 1 } },
+      // Invalidates every JWT issued before the reset. Receiving the email
+      // proves ownership, so a pending brute-force lockout is lifted too.
+      data: {
+        passwordHash,
+        sessionVersion: { increment: 1 },
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      },
     });
     // Receiving the email proves ownership, so a reset also verifies it.
     await tx.user.updateMany({
