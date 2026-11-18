@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useSyncExternalStore } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,8 @@ export function ThemeToggle({ className }: { className?: string }) {
   const { theme, resolvedTheme, systemTheme, setTheme } = useTheme();
   const hydrated = useHydrated();
   const buttonRef = useRef<HTMLButtonElement>(null);
+  /** On only after the first press, so a page load never spins the glyph. */
+  const [iconTurns, setIconTurns] = useState(false);
 
   if (!hydrated) {
     return <Button variant="ghost" size="icon" aria-hidden tabIndex={-1} className={className} />;
@@ -56,15 +58,19 @@ export function ThemeToggle({ className }: { className?: string }) {
     // dark -> system (or system -> light while the OS is already light) changes
     // the label, not a pixel: there is nothing to reveal.
     if (!isResolved(nextResolved) || nextResolved === resolvedTheme) {
+      setIconTurns(true);
       setTheme(next);
       return;
     }
 
     revealThemeChange(buttonRef.current, () => {
       applyTheme(nextResolved);
+      setIconTurns(true);
       setTheme(next);
     });
   };
+
+  const iconClass = cn('h-5 w-5', iconTurns && 'theme-icon-enter');
 
   return (
     <Button
@@ -77,11 +83,11 @@ export function ThemeToggle({ className }: { className?: string }) {
       title={`Theme: ${labels[current]} — switch to ${labels[next]}`}
     >
       {current === 'system' ? (
-        <Monitor className="h-5 w-5" />
+        <Monitor key="system" className={iconClass} />
       ) : current === 'dark' ? (
-        <Moon className="h-5 w-5" />
+        <Moon key="dark" className={iconClass} />
       ) : (
-        <Sun className="h-5 w-5" />
+        <Sun key="light" className={iconClass} />
       )}
     </Button>
   );

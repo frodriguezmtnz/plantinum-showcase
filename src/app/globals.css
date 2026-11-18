@@ -1110,6 +1110,23 @@ html[data-theme-vt]::view-transition-new(root) {
   }
 }
 
+/* The toggle's glyph turns in as the new theme arrives. Mounted on demand
+   (keyed by the theme), so the page load itself never animates it. */
+.theme-icon-enter {
+  animation: theme-icon-enter 200ms var(--ease-bloom) both;
+}
+
+@keyframes theme-icon-enter {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
 /* JS already skips the transition when motion is unwelcome; this is the belt
    and braces for anyone driving the attribute by hand. */
 @media (prefers-reduced-motion: reduce) {
@@ -1117,6 +1134,10 @@ html[data-theme-vt]::view-transition-new(root) {
     animation: none;
     -webkit-mask-image: none;
     mask-image: none;
+  }
+
+  .theme-icon-enter {
+    animation: none;
   }
 }
 
