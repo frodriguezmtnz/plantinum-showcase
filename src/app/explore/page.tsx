@@ -76,6 +76,7 @@ export default async function ExplorePage({ searchParams }: Props) {
             label="Featured plates"
             params={PRISM_PRESETS.explore.params}
             aspectRatio={PRISM_PRESETS.explore.aspectRatio}
+            sizes={PRISM_PRESETS.explore.sizes}
             className={PRISM_PRESETS.explore.className}
             animateInitial={PRISM_PRESETS.explore.animateInitial}
             clipToViewport={PRISM_PRESETS.explore.clipToViewport}

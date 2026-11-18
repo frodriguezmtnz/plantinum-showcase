@@ -27,6 +27,7 @@ export interface PrismGalleryProps {
   animateInitial?: boolean;
   clipToViewport?: boolean;
   aspectRatio?: string;
+  sizes?: string;
   className?: string;
 }
 
@@ -63,6 +64,7 @@ export function PrismGallery({
   animateInitial = false,
   clipToViewport = true,
   aspectRatio = DEFAULT_ASPECT,
+  sizes = "100vw",
   className,
 }: PrismGalleryProps) {
   const { renderer, contextLost } = usePrismRenderer();
@@ -191,7 +193,7 @@ export function PrismGallery({
                 src={item.image}
                 alt={item.alt}
                 fill
-                sizes="100vw"
+                sizes={sizes}
                 unoptimized={isStoredImage(item.image)}
                 loading={i === 0 ? "eager" : "lazy"}
               />

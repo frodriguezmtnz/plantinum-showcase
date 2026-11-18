@@ -3,6 +3,7 @@ import type { PrismParams } from "./prism-wall";
 export interface PrismPreset {
   params: Partial<PrismParams>;
   aspectRatio: string;
+  sizes: string;
   className: string;
   animateInitial: boolean;
   clipToViewport: boolean;
@@ -29,6 +30,7 @@ export const PRISM_PRESETS = {
       gloss: 0.7,
     },
     aspectRatio: "16 / 9",
+    sizes: "(min-width: 1024px) 1024px, 100vw",
     className: "mx-auto max-w-5xl",
     animateInitial: false,
     clipToViewport: true,
@@ -56,6 +58,7 @@ export const PRISM_PRESETS = {
       gloss: 1,
     },
     aspectRatio: "21 / 9",
+    sizes: "(min-width: 1400px) 1400px, 100vw",
     className: "mx-auto w-full",
     animateInitial: true,
     clipToViewport: true,

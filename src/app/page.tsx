@@ -129,6 +129,7 @@ export default async function Home() {
             label="Most loved plates"
             params={PRISM_PRESETS.home.params}
             aspectRatio={PRISM_PRESETS.home.aspectRatio}
+            sizes={PRISM_PRESETS.home.sizes}
             className={PRISM_PRESETS.home.className}
             animateInitial={PRISM_PRESETS.home.animateInitial}
             clipToViewport={PRISM_PRESETS.home.clipToViewport}

@@ -11,6 +11,7 @@ export interface PrismGallerySectionProps {
   animateInitial?: boolean;
   clipToViewport?: boolean;
   aspectRatio?: string;
+  sizes?: string;
   fov?: number;
   params?: Partial<PrismParams>;
   className?: string;
