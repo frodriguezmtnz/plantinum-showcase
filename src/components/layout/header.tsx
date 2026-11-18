@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Bell,
   Settings,
+  FlaskConical,
 } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import { NotificationBell } from '@/components/shared/notification-bell';
@@ -47,6 +48,9 @@ const navLinks = [
   { href: '/', label: 'Home', icon: Trophy },
   { href: '/explore', label: 'Explore', icon: Compass },
   { href: '/hall-of-fame', label: 'Hall of Fame', icon: Crown },
+  ...(process.env.NODE_ENV === 'development'
+    ? [{ href: '/design/prism-gallery', label: 'Prism', icon: FlaskConical }]
+    : []),
 ];
 
 const navPill =
