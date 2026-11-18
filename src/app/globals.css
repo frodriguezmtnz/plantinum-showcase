@@ -49,6 +49,9 @@
     --glow: 0 0 0 1px hsl(322 100% 65% / 0.45), 0 0 28px -4px hsl(322 100% 70% / 0.5);
     --lift: 0 14px 34px -22px hsl(207 60% 28% / 0.4);
     --ease-bloom: cubic-bezier(0.22, 1, 0.36, 1);
+    /* Scene-level beats (the theme hand-off) need to be seen growing, not
+       snapped: a symmetric ease keeps the circle readable at half a second. */
+    --ease-reveal: cubic-bezier(0.65, 0, 0.35, 1);
 
     /* Graph-paper field (eventarium trick): 1px lines on a 30px lattice,
        masked away after ~42vh so it only whispers at the top of the page. */
@@ -1051,6 +1054,91 @@ input[type='search']::-webkit-search-decoration {
   background: hsl(0 0% 98%);
   border: 3px solid transparent;
   background-clip: content-box;
+}
+
+/* ── Theme hand-off ─────────────────────────────────────────────────────
+   The toggle flips tokens in place; this is the beat that makes the swap read
+   as a light being switched. The View Transitions API keeps a snapshot of the
+   old world underneath (`--vt-x/--vt-y` come from the pressed button) while
+   the new one grows over it as a soft-edged circle: a radial-gradient mask
+   whose edge and feather are registered custom properties, so the browser
+   interpolates them frame by frame. A radial-gradient percentage resolves
+   against the farthest corner, so 101% always covers the viewport without any
+   radius math — and nothing here is in px, which Chrome would paint unscaled
+   on ::view-transition-new(root) at fractional display scales. */
+@property --theme-reveal-edge {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@property --theme-reveal-feather {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+html[data-theme-vt]::view-transition-group(root) {
+  animation-duration: var(--vt-duration, 560ms);
+  animation-timing-function: var(--ease-reveal);
+}
+
+html[data-theme-vt]::view-transition-old(root) {
+  animation: none;
+  z-index: -1;
+}
+
+html[data-theme-vt]::view-transition-new(root) {
+  z-index: 1;
+  -webkit-mask-image: radial-gradient(
+    circle at var(--vt-x, 96%) var(--vt-y, 4%),
+    #000 var(--theme-reveal-edge),
+    transparent var(--theme-reveal-feather)
+  );
+  mask-image: radial-gradient(
+    circle at var(--vt-x, 96%) var(--vt-y, 4%),
+    #000 var(--theme-reveal-edge),
+    transparent var(--theme-reveal-feather)
+  );
+  animation: theme-reveal var(--vt-duration, 560ms) var(--ease-reveal) forwards;
+}
+
+@keyframes theme-reveal {
+  to {
+    --theme-reveal-edge: 92%;
+    --theme-reveal-feather: 101%;
+  }
+}
+
+/* The toggle's glyph turns in as the new theme arrives. Mounted on demand
+   (keyed by the theme), so the page load itself never animates it. */
+.theme-icon-enter {
+  animation: theme-icon-enter 200ms var(--ease-bloom) both;
+}
+
+@keyframes theme-icon-enter {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* JS already skips the transition when motion is unwelcome; this is the belt
+   and braces for anyone driving the attribute by hand. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-vt]::view-transition-new(root) {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .theme-icon-enter {
+    animation: none;
+  }
 }
 
 /* The header tucks away on scroll-down and returns on scroll-up; keyboard
