@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
-    "predev": "pnpm db:migrate",
+    "predev": "prisma migrate deploy",
     "db:migrate": "prisma migrate deploy",
     "build": "prisma generate && next build",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
