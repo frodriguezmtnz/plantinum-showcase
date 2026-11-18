@@ -77,6 +77,13 @@ interface UserRecord {
   image: string | null;
 }
 
+/**
+ * Only the columns the user view needs. Listing them keeps board reads from
+ * devolving into `SELECT *`, so an unrelated new column (e.g. an auth-only
+ * field) can never break the home again if a migration is pending.
+ */
+const USER_VIEW_SELECT = { id: true, username: true, image: true } as const;
+
 const toPlatinumView = (p: PlatinumRecord, hasVoted = false): Platinum => ({
   id: p.id,
   hash: p.hash,
@@ -127,7 +134,7 @@ async function attachVoteStatus(
 
 // Data access functions
 export async function getUsers(): Promise<User[]> {
-  const users = await prisma.user.findMany();
+  const users = await prisma.user.findMany({ select: USER_VIEW_SELECT });
   return users.map((u) => toUserView(u));
 }
 
@@ -135,7 +142,10 @@ export async function getUsers(): Promise<User[]> {
 export async function getUsersByIds(ids: string[]): Promise<User[]> {
   const unique = [...new Set(ids)];
   if (unique.length === 0) return [];
-  const users = await prisma.user.findMany({ where: { id: { in: unique } } });
+  const users = await prisma.user.findMany({
+    where: { id: { in: unique } },
+    select: USER_VIEW_SELECT,
+  });
   return users.map((u) => toUserView(u));
 }
 
@@ -289,7 +299,7 @@ export async function getPlatinumsPage(options: {
     orderBy: platinumListOrderBy(sort),
     skip: offset,
     take: limit + 1,
-    include: { user: true },
+    include: { user: { select: USER_VIEW_SELECT } },
   });
 
   const hasMore = platinums.length > limit;
@@ -345,7 +355,7 @@ export async function getFollowingFeedPage(options: {
     orderBy: platinumListOrderBy(sort),
     skip: offset,
     take: limit + 1,
-    include: { user: true },
+    include: { user: { select: USER_VIEW_SELECT } },
   });
 
   const hasMore = platinums.length > limit;
