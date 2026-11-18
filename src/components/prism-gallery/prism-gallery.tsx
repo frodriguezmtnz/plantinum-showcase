@@ -116,6 +116,7 @@ export function PrismGallery({
     return () => {
       renderer.removeScene(wall.scene);
       wall.destroy();
+      if (styles.sceneReady) stage.classList.remove(styles.sceneReady);
       wallRef.current = null;
     };
   }, [renderer, contextLost, motionOff, items, fov, animateInitial, clipToViewport]);
