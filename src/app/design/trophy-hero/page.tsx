@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { designPreviewsEnabled } from '@/lib/design-previews';
 import { HeroTrophyPreview } from './preview';
 
 export const metadata: Metadata = {
@@ -8,6 +9,6 @@ export const metadata: Metadata = {
 };
 
 export default function TrophyHeroPreviewPage() {
-  if (process.env.NODE_ENV === 'production') notFound();
+  if (!designPreviewsEnabled()) notFound();
   return <HeroTrophyPreview />;
 }
