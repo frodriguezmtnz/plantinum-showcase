@@ -351,7 +351,7 @@ export function PrismGalleryPreview({ items }: { items: PrismGalleryItem[] }) {
           <div className="space-y-2">
             <HelpLabel
               label="Preset"
-              description="Home es el ajuste suave; Explore es el efecto original más intenso."
+              description="Home es el ajuste suave de referencia; Explore es el muro actual."
               className="field-mark"
             />
             <div className="flex gap-2">
