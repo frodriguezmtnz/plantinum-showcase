@@ -5,6 +5,7 @@ import { ExploreClient } from '@/components/explore/explore-client';
 import { MonthlyRace } from '@/components/explore/monthly-race';
 import { PrismGallerySection } from '@/components/prism-gallery/loader';
 import { PRISM_PRESETS } from '@/components/prism-gallery/presets';
+import { Button } from '@/components/ui/button';
 
 export const metadata = {
   title: 'Explore Gallery | Platinum Showcase',
@@ -83,6 +84,11 @@ export default async function ExplorePage({ searchParams }: Props) {
             autoplay={PRISM_PRESETS.explore.autoplay}
             fov={PRISM_PRESETS.explore.fov}
           />
+          <div className="mt-6 flex justify-center">
+            <Button asChild variant="outline" size="lg">
+              <a href="#gallery-board">Explore more</a>
+            </Button>
+          </div>
         </div>
       )}
 
@@ -90,15 +96,17 @@ export default async function ExplorePage({ searchParams }: Props) {
         <MonthlyRace />
       </div>
 
-      <ExploreClient
-        initialItems={items}
-        initialHasMore={hasMore}
-        q={q}
-        platform={platform}
-        sort={sort}
-        source={source}
-        isSignedIn={Boolean(userId)}
-      />
+      <div id="gallery-board" className="scroll-mt-28">
+        <ExploreClient
+          initialItems={items}
+          initialHasMore={hasMore}
+          q={q}
+          platform={platform}
+          sort={sort}
+          source={source}
+          isSignedIn={Boolean(userId)}
+        />
+      </div>
     </section>
   );
 }
