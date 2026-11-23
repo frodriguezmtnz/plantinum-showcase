@@ -8,8 +8,6 @@ import {
 import { auth } from '@/auth';
 import { PlatinumCard } from '@/components/shared/platinum-card';
 import { RaceRow, type RaceEntry } from '@/components/shared/race-row';
-import { PrismGallerySection } from '@/components/prism-gallery/loader';
-import { PRISM_PRESETS } from '@/components/prism-gallery/presets';
 import { HeroTrophySkyline } from '@/components/shared/hero-trophy-skyline';
 import { HomeMotion } from '@/components/shared/home-motion';
 import { Button } from '@/components/ui/button';
@@ -60,12 +58,6 @@ export default async function Home() {
 
   const mostLoved = favourites.slice(0, 3);
 
-  const featuredWall = favourites.slice(0, 6).map((p) => ({
-    id: p.id,
-    image: p.imageUrl,
-    alt: `Platinum screenshot for ${p.gameName}`,
-  }));
-
   return (
     <HomeMotion>
     <div>
@@ -110,34 +102,6 @@ export default async function Home() {
           Arrows or scroll to browse · Enter opens the plate
         </p>
       </section>
-
-      {featuredWall.length >= 2 && (
-        <section className="container pb-8">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <span className="field-mark">Featured</span>
-              <h2 className="font-headline mt-1 text-2xl font-bold tracking-tight md:text-3xl">
-                Most loved plates
-              </h2>
-            </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/explore">Open the full gallery</Link>
-            </Button>
-          </div>
-          <PrismGallerySection
-            items={featuredWall}
-            label="Most loved plates"
-            params={PRISM_PRESETS.home.params}
-            aspectRatio={PRISM_PRESETS.home.aspectRatio}
-            sizes={PRISM_PRESETS.home.sizes}
-            className={PRISM_PRESETS.home.className}
-            animateInitial={PRISM_PRESETS.home.animateInitial}
-            clipToViewport={PRISM_PRESETS.home.clipToViewport}
-            autoplay={PRISM_PRESETS.home.autoplay}
-            fov={PRISM_PRESETS.home.fov}
-          />
-        </section>
-      )}
 
       {/* The dealt hand: the two explainer cards stacking one on the next. */}
       <section className="container pb-8">
