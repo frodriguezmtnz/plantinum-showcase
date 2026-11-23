@@ -1,0 +1,217 @@
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.root {
+  position: relative;
+  width: 100%;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--prismGallery-aspect, 16 / 10);
+  background: #0a0a0d;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.slides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+
+.slideActive {
+  visibility: visible;
+}
+
+.slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.stage.sceneReady .slides {
+  opacity: 0;
+}
+
+.nav {
+  appearance: none;
+  padding: 0;
+  font: inherit;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 12%);
+  border: 1px solid rgb(255 255 255 / 20%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: contrast(2) brightness(0.7) blur(10px);
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s var(--ease-bloom);
+}
+
+.nav:hover {
+  background: rgb(255 255 255 / 22%);
+}
+
+.nav:focus-visible {
+  outline: none;
+  box-shadow: var(--bloom);
+}
+
+.nav:disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.navPrev {
+  left: 1rem;
+}
+
+.navNext {
+  right: 1rem;
+}
+
+.thumbs {
+  position: relative;
+  z-index: 10;
+  margin: 0.75rem auto 0;
+  width: max-content;
+  max-width: 100%;
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0 0 10px 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(322 100% 65% / 0.5) transparent;
+}
+
+.thumb {
+  position: relative;
+  list-style: none;
+  flex-shrink: 0;
+}
+
+.thumbButton {
+  display: block;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  background: none;
+  opacity: 0.5;
+  transition:
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.thumbButton:hover {
+  opacity: 0.85;
+}
+
+.thumbButton:focus-visible {
+  outline: none;
+  box-shadow: var(--glow);
+}
+
+.thumbButton[aria-current="true"] {
+  border-color: hsl(322 100% 65%);
+  opacity: 1;
+}
+
+.thumbButton img {
+  display: block;
+  width: 80px;
+  height: 50px;
+  object-fit: cover;
+}
+
+.autoplay {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  height: 3px;
+  background: hsl(322 100% 65%);
+  transform-origin: left;
+  pointer-events: none;
+  animation: prism-autoplay var(--autoplay) linear forwards;
+}
+
+.root:hover .autoplay,
+.root:focus-within .autoplay,
+.root[data-paused] .autoplay {
+  animation-play-state: paused;
+}
+
+@keyframes prism-autoplay {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@media (max-width: 600px) {
+  .navPrev {
+    left: 0.5rem;
+  }
+
+  .navNext {
+    right: 0.5rem;
+  }
+
+  .thumbButton img {
+    width: 44px;
+    height: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition: none;
+  }
+
+  .thumbButton {
+    transition: none;
+  }
+}

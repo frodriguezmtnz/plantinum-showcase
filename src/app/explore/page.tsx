@@ -1,8 +1,11 @@
 import { redirect } from 'next/navigation';
-import { getFollowingFeedPage, getPlatinumsPage } from '@/lib/data';
+import { getFollowingFeedPage, getMostVotedPlatinums, getPlatinumsPage } from '@/lib/data';
 import { auth } from '@/auth';
 import { ExploreClient } from '@/components/explore/explore-client';
 import { MonthlyRace } from '@/components/explore/monthly-race';
+import { PrismGallerySection } from '@/components/prism-gallery/loader';
+import { PRISM_PRESETS } from '@/components/prism-gallery/presets';
+import { Button } from '@/components/ui/button';
 
 export const metadata = {
   title: 'Explore Gallery | Platinum Showcase',
@@ -50,6 +53,13 @@ export default async function ExplorePage({ searchParams }: Props) {
           currentUserId: userId,
         });
 
+  const featured = await getMostVotedPlatinums(6, [], userId);
+  const featuredWall = featured.map((plate) => ({
+    id: plate.id,
+    image: plate.imageUrl,
+    alt: `Platinum screenshot for ${plate.gameName}`,
+  }));
+
   return (
     <section className="container py-8 md:py-12">
       <div className="text-center mb-8">
@@ -60,19 +70,43 @@ export default async function ExplorePage({ searchParams }: Props) {
         </p>
       </div>
 
+      {featuredWall.length >= 2 && (
+        <div className="mb-8">
+          <PrismGallerySection
+            items={featuredWall}
+            label="Featured plates"
+            params={PRISM_PRESETS.explore.params}
+            aspectRatio={PRISM_PRESETS.explore.aspectRatio}
+            sizes={PRISM_PRESETS.explore.sizes}
+            className={PRISM_PRESETS.explore.className}
+            animateInitial={PRISM_PRESETS.explore.animateInitial}
+            clipToViewport={PRISM_PRESETS.explore.clipToViewport}
+            autoplay={PRISM_PRESETS.explore.autoplay}
+            fov={PRISM_PRESETS.explore.fov}
+          />
+          <div className="mt-6 flex justify-center">
+            <Button asChild variant="outline" size="lg">
+              <a href="#gallery-board">Explore more</a>
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <MonthlyRace />
       </div>
 
-      <ExploreClient
-        initialItems={items}
-        initialHasMore={hasMore}
-        q={q}
-        platform={platform}
-        sort={sort}
-        source={source}
-        isSignedIn={Boolean(userId)}
-      />
+      <div id="gallery-board" className="scroll-mt-28">
+        <ExploreClient
+          initialItems={items}
+          initialHasMore={hasMore}
+          q={q}
+          platform={platform}
+          sort={sort}
+          source={source}
+          isSignedIn={Boolean(userId)}
+        />
+      </div>
     </section>
   );
 }
