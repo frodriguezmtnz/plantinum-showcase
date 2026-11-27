@@ -100,7 +100,12 @@ describe.skipIf(!url)('two-factor — Postgres integration', () => {
   it('rejects a replayed TOTP code but accepts a strictly newer timestep', async () => {
     const secret = twoFactor.generateTwoFactorSecret();
     const encrypted = twoFactor.encryptTwoFactorSecret(secret);
-    const token = await generate({ secret });
+    // Pin both tokens to the same base epoch so the "next" code is exactly one
+    // timestep ahead no matter where in the 30s window the test starts.
+    // Deriving it from `Date.now() + 31` could land two steps ahead (and
+    // outside the tolerance) when the test starts late in a window.
+    const epoch = Math.floor(Date.now() / 1000);
+    const token = await generate({ secret, epoch });
 
     // First use claims the timestep...
     expect(
@@ -115,7 +120,7 @@ describe.skipIf(!url)('two-factor — Postgres integration', () => {
     // global lockout).
     const nextStepToken = await generate({
       secret,
-      epoch: Math.floor(Date.now() / 1000) + 31,
+      epoch: epoch + 30,
     });
     expect(
       await twoFactor.verifyTwoFactorCode(replayUser.id, encrypted, nextStepToken),
