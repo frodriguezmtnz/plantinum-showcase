@@ -11,9 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Loader2, SearchX, Users, X } from 'lucide-react';
+import { Globe, LayoutGrid, List, Loader2, SearchX, Users, X } from 'lucide-react';
 import { getMoreFollowingPlatinums, getMorePlatinums } from '@/app/actions';
 import { cn } from '@/lib/utils';
+import { DEFAULT_GALLERY_VIEW, type GalleryView } from '@/lib/gallery-view';
 
 export type ExploreSource = 'all' | 'following';
 
@@ -24,6 +25,7 @@ interface ExploreClientProps {
   platform: string;
   sort: string;
   source: ExploreSource;
+  view: GalleryView;
   isSignedIn: boolean;
 }
 
@@ -44,6 +46,18 @@ function GhostCard() {
   );
 }
 
+function ListGhostCard() {
+  return (
+    <div className="panel-solid flex flex-col gap-4 rounded-2xl p-4 sm:flex-row sm:items-center">
+      <Skeleton className="aspect-video w-full rounded-xl sm:w-64" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-3 w-3/4" />
+      </div>
+    </div>
+  );
+}
+
 export function ExploreClient({
   initialItems,
   initialHasMore,
@@ -51,6 +65,7 @@ export function ExploreClient({
   platform,
   sort,
   source,
+  view,
   isSignedIn,
 }: ExploreClientProps) {
   const router = useRouter();
@@ -83,24 +98,32 @@ export function ExploreClient({
   }
 
   const updateUrl = useCallback(
-    (next: { q?: string; platform?: string; sort?: string; source?: ExploreSource }) => {
+    (next: {
+      q?: string;
+      platform?: string;
+      sort?: string;
+      source?: ExploreSource;
+      view?: GalleryView;
+    }) => {
       const nextQ = next.q ?? searchQuery;
       const nextPlatform = next.platform ?? platformFilter;
       const nextSort = next.sort ?? sortOrder;
       const nextSource = next.source ?? source;
+      const nextView = next.view ?? view;
 
       const params = new URLSearchParams();
       if (nextQ.trim()) params.set('q', nextQ.trim());
       if (nextPlatform && nextPlatform !== 'all') params.set('platform', nextPlatform);
       if (nextSort && nextSort !== 'recent') params.set('sort', nextSort);
       if (nextSource === 'following') params.set('source', 'following');
+      if (nextView !== DEFAULT_GALLERY_VIEW) params.set('view', nextView);
 
       const query = params.toString();
       startTransition(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
       });
     },
-    [pathname, router, searchQuery, platformFilter, sortOrder, source],
+    [pathname, router, searchQuery, platformFilter, sortOrder, source, view],
   );
 
   useEffect(() => {
@@ -126,6 +149,10 @@ export function ExploreClient({
       return;
     }
     updateUrl({ source: next });
+  };
+
+  const handleViewChange = (next: GalleryView) => {
+    if (next !== view) updateUrl({ view: next });
   };
 
   const hasFilters = q.trim() !== '' || platform !== 'all' || sort !== 'recent';
@@ -281,6 +308,37 @@ export function ExploreClient({
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-2 sm:shrink-0">
+            <span className="text-sm font-medium">View:</span>
+            <div
+              className="inline-flex rounded-full border border-border/70 bg-background/40 p-0.5"
+              role="group"
+              aria-label="Gallery view"
+            >
+              <Button
+                type="button"
+                size="sm"
+                variant={view === 'grid' ? 'secondary' : 'ghost'}
+                className="h-8 rounded-full px-3"
+                onClick={() => handleViewChange('grid')}
+                aria-pressed={view === 'grid'}
+              >
+                <LayoutGrid className="mr-1.5 h-4 w-4" aria-hidden />
+                Grid
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                className="h-8 rounded-full px-3"
+                onClick={() => handleViewChange('list')}
+                aria-pressed={view === 'list'}
+              >
+                <List className="mr-1.5 h-4 w-4" aria-hidden />
+                List
+              </Button>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -299,25 +357,51 @@ export function ExploreClient({
               </>
             )}
           </p>
-          <div className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 transition-opacity ${isPending ? 'opacity-60' : ''}`}>
-            {items.map((item, index) => (
-              <div key={item.platinum.id} className="mb-6 break-inside-avoid">
+          {view === 'grid' ? (
+            <div
+              data-gallery-view="grid"
+              className={`columns-1 sm:columns-2 lg:columns-3 gap-6 transition-opacity ${isPending ? 'opacity-60' : ''}`}
+            >
+              {items.map((item, index) => (
+                <div key={item.platinum.id} className="mb-6 break-inside-avoid">
+                  <PlatinumCard
+                    platinum={item.platinum}
+                    user={item.user}
+                    layout="grid"
+                    priority={index < 4}
+                  />
+                </div>
+              ))}
+              {isLoadingMore && (
+                <>
+                  <GhostCard />
+                  <GhostCard />
+                  <GhostCard />
+                </>
+              )}
+            </div>
+          ) : (
+            <div
+              data-gallery-view="list"
+              className={cn('space-y-4', isPending && 'opacity-60')}
+            >
+              {items.map((item, index) => (
                 <PlatinumCard
+                  key={item.platinum.id}
                   platinum={item.platinum}
                   user={item.user}
+                  layout="list"
                   priority={index < 4}
                 />
-              </div>
-            ))}
-            {isLoadingMore && (
-              <>
-                <GhostCard />
-                <GhostCard />
-                <GhostCard />
-                <GhostCard />
-              </>
-            )}
-          </div>
+              ))}
+              {isLoadingMore && (
+                <>
+                  <ListGhostCard />
+                  <ListGhostCard />
+                </>
+              )}
+            </div>
+          )}
 
           {hasMore && (
             <>

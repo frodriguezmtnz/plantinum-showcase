@@ -1,18 +1,17 @@
+import {
+  DEFAULT_GALLERY_VIEW,
+  parseGalleryView,
+  type GalleryView,
+} from '@/lib/gallery-view';
+
 export const PROFILE_PAGE_SIZE = 8;
 
-export const PROFILE_VIEWS = [
-  { value: 'grid', label: 'Grid' },
-  { value: 'list', label: 'List' },
-] as const;
+export type ProfileView = GalleryView;
 
-export type ProfileView = (typeof PROFILE_VIEWS)[number]['value'];
-
-export const DEFAULT_PROFILE_VIEW: ProfileView = 'grid';
+export const DEFAULT_PROFILE_VIEW: ProfileView = DEFAULT_GALLERY_VIEW;
 
 export function parseProfileView(value?: string): ProfileView {
-  return PROFILE_VIEWS.some((option) => option.value === value)
-    ? (value as ProfileView)
-    : DEFAULT_PROFILE_VIEW;
+  return parseGalleryView(value);
 }
 
 export function parseProfileInfinite(value?: string): boolean {
