@@ -19,6 +19,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteUrl();
 
   const platinums = await prisma.platinum.findMany({
+    // Only plates the public can actually open: non-published ones 404 for
+    // everyone but their owner or a moderator, and they are noindex.
+    where: { moderationStatus: "PUBLISHED" },
     select: { id: true, platinumDate: true },
     orderBy: { platinumDate: "desc" },
     take: 5000,
