@@ -5,6 +5,7 @@ import { ExploreClient } from '@/components/explore/explore-client';
 import { MonthlyRace } from '@/components/explore/monthly-race';
 import { PrismGallerySection } from '@/components/prism-gallery/loader';
 import { PRISM_PRESETS } from '@/components/prism-gallery/presets';
+import { parseGalleryView, type GalleryView } from '@/lib/gallery-view';
 import { Button } from '@/components/ui/button';
 
 export const metadata = {
@@ -18,6 +19,7 @@ type Props = {
     platform?: string;
     sort?: string;
     source?: string;
+    view?: string;
   }>;
 };
 
@@ -27,8 +29,10 @@ export default async function ExplorePage({ searchParams }: Props) {
     platform = 'all',
     sort = 'recent',
     source: rawSource,
+    view: rawView,
   } = await searchParams;
   const source = rawSource === 'following' ? 'following' : 'all';
+  const view: GalleryView = parseGalleryView(rawView);
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -97,15 +101,16 @@ export default async function ExplorePage({ searchParams }: Props) {
       </div>
 
       <div id="gallery-board" className="scroll-mt-28">
-        <ExploreClient
-          initialItems={items}
-          initialHasMore={hasMore}
-          q={q}
-          platform={platform}
-          sort={sort}
-          source={source}
-          isSignedIn={Boolean(userId)}
-        />
+      <ExploreClient
+        initialItems={items}
+        initialHasMore={hasMore}
+        q={q}
+        platform={platform}
+        sort={sort}
+        source={source}
+        view={view}
+        isSignedIn={Boolean(userId)}
+      />
       </div>
     </section>
   );
