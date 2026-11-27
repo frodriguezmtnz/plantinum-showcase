@@ -30,14 +30,14 @@ const COLUMN_PRESETS = [
     value: '4',
     label: '4 columns (xl+)',
     className: 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4',
-    description: 'El masonry actual de Explore, cuatro por fila en xl.',
+    description: 'Preset anterior de Explore, cuatro por fila en xl. Solo para comparar.',
   },
 ] as const;
 
 type ColumnPreset = (typeof COLUMN_PRESETS)[number]['value'];
 
 export function GalleryColumnsPreview({ items }: { items: PlatinumPageItem[] }) {
-  const [preset, setPreset] = useState<ColumnPreset>('4');
+  const [preset, setPreset] = useState<ColumnPreset>('3');
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const columns = COLUMN_PRESETS.find((option) => option.value === preset)!;

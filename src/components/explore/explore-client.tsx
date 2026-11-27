@@ -360,7 +360,7 @@ export function ExploreClient({
           {view === 'grid' ? (
             <div
               data-gallery-view="grid"
-              className={`columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 transition-opacity ${isPending ? 'opacity-60' : ''}`}
+              className={`columns-1 sm:columns-2 lg:columns-3 gap-6 transition-opacity ${isPending ? 'opacity-60' : ''}`}
             >
               {items.map((item, index) => (
                 <div key={item.platinum.id} className="mb-6 break-inside-avoid">
@@ -374,7 +374,6 @@ export function ExploreClient({
               ))}
               {isLoadingMore && (
                 <>
-                  <GhostCard />
                   <GhostCard />
                   <GhostCard />
                   <GhostCard />
